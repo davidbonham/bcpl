@@ -15,10 +15,10 @@ BCPLWORD llvm_build_gep2(BCPLWORD builder, BCPLWORD type_ref, BCPLWORD pointer, 
     int i;
     for (i = 0; i < num_indices; i += 1)
     {
-        indices_copy[i] = (LLVMValueRef)ptr[i];
+        indices_copy[i] = (LLVMValueRef)(uintptr_t)ptr[i];
     }
 
-return (BCPLWORD) LLVMBuildGEP2((LLVMBuilderRef)builder, (LLVMTypeRef)type_ref, (LLVMValueRef)pointer, indices_copy, (unsigned)num_indices, c_name);
+return (BCPLWORD)(uintptr_t) LLVMBuildGEP2((LLVMBuilderRef)(uintptr_t)builder, (LLVMTypeRef)(uintptr_t)type_ref, (LLVMValueRef)(uintptr_t)pointer, indices_copy, (unsigned)num_indices, c_name);
 }
 
 ''',
@@ -32,12 +32,12 @@ BCPLWORD llvm_function_type(BCPLWORD ret_llvm_type_ref, BCPLWORD params_llvm_typ
     LLVMTypeRef* param_types = (LLVMTypeRef*) malloc(params_count*sizeof(LLVMTypeRef));
     for (int i = 0; i < params_count; i += 1)
     {
-        param_types[i] = (LLVMTypeRef) ptr[i];
+        param_types[i] = (LLVMTypeRef)(uintptr_t) ptr[i];
     }
 
-    LLVMTypeRef const result = LLVMFunctionType((LLVMTypeRef)ret_llvm_type_ref, param_types, params_count, is_varargs);
+    LLVMTypeRef const result = LLVMFunctionType((LLVMTypeRef)(uintptr_t)ret_llvm_type_ref, param_types, params_count, is_varargs);
     free(param_types);
-    return (BCPLWORD)result;
+    return (BCPLWORD)(uintptr_t)result;
 }
 
 ''',
@@ -54,19 +54,19 @@ BCPLWORD llvm_build_call2(BCPLWORD builder, BCPLWORD signature, BCPLWORD functio
     BCPLWORD* ptr = (BCPLWORD*)b2c_address(arguments);
     LLVMValueRef* const args_copy = (LLVMValueRef*) malloc(sizeof(LLVMValueRef)*num_args);
     int i;
-    for (i = 0; i < num_args; i += 1) args_copy[i] = (LLVMValueRef)ptr[i];
+    for (i = 0; i < num_args; i += 1) args_copy[i] = (LLVMValueRef)(uintptr_t)ptr[i];
 
     if (extfn_tracing)
     {
-        print_message("signature", LLVMPrintTypeToString((LLVMTypeRef)signature));
-        printf("num_args=%lu\\n", num_args);
+        print_message("signature", LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)signature));
+        printf("num_args=%d\\n", num_args);
         for (i = 0; i < num_args; i += 1) print_message("arg", LLVMPrintValueToString((LLVMValueRef)args_copy[i]));
     }
 
-    LLVMValueRef result = LLVMBuildCall2((LLVMBuilderRef)builder, (LLVMTypeRef)signature, (LLVMValueRef)function, args_copy, (unsigned)num_args, c_name);
+    LLVMValueRef result = LLVMBuildCall2((LLVMBuilderRef)(uintptr_t)builder, (LLVMTypeRef)(uintptr_t)signature, (LLVMValueRef)(uintptr_t)function, args_copy, (unsigned)num_args, c_name);
     free(args_copy);
 
-    return (BCPLWORD)result;
+    return (BCPLWORD)(uintptr_t)result;
 }
 
 ''',
@@ -75,7 +75,7 @@ BCPLWORD llvm_build_call2(BCPLWORD builder, BCPLWORD signature, BCPLWORD functio
 BCPLWORD llvm_print_module_to_file(BCPLWORD llvm_module_ref, BCPLWORD filename, BCPLWORD error_ref)
 {
     char* c_error = NULL;
-    LLVMBool const result = LLVMPrintModuleToFile((LLVMModuleRef)llvm_module_ref, b2c_string1(filename), &c_error);
+    LLVMBool const result = LLVMPrintModuleToFile((LLVMModuleRef)(uintptr_t)llvm_module_ref, b2c_string1(filename), &c_error);
 
     if (c_error == NULL)
     {
@@ -101,7 +101,7 @@ BCPLWORD llvm_print_module_to_file(BCPLWORD llvm_module_ref, BCPLWORD filename, 
     'LLVMVerifyModule': '''
 BCPLWORD llvm_verify_module(BCPLWORD llvm_module_ref, BCPLWORD llvm_verifier_failure_action, BCPLWORD out)
 {
-   return (BCPLWORD)LLVMVerifyModule((LLVMModuleRef)llvm_module_ref, (LLVMVerifierFailureAction)llvm_verifier_failure_action, NULL);
+   return (BCPLWORD)LLVMVerifyModule((LLVMModuleRef)(uintptr_t)llvm_module_ref, (LLVMVerifierFailureAction)(uintptr_t)llvm_verifier_failure_action, NULL);
 }
 
 ''',
@@ -109,7 +109,7 @@ BCPLWORD llvm_verify_module(BCPLWORD llvm_module_ref, BCPLWORD llvm_verifier_fai
     'LLVMGetBasicBlockName': '''
 BCPLWORD llvm_get_basic_block_name(BCPLWORD bb, BCPLWORD vector)
 {
-    const char* const name = LLVMGetBasicBlockName((LLVMBasicBlockRef)bb);
+    const char* const name = LLVMGetBasicBlockName((LLVMBasicBlockRef)(uintptr_t)bb);
     size_t const length = strlen(name);
     char* const vector_p = b2c_address(vector);
     vector_p[0] = length;
@@ -123,7 +123,7 @@ BCPLWORD llvm_get_basic_block_name(BCPLWORD bb, BCPLWORD vector)
 
 BCPLWORD llvm_print_module_to_string(BCPLWORD module_ref)
 {
-    return c2b_address(LLVMPrintModuleToString((LLVMModuleRef)module_ref));
+    return c2b_address(LLVMPrintModuleToString((LLVMModuleRef)(uintptr_t)module_ref));
 }
 
 ''',
@@ -153,8 +153,8 @@ BCPLWORD llvm_const_string_in_context(BCPLWORD c, BCPLWORD str, BCPLWORD length,
     // Because we want to initialise memory with a BCPL string, don't
     // convert it into a c string, just pass its real address
     const char* address = b2c_address(str);
-    return (BCPLWORD)LLVMConstStringInContext((LLVMContextRef)c, address, (unsigned)length, (LLVMBool)dont_null_terminate);
-}
+    return (BCPLWORD)(uintptr_t) LLVMConstStringInContext((LLVMContextRef)(uintptr_t)c, address, (unsigned)length, (LLVMBool)dont_null_terminate);
+} 
 
 ''',
 
@@ -163,7 +163,7 @@ BCPLWORD llvm_const_string_in_context(BCPLWORD c, BCPLWORD str, BCPLWORD length,
 BCPLWORD llvm_const_array(BCPLWORD element_ty, BCPLWORD constant_vals, BCPLWORD length)
 {
     LLVMValueRef* items = (LLVMValueRef*)b2c_address(constant_vals);
-    return (BCPLWORD)LLVMConstArray((LLVMTypeRef)element_ty, items, (unsigned)length);
+    return (BCPLWORD)(uintptr_t) LLVMConstArray((LLVMTypeRef)(uintptr_t)element_ty, items, (unsigned)length);
 }
 
 ''',
@@ -171,7 +171,7 @@ BCPLWORD llvm_const_array(BCPLWORD element_ty, BCPLWORD constant_vals, BCPLWORD 
 
 BCPLWORD llvm_print_value_to_string(BCPLWORD value)
 {
-    char* const message = LLVMPrintValueToString((LLVMValueRef)value);
+    char* const message = LLVMPrintValueToString((LLVMValueRef)(uintptr_t)value);
     return build_message("llvm_print_value_to_string", message);
 }
 
@@ -182,8 +182,8 @@ BCPLWORD llvm_add_incoming(BCPLWORD phi_node, BCPLWORD incoming_values, BCPLWORD
 {
     LLVMValueRef*      values = (LLVMValueRef*)b2c_address(incoming_values);
     LLVMBasicBlockRef* blocks = (LLVMBasicBlockRef*)b2c_address(incoming_blocks);
-    LLVMValueRef phi = (LLVMValueRef)phi_node;
-    LLVMAddIncoming((LLVMValueRef)phi_node, values, blocks, (unsigned)count);
+    LLVMValueRef phi = (LLVMValueRef)(uintptr_t)phi_node;
+    LLVMAddIncoming(phi, values, blocks, (unsigned)count);
     return 0;
 }
 
@@ -230,7 +230,7 @@ def generate_wrapper(return_type, function, arguments, has_args=True):
         # Parameters passed to us declared as BCPLWORDS
         parameter_list = ', '.join([f'BCPLWORD {convert(argument[1])}' for argument in arguments])
         # Arguments we pass to the function, cast to their LLVM type
-        llvm_arguments = ', '.join([f'({argument[0]}){convert(argument[1])}' for argument in used_arguments])
+        llvm_arguments = ', '.join([f'({argument[0]})(uintptr_t){convert(argument[1])}' for argument in used_arguments])
     else:
         parameter_list = 'void'
         llvm_arguments = ''
