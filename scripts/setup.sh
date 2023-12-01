@@ -1,11 +1,9 @@
-export BCPLROOT=/home/david/official_bcpl_release/BCPL/cintcode
-export PATH=$BCPLROOT/bin:$PATH
-alias @="cintsys64 -c"
+alias @="${BL_ROOT}/bin/cintsys64 -c"
 
 export BL_ROOT=/home/david/bcpl-llvm
 PATH=/usr/lib/llvm-17/bin:${PATH}
 
-
+export BCPLROOT=/home/david/official_bcpl_release/BCPL/cintcode
 export BCPL64ROOT=/home/david/official_bcpl_release/BCPL/cintcode
 export BCPL64PATH=$BCPL64ROOT/cin64
 export BCPL64HDRS=$BCPL64ROOT/g
