@@ -1,0 +1,30 @@
+Start with a new ~/official_bcpl_release
+Edit the cintsys Makefile to comment out the optional libraries eg sound
+make clean64
+make sys64
+
+set up
+   bcpl-llvm
+       src
+           bcpl-llvm.b   the wrapper including the fe and my cg
+           llvmcg.b      my cg
+           c-api         holds the generated source for the LLVM C API 
+       scripts
+           setup.sh      set up for official_bcpl_release cintsys
+           genif.py      generates the LLVM C API
+
+
+Now I can compile hello.b to ocode in /tmp
+
+-- building of c api files
+
+export BL_ROOT=/home/david/bcpl-llvm
+python3 $BL_ROOT/scripts/genif.py <$BL_ROOT/src/selected_api.h $BL_ROOT/src/c-api/autogen
+
+-- building of my own cintsys64 including the c-api
+-- execution of bcpl
+
+
+
+
+

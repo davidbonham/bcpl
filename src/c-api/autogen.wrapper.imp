@@ -1,0 +1,899 @@
+BCPLWORD llvm_initialize_core(BCPLWORD r)
+{
+    LLVMInitializeCore((LLVMPassRegistryRef)r);
+    return 0;
+}
+
+BCPLWORD llvm_shutdown(void)
+{
+    LLVMShutdown();
+    return 0;
+}
+
+BCPLWORD llvm_context_create(void)
+{
+    return (BCPLWORD)LLVMContextCreate();
+}
+
+BCPLWORD llvm_get_global_context(void)
+{
+    return (BCPLWORD)LLVMGetGlobalContext();
+}
+
+BCPLWORD llvm_context_dispose(BCPLWORD c)
+{
+    LLVMContextDispose((LLVMContextRef)c);
+    return 0;
+}
+
+BCPLWORD llvm_module_create_with_name(BCPLWORD module_id)
+{
+    return (BCPLWORD)LLVMModuleCreateWithName((const char*)b2c_string1(module_id));
+}
+
+BCPLWORD llvm_module_create_with_name_in_context(BCPLWORD module_id, BCPLWORD c)
+{
+    return (BCPLWORD)LLVMModuleCreateWithNameInContext((const char*)b2c_string1(module_id), (LLVMContextRef)c);
+}
+
+BCPLWORD llvm_dispose_module(BCPLWORD m)
+{
+    LLVMDisposeModule((LLVMModuleRef)m);
+    return 0;
+}
+
+BCPLWORD llvm_dump_module(BCPLWORD m)
+{
+    LLVMDumpModule((LLVMModuleRef)m);
+    return 0;
+}
+
+
+BCPLWORD llvm_print_module_to_file(BCPLWORD llvm_module_ref, BCPLWORD filename, BCPLWORD error_ref)
+{
+    char* c_error = NULL;
+    LLVMBool const result = LLVMPrintModuleToFile((LLVMModuleRef)llvm_module_ref, b2c_string1(filename), &c_error);
+
+    if (c_error == NULL)
+    {
+        *(BCPLWORD*)b2c_address(error_ref) = 0;
+    }
+    else
+    {
+        // It will be up to the BCPL program to deal with and dispose of the
+        // resulting error message to we need to allocate space on the BCPL
+        // heap for it, return that copy and free our own
+        BCPLWORD words_needed = strlen(c_error) / sizeof(BCPLWORD);
+        BCPLWORD space = getvec(words_needed);
+        c2b_str(c_error, space);
+
+        *(BCPLWORD*)b2c_address(error_ref) = space;
+        LLVMDisposeMessage(c_error);
+    }
+    return result ? BCPLTRUE : 0;
+}
+
+BCPLWORD llvm_add_function(BCPLWORD m, BCPLWORD name, BCPLWORD function_ty)
+{
+    return (BCPLWORD)LLVMAddFunction((LLVMModuleRef)m, (const char*)b2c_string1(name), (LLVMTypeRef)function_ty);
+}
+
+BCPLWORD llvm_int64_type_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMInt64TypeInContext((LLVMContextRef)c);
+}
+
+
+BCPLWORD llvm_function_type(BCPLWORD ret_llvm_type_ref, BCPLWORD params_llvm_type_ref_ptr, BCPLWORD params_count, BCPLWORD is_varargs)
+{
+    // We can't just pass through our BCPL vector of type refs because the
+    // elements size may differ, so we need to create a temporary copy.
+    BCPLWORD* ptr = (BCPLWORD*)b2c_address(params_llvm_type_ref_ptr);
+    LLVMTypeRef* param_types = (LLVMTypeRef*) malloc(params_count*sizeof(LLVMTypeRef));
+    for (int i = 0; i < params_count; i += 1)
+    {
+        param_types[i] = (LLVMTypeRef) ptr[i];
+    }
+
+    LLVMTypeRef const result = LLVMFunctionType((LLVMTypeRef)ret_llvm_type_ref, param_types, params_count, is_varargs);
+    free(param_types);
+    return (BCPLWORD)result;
+}
+
+BCPLWORD llvm_array_type(BCPLWORD element_type, BCPLWORD element_count)
+{
+    return (BCPLWORD)LLVMArrayType((LLVMTypeRef)element_type, (unsigned)element_count);
+}
+
+BCPLWORD llvm_pointer_type(BCPLWORD element_type, BCPLWORD address_space)
+{
+    return (BCPLWORD)LLVMPointerType((LLVMTypeRef)element_type, (unsigned)address_space);
+}
+
+BCPLWORD llvm_void_type_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMVoidTypeInContext((LLVMContextRef)c);
+}
+
+
+
+BCPLWORD llvm_print_value_to_string(BCPLWORD value)
+{
+    char* const message = LLVMPrintValueToString((LLVMValueRef)value);
+    return build_message("llvm_print_value_to_string", message);
+}
+
+BCPLWORD llvm_const_ptr_to_int(BCPLWORD constant_val, BCPLWORD to_type)
+{
+    return (BCPLWORD)LLVMConstPtrToInt((LLVMValueRef)constant_val, (LLVMTypeRef)to_type);
+}
+
+BCPLWORD llvm_const_int_to_ptr(BCPLWORD constant_val, BCPLWORD to_type)
+{
+    return (BCPLWORD)LLVMConstIntToPtr((LLVMValueRef)constant_val, (LLVMTypeRef)to_type);
+}
+
+BCPLWORD llvm_const_int(BCPLWORD int_ty, BCPLWORD n, BCPLWORD sign_extend)
+{
+    return (BCPLWORD)LLVMConstInt((LLVMTypeRef)int_ty, (unsigned long long)n, (LLVMBool)sign_extend);
+}
+
+BCPLWORD llvm_set_linkage(BCPLWORD global, BCPLWORD linkage)
+{
+    LLVMSetLinkage((LLVMValueRef)global, (LLVMLinkage)linkage);
+    return 0;
+}
+
+BCPLWORD llvm_set_section(BCPLWORD global, BCPLWORD section)
+{
+    LLVMSetSection((LLVMValueRef)global, (const char*)b2c_string1(section));
+    return 0;
+}
+
+BCPLWORD llvm_set_visibility(BCPLWORD global, BCPLWORD viz)
+{
+    LLVMSetVisibility((LLVMValueRef)global, (LLVMVisibility)viz);
+    return 0;
+}
+
+BCPLWORD llvm_add_global(BCPLWORD m, BCPLWORD ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMAddGlobal((LLVMModuleRef)m, (LLVMTypeRef)ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_set_initializer(BCPLWORD global_var, BCPLWORD constant_val)
+{
+    LLVMSetInitializer((LLVMValueRef)global_var, (LLVMValueRef)constant_val);
+    return 0;
+}
+
+BCPLWORD llvm_set_externally_initialized(BCPLWORD global_var, BCPLWORD is_ext_init)
+{
+    LLVMSetExternallyInitialized((LLVMValueRef)global_var, (LLVMBool)is_ext_init);
+    return 0;
+}
+
+BCPLWORD llvm_delete_function(BCPLWORD fn)
+{
+    LLVMDeleteFunction((LLVMValueRef)fn);
+    return 0;
+}
+
+BCPLWORD llvm_insert_existing_basic_block_after_insert_block(BCPLWORD builder, BCPLWORD bb)
+{
+    LLVMInsertExistingBasicBlockAfterInsertBlock((LLVMBuilderRef)builder, (LLVMBasicBlockRef)bb);
+    return 0;
+}
+
+BCPLWORD llvm_append_existing_basic_block(BCPLWORD fn, BCPLWORD bb)
+{
+    LLVMAppendExistingBasicBlock((LLVMValueRef)fn, (LLVMBasicBlockRef)bb);
+    return 0;
+}
+
+BCPLWORD llvm_create_basic_block_in_context(BCPLWORD c, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMCreateBasicBlockInContext((LLVMContextRef)c, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_append_basic_block_in_context(BCPLWORD c, BCPLWORD fn, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMAppendBasicBlockInContext((LLVMContextRef)c, (LLVMValueRef)fn, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_append_basic_block(BCPLWORD fn, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMAppendBasicBlock((LLVMValueRef)fn, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_insert_basic_block_in_context(BCPLWORD c, BCPLWORD bb, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMInsertBasicBlockInContext((LLVMContextRef)c, (LLVMBasicBlockRef)bb, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_insert_basic_block(BCPLWORD insert_before_bb, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMInsertBasicBlock((LLVMBasicBlockRef)insert_before_bb, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_create_builder_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMCreateBuilderInContext((LLVMContextRef)c);
+}
+
+BCPLWORD llvm_position_builder(BCPLWORD builder, BCPLWORD block, BCPLWORD instr)
+{
+    LLVMPositionBuilder((LLVMBuilderRef)builder, (LLVMBasicBlockRef)block, (LLVMValueRef)instr);
+    return 0;
+}
+
+BCPLWORD llvm_position_builder_before(BCPLWORD builder, BCPLWORD instr)
+{
+    LLVMPositionBuilderBefore((LLVMBuilderRef)builder, (LLVMValueRef)instr);
+    return 0;
+}
+
+BCPLWORD llvm_position_builder_at_end(BCPLWORD builder, BCPLWORD block)
+{
+    LLVMPositionBuilderAtEnd((LLVMBuilderRef)builder, (LLVMBasicBlockRef)block);
+    return 0;
+}
+
+BCPLWORD llvm_get_insert_block(BCPLWORD builder)
+{
+    return (BCPLWORD)LLVMGetInsertBlock((LLVMBuilderRef)builder);
+}
+
+BCPLWORD llvm_clear_insertion_position(BCPLWORD builder)
+{
+    LLVMClearInsertionPosition((LLVMBuilderRef)builder);
+    return 0;
+}
+
+BCPLWORD llvm_insert_into_builder(BCPLWORD builder, BCPLWORD instr)
+{
+    LLVMInsertIntoBuilder((LLVMBuilderRef)builder, (LLVMValueRef)instr);
+    return 0;
+}
+
+BCPLWORD llvm_insert_into_builder_with_name(BCPLWORD builder, BCPLWORD instr, BCPLWORD name)
+{
+    LLVMInsertIntoBuilderWithName((LLVMBuilderRef)builder, (LLVMValueRef)instr, (const char*)b2c_string1(name));
+    return 0;
+}
+
+BCPLWORD llvm_dispose_builder(BCPLWORD builder)
+{
+    LLVMDisposeBuilder((LLVMBuilderRef)builder);
+    return 0;
+}
+
+BCPLWORD llvm_build_ret_void(BCPLWORD builder)
+{
+    return (BCPLWORD)LLVMBuildRetVoid((LLVMBuilderRef)builder);
+}
+
+BCPLWORD llvm_build_ret(BCPLWORD builder, BCPLWORD v)
+{
+    return (BCPLWORD)LLVMBuildRet((LLVMBuilderRef)builder, (LLVMValueRef)v);
+}
+
+BCPLWORD llvm_build_br(BCPLWORD builder, BCPLWORD dest)
+{
+    return (BCPLWORD)LLVMBuildBr((LLVMBuilderRef)builder, (LLVMBasicBlockRef)dest);
+}
+
+BCPLWORD llvm_build_cond_br(BCPLWORD builder, BCPLWORD if_, BCPLWORD then_, BCPLWORD else_)
+{
+    return (BCPLWORD)LLVMBuildCondBr((LLVMBuilderRef)builder, (LLVMValueRef)if_, (LLVMBasicBlockRef)then_, (LLVMBasicBlockRef)else_);
+}
+
+BCPLWORD llvm_build_switch(BCPLWORD builder, BCPLWORD v, BCPLWORD else_, BCPLWORD num_cases)
+{
+    return (BCPLWORD)LLVMBuildSwitch((LLVMBuilderRef)builder, (LLVMValueRef)v, (LLVMBasicBlockRef)else_, (unsigned)num_cases);
+}
+
+BCPLWORD llvm_build_indirect_br(BCPLWORD b, BCPLWORD addr, BCPLWORD num_dests)
+{
+    return (BCPLWORD)LLVMBuildIndirectBr((LLVMBuilderRef)b, (LLVMValueRef)addr, (unsigned)num_dests);
+}
+
+BCPLWORD llvm_add_case(BCPLWORD switch_, BCPLWORD on_val, BCPLWORD dest)
+{
+    LLVMAddCase((LLVMValueRef)switch_, (LLVMValueRef)on_val, (LLVMBasicBlockRef)dest);
+    return 0;
+}
+
+BCPLWORD llvm_add_destination(BCPLWORD indirect_br, BCPLWORD dest)
+{
+    LLVMAddDestination((LLVMValueRef)indirect_br, (LLVMBasicBlockRef)dest);
+    return 0;
+}
+
+BCPLWORD llvm_build_add(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildAdd((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nswadd(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNSWAdd((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nuwadd(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNUWAdd((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_fadd(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFAdd((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_sub(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildSub((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nswsub(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNSWSub((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nuwsub(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNUWSub((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_fsub(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFSub((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_mul(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildMul((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nswmul(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNSWMul((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nuwmul(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNUWMul((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_fmul(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFMul((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_udiv(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildUDiv((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_exact_udiv(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildExactUDiv((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_sdiv(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildSDiv((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_exact_sdiv(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildExactSDiv((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_fdiv(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFDiv((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_urem(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildURem((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_srem(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildSRem((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_frem(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFRem((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_shl(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildShl((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_lshr(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildLShr((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_ashr(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildAShr((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_and(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildAnd((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_or(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildOr((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_xor(BCPLWORD b, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildXor((LLVMBuilderRef)b, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_bin_op(BCPLWORD b, BCPLWORD op, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildBinOp((LLVMBuilderRef)b, (LLVMOpcode)op, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_neg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNeg((LLVMBuilderRef)b, (LLVMValueRef)v, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nswneg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNSWNeg((LLVMBuilderRef)b, (LLVMValueRef)v, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_nuwneg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNUWNeg((LLVMBuilderRef)b, (LLVMValueRef)v, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_fneg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFNeg((LLVMBuilderRef)b, (LLVMValueRef)v, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_not(BCPLWORD b, BCPLWORD v, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildNot((LLVMBuilderRef)b, (LLVMValueRef)v, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_alloca(BCPLWORD b, BCPLWORD ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildAlloca((LLVMBuilderRef)b, (LLVMTypeRef)ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_array_alloca(BCPLWORD b, BCPLWORD ty, BCPLWORD val, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildArrayAlloca((LLVMBuilderRef)b, (LLVMTypeRef)ty, (LLVMValueRef)val, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_load(BCPLWORD b, BCPLWORD pointer_val, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildLoad((LLVMBuilderRef)b, (LLVMValueRef)pointer_val, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_load2(BCPLWORD b, BCPLWORD ty, BCPLWORD pointer_val, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildLoad2((LLVMBuilderRef)b, (LLVMTypeRef)ty, (LLVMValueRef)pointer_val, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_store(BCPLWORD b, BCPLWORD val, BCPLWORD ptr)
+{
+    return (BCPLWORD)LLVMBuildStore((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMValueRef)ptr);
+}
+
+
+BCPLWORD llvm_build_gep2(BCPLWORD builder, BCPLWORD type_ref, BCPLWORD pointer, BCPLWORD indices, BCPLWORD num_indices, BCPLWORD name)
+{
+    char c_name[256];
+    char const* r = b2c_str(name, c_name);
+
+    BCPLWORD* ptr = (BCPLWORD*)b2c_address(indices);
+    LLVMValueRef* const indices_copy = (LLVMValueRef*) malloc(sizeof(LLVMValueRef)*num_indices);
+    int i;
+    for (i = 0; i < num_indices; i += 1)
+    {
+        indices_copy[i] = (LLVMValueRef)ptr[i];
+    }
+
+return (BCPLWORD) LLVMBuildGEP2((LLVMBuilderRef)builder, (LLVMTypeRef)type_ref, (LLVMValueRef)pointer, indices_copy, (unsigned)num_indices, c_name);
+}
+
+
+BCPLWORD llvm_build_call2(BCPLWORD builder, BCPLWORD signature, BCPLWORD function, BCPLWORD arguments, BCPLWORD num_args, BCPLWORD name)
+{
+    extern bool extfn_tracing;
+    char c_name[256];
+    char const* r = b2c_str(name, c_name);
+
+    // We can't assume that the arguments are the same size so we must copy
+    // the vector
+    BCPLWORD* ptr = (BCPLWORD*)b2c_address(arguments);
+    LLVMValueRef* const args_copy = (LLVMValueRef*) malloc(sizeof(LLVMValueRef)*num_args);
+    int i;
+    for (i = 0; i < num_args; i += 1) args_copy[i] = (LLVMValueRef)ptr[i];
+
+    if (extfn_tracing)
+    {
+        print_message("signature", LLVMPrintTypeToString((LLVMTypeRef)signature));
+        printf("num_args=%lu\n", num_args);
+        for (i = 0; i < num_args; i += 1) print_message("arg", LLVMPrintValueToString((LLVMValueRef)args_copy[i]));
+    }
+
+    LLVMValueRef result = LLVMBuildCall2((LLVMBuilderRef)builder, (LLVMTypeRef)signature, (LLVMValueRef)function, args_copy, (unsigned)num_args, c_name);
+    free(args_copy);
+
+    return (BCPLWORD)result;
+}
+
+BCPLWORD llvm_build_ptr_to_int(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildPtrToInt((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_int_to_ptr(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildIntToPtr((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+
+BCPLWORD llvm_verify_module(BCPLWORD llvm_module_ref, BCPLWORD llvm_verifier_failure_action, BCPLWORD out)
+{
+   return (BCPLWORD)LLVMVerifyModule((LLVMModuleRef)llvm_module_ref, (LLVMVerifierFailureAction)llvm_verifier_failure_action, NULL);
+}
+
+BCPLWORD llvm_get_initializer(BCPLWORD global_var)
+{
+    return (BCPLWORD)LLVMGetInitializer((LLVMValueRef)global_var);
+}
+
+BCPLWORD llvm_create_function_pass_manager_for_module(BCPLWORD m)
+{
+    return (BCPLWORD)LLVMCreateFunctionPassManagerForModule((LLVMModuleRef)m);
+}
+
+BCPLWORD llvm_add_promote_memory_to_register_pass(BCPLWORD pm)
+{
+    LLVMAddPromoteMemoryToRegisterPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_add_instruction_combining_pass(BCPLWORD pm)
+{
+    LLVMAddInstructionCombiningPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_add_reassociate_pass(BCPLWORD pm)
+{
+    LLVMAddReassociatePass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_add_gvnpass(BCPLWORD pm)
+{
+    LLVMAddGVNPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_add_cfgsimplification_pass(BCPLWORD pm)
+{
+    LLVMAddCFGSimplificationPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_initialize_function_pass_manager(BCPLWORD fpm)
+{
+    return (BCPLWORD)LLVMInitializeFunctionPassManager((LLVMPassManagerRef)fpm);
+}
+
+BCPLWORD llvm_run_function_pass_manager(BCPLWORD fpm, BCPLWORD f)
+{
+    return (BCPLWORD)LLVMRunFunctionPassManager((LLVMPassManagerRef)fpm, (LLVMValueRef)f);
+}
+
+BCPLWORD llvm_dispose_pass_manager(BCPLWORD pm)
+{
+    LLVMDisposePassManager((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_get_param(BCPLWORD fn, BCPLWORD index)
+{
+    return (BCPLWORD)LLVMGetParam((LLVMValueRef)fn, (unsigned)index);
+}
+
+BCPLWORD llvm_build_icmp(BCPLWORD b, BCPLWORD op, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildICmp((LLVMBuilderRef)b, (LLVMIntPredicate)op, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_int1type_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMInt1TypeInContext((LLVMContextRef)c);
+}
+
+
+BCPLWORD llvm_get_basic_block_name(BCPLWORD bb, BCPLWORD vector)
+{
+    const char* const name = LLVMGetBasicBlockName((LLVMBasicBlockRef)bb);
+    size_t const length = strlen(name);
+    char* const vector_p = b2c_address(vector);
+    vector_p[0] = length;
+    memcpy(vector_p+1, name, length);
+    return 0;
+}
+
+BCPLWORD llvm_get_basic_block_parent(BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMGetBasicBlockParent((LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_get_basic_block_terminator(BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMGetBasicBlockTerminator((LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_count_basic_blocks(BCPLWORD fn)
+{
+    return (BCPLWORD)LLVMCountBasicBlocks((LLVMValueRef)fn);
+}
+
+BCPLWORD llvm_get_first_basic_block(BCPLWORD fn)
+{
+    return (BCPLWORD)LLVMGetFirstBasicBlock((LLVMValueRef)fn);
+}
+
+BCPLWORD llvm_get_last_basic_block(BCPLWORD fn)
+{
+    return (BCPLWORD)LLVMGetLastBasicBlock((LLVMValueRef)fn);
+}
+
+BCPLWORD llvm_get_next_basic_block(BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMGetNextBasicBlock((LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_get_previous_basic_block(BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMGetPreviousBasicBlock((LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_get_entry_basic_block(BCPLWORD fn)
+{
+    return (BCPLWORD)LLVMGetEntryBasicBlock((LLVMValueRef)fn);
+}
+
+BCPLWORD llvm_build_int_cast2(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD is_signed, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildIntCast2((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (LLVMBool)is_signed, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_verify_function(BCPLWORD fn, BCPLWORD action)
+{
+    return (BCPLWORD)LLVMVerifyFunction((LLVMValueRef)fn, (LLVMVerifierFailureAction)action);
+}
+
+
+
+BCPLWORD llvm_print_module_to_string(BCPLWORD module_ref)
+{
+    return c2b_address(LLVMPrintModuleToString((LLVMModuleRef)module_ref));
+}
+
+
+BCPLWORD llvm_dispose_message(BCPLWORD message)
+{
+    LLVMDisposeMessage(b2c_address(message));
+}
+
+
+
+BCPLWORD llvm_tracing(BCPLWORD flag)
+{
+    extern bool extfn_tracing;
+    extfn_tracing = flag != 0;
+    return 0;
+}
+
+
+BCPLWORD llvm_const_string_in_context(BCPLWORD c, BCPLWORD str, BCPLWORD length, BCPLWORD dont_null_terminate)
+{
+    // Because we want to initialise memory with a BCPL string, don't
+    // convert it into a c string, just pass its real address
+    const char* address = b2c_address(str);
+    return (BCPLWORD)LLVMConstStringInContext((LLVMContextRef)c, address, (unsigned)length, (LLVMBool)dont_null_terminate);
+}
+
+BCPLWORD llvm_int8type_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMInt8TypeInContext((LLVMContextRef)c);
+}
+
+BCPLWORD llvm_build_extract_element(BCPLWORD b, BCPLWORD vec_val, BCPLWORD index, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildExtractElement((LLVMBuilderRef)b, (LLVMValueRef)vec_val, (LLVMValueRef)index, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_zext(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildZExt((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_pointer_cast(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildPointerCast((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_global_string(BCPLWORD b, BCPLWORD str, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildGlobalString((LLVMBuilderRef)b, (const char*)b2c_string1(str), (const char*)b2c_string2(name));
+}
+
+BCPLWORD llvm_build_global_string_ptr(BCPLWORD b, BCPLWORD str, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildGlobalStringPtr((LLVMBuilderRef)b, (const char*)b2c_string1(str), (const char*)b2c_string2(name));
+}
+
+
+
+BCPLWORD llvm_const_array(BCPLWORD element_ty, BCPLWORD constant_vals, BCPLWORD length)
+{
+    LLVMValueRef* items = (LLVMValueRef*)b2c_address(constant_vals);
+    return (BCPLWORD)LLVMConstArray((LLVMTypeRef)element_ty, items, (unsigned)length);
+}
+
+BCPLWORD llvm_get_next_instruction(BCPLWORD inst)
+{
+    return (BCPLWORD)LLVMGetNextInstruction((LLVMValueRef)inst);
+}
+
+BCPLWORD llvm_get_first_instruction(BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMGetFirstInstruction((LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_is_aterminator_inst(BCPLWORD inst)
+{
+    return (BCPLWORD)LLVMIsATerminatorInst((LLVMValueRef)inst);
+}
+
+BCPLWORD llvm_add_new_gvnpass(BCPLWORD pm)
+{
+    LLVMAddNewGVNPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_add_constant_propagation_pass(BCPLWORD pm)
+{
+    LLVMAddConstantPropagationPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_add_partially_inline_lib_calls_pass(BCPLWORD pm)
+{
+    LLVMAddPartiallyInlineLibCallsPass((LLVMPassManagerRef)pm);
+    return 0;
+}
+
+BCPLWORD llvm_set_alignment(BCPLWORD v, BCPLWORD bytes)
+{
+    LLVMSetAlignment((LLVMValueRef)v, (unsigned)bytes);
+    return 0;
+}
+
+BCPLWORD llvm_delete_basic_block(BCPLWORD bb)
+{
+    LLVMDeleteBasicBlock((LLVMBasicBlockRef)bb);
+    return 0;
+}
+
+BCPLWORD llvm_build_free(BCPLWORD b, BCPLWORD pointer_val)
+{
+    return (BCPLWORD)LLVMBuildFree((LLVMBuilderRef)b, (LLVMValueRef)pointer_val);
+}
+
+BCPLWORD llvm_get_last_instruction(BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMGetLastInstruction((LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_instruction_erase_from_parent(BCPLWORD inst)
+{
+    LLVMInstructionEraseFromParent((LLVMValueRef)inst);
+    return 0;
+}
+
+BCPLWORD llvm_get_instruction_parent(BCPLWORD inst)
+{
+    return (BCPLWORD)LLVMGetInstructionParent((LLVMValueRef)inst);
+}
+
+BCPLWORD llvm_get_previous_instruction(BCPLWORD inst)
+{
+    return (BCPLWORD)LLVMGetPreviousInstruction((LLVMValueRef)inst);
+}
+
+BCPLWORD llvm_int128type_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMInt128TypeInContext((LLVMContextRef)c);
+}
+
+BCPLWORD llvm_double_type_in_context(BCPLWORD c)
+{
+    return (BCPLWORD)LLVMDoubleTypeInContext((LLVMContextRef)c);
+}
+
+BCPLWORD llvm_build_fpto_si(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFPToSI((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_sito_fp(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildSIToFP((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_build_bit_cast(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildBitCast((LLVMBuilderRef)b, (LLVMValueRef)val, (LLVMTypeRef)dest_ty, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_lookup_intrinsic_id(BCPLWORD name, BCPLWORD name_len)
+{
+    return (BCPLWORD)LLVMLookupIntrinsicID((const char*)b2c_string1(name), (size_t)name_len);
+}
+
+BCPLWORD llvm_get_intrinsic_declaration(BCPLWORD mod, BCPLWORD id, BCPLWORD param_types, BCPLWORD param_count)
+{
+    return (BCPLWORD)LLVMGetIntrinsicDeclaration((LLVMModuleRef)mod, (unsigned)id, (LLVMTypeRef*)param_types, (size_t)param_count);
+}
+
+BCPLWORD llvm_build_fcmp(BCPLWORD b, BCPLWORD op, BCPLWORD lhs, BCPLWORD rhs, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildFCmp((LLVMBuilderRef)b, (LLVMRealPredicate)op, (LLVMValueRef)lhs, (LLVMValueRef)rhs, (const char*)b2c_string1(name));
+}
+
+BCPLWORD llvm_block_address(BCPLWORD f, BCPLWORD bb)
+{
+    return (BCPLWORD)LLVMBlockAddress((LLVMValueRef)f, (LLVMBasicBlockRef)bb);
+}
+
+BCPLWORD llvm_type_of(BCPLWORD val)
+{
+    return (BCPLWORD)LLVMTypeOf((LLVMValueRef)val);
+}
+
+BCPLWORD llvm_build_phi(BCPLWORD b, BCPLWORD ty, BCPLWORD name)
+{
+    return (BCPLWORD)LLVMBuildPhi((LLVMBuilderRef)b, (LLVMTypeRef)ty, (const char*)b2c_string1(name));
+}
+
+
+BCPLWORD llvm_add_incoming(BCPLWORD phi_node, BCPLWORD incoming_values, BCPLWORD incoming_blocks, BCPLWORD count)
+{
+    LLVMValueRef*      values = (LLVMValueRef*)b2c_address(incoming_values);
+    LLVMBasicBlockRef* blocks = (LLVMBasicBlockRef*)b2c_address(incoming_blocks);
+    LLVMValueRef phi = (LLVMValueRef)phi_node;
+    LLVMAddIncoming((LLVMValueRef)phi_node, values, blocks, (unsigned)count);
+    return 0;
+}
+
+BCPLWORD llvm_count_incoming(BCPLWORD phi_node)
+{
+    return (BCPLWORD)LLVMCountIncoming((LLVMValueRef)phi_node);
+}
+
