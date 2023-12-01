@@ -124,7 +124,7 @@ $(
     pending_cell_referenced  // The corresponding m
     pending_cell_count       // The number of entries
 
-    fpm                      // The function pass manager for this module
+    //FIXME new pass manager fpm                      // The function pass manager for this module
 
     section_mark             // workspace level at start of section
     is_current_section_empty // Stops us emitting unused initial section
@@ -811,7 +811,7 @@ $(
             longjump(fin_p, fin_l)
         $)
 
-        llvm_dispose_pass_manager(fpm)
+        //FIXME new pass manager llvm_dispose_pass_manager(fpm)
         llvm_dispose_module(module)
 
         is_current_section_empty := TRUE
@@ -1759,18 +1759,18 @@ $(
     // Create the new module and set up a function pass manager for
     // optimisation
     module := llvm_module_create_with_name_in_context(name, context)
-    fpm := llvm_create_function_pass_manager_for_module(module)
+    //FIXME new pass manager fpm := llvm_create_function_pass_manager_for_module(module)
 
-    llvm_add_promote_memory_to_register_pass(fpm);
-    llvm_add_cfgsimplification_pass(fpm)
-    llvm_add_constant_propagation_pass(fpm)
-    llvm_add_new_gvnpass(fpm)
-    llvm_add_reassociate_pass(fpm)
-    llvm_add_partially_inline_lib_calls_pass(fpm)
-    llvm_add_instruction_combining_pass(fpm);
-    llvm_add_cfgsimplification_pass(fpm)
+    //FIXME new pass manager llvm_add_promote_memory_to_register_pass(fpm);
+    //FIXME new pass manager llvm_add_cfgsimplification_pass(fpm)
+    //FIXME new pass manager llvm_add_constant_propagation_pass(fpm)
+    //FIXME new pass manager llvm_add_new_gvnpass(fpm)
+    //FIXME new pass manager llvm_add_reassociate_pass(fpm)
+    //FIXME new pass manager llvm_add_partially_inline_lib_calls_pass(fpm)
+    //FIXME new pass manager llvm_add_instruction_combining_pass(fpm);
+    //FIXME new pass manager llvm_add_cfgsimplification_pass(fpm)
 
-    llvm_initialize_function_pass_manager(fpm)
+    //FIXME new pass manager llvm_initialize_function_pass_manager(fpm)
 
     // Declare the global vector as an external reference
     gv_type := llvm_array_type(word_type, GLOBALVECTORSIZE)

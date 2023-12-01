@@ -7,16 +7,18 @@ extern BCPLWORD getvec(BCPLWORD upb);
  
 #include "llvm_bcpl_binding.h"
 
-#include "llvm/Core.h"
-#include "llvm/Analysis.h"
-#include "llvm/Transforms/Scalar.h"
-#include "llvm/Transforms/InstCombine.h"
-#include "llvm/Transforms/Utils.h"
+#include "llvm-c/Core.h"
+#include "llvm-c/Analysis.h"
+//#include "llvm-c/Transforms/Scalar.h"
+//#include "llvm-c/Transforms/InstCombine.h"
+//#include "llvm-c/Transforms/Utils.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define BCPLTRUE (-1)
 
@@ -108,7 +110,7 @@ void print_message(char* label, char*message)
  * to another of our functions, we don't need to convert it into a BCPL cell
  * address.
  */
-#include "../../../capi/autogen.wrapper.imp"
+#include "autogen.wrapper.imp"
 
 
 BCPLWORD llvm_set_message_buffer(BCPLWORD buffer)

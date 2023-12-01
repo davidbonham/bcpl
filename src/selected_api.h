@@ -1,5 +1,3 @@
-void LLVMInitializeCore(LLVMPassRegistryRef R);
-
 void LLVMShutdown(void);
 
 
@@ -194,19 +192,6 @@ LLVMBool LLVMVerifyModule(LLVMModuleRef M, LLVMVerifierFailureAction Action,
 
 LLVMValueRef LLVMGetInitializer(LLVMValueRef GlobalVar);
 
-LLVMPassManagerRef LLVMCreateFunctionPassManagerForModule(LLVMModuleRef M);
-
-void LLVMAddPromoteMemoryToRegisterPass(LLVMPassManagerRef PM);
-void LLVMAddInstructionCombiningPass(LLVMPassManagerRef PM);
-void LLVMAddReassociatePass(LLVMPassManagerRef PM);
-void LLVMAddGVNPass(LLVMPassManagerRef PM);
-void LLVMAddCFGSimplificationPass(LLVMPassManagerRef PM);
-
-LLVMBool LLVMInitializeFunctionPassManager(LLVMPassManagerRef FPM);
-LLVMBool LLVMRunFunctionPassManager(LLVMPassManagerRef FPM, LLVMValueRef F);
-
-void LLVMDisposePassManager(LLVMPassManagerRef PM);
-
 LLVMValueRef LLVMGetParam(LLVMValueRef Fn, unsigned Index);
 
 LLVMValueRef LLVMBuildICmp(LLVMBuilderRef, LLVMIntPredicate Op,
@@ -271,9 +256,6 @@ LLVMValueRef LLVMGetNextInstruction(LLVMValueRef Inst);
 LLVMValueRef LLVMGetFirstInstruction(LLVMBasicBlockRef BB);
 LLVMValueRef LLVMIsATerminatorInst(LLVMValueRef Inst);
 
-void LLVMAddNewGVNPass(LLVMPassManagerRef PM);
-void LLVMAddConstantPropagationPass(LLVMPassManagerRef PM);
-void LLVMAddPartiallyInlineLibCallsPass(LLVMPassManagerRef PM);
 void LLVMSetAlignment(LLVMValueRef V, unsigned Bytes);
 void LLVMDeleteBasicBlock(LLVMBasicBlockRef BB);
 
