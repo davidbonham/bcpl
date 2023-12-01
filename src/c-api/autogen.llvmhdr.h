@@ -2,7 +2,6 @@ MANIFEST
 $(
     LLVM_START_MARKER = 4
     LLVM_SET_MESSAGE_BUFFER
-    LLVM_INITIALIZE_CORE
     LLVM_SHUTDOWN
     LLVM_CONTEXT_CREATE
     LLVM_GET_GLOBAL_CONTEXT
@@ -87,7 +86,6 @@ $(
     LLVM_BUILD_NOT
     LLVM_BUILD_ALLOCA
     LLVM_BUILD_ARRAY_ALLOCA
-    LLVM_BUILD_LOAD
     LLVM_BUILD_LOAD2
     LLVM_BUILD_STORE
     LLVM_BUILD_GEP2
@@ -96,15 +94,6 @@ $(
     LLVM_BUILD_INT_TO_PTR
     LLVM_VERIFY_MODULE
     LLVM_GET_INITIALIZER
-    LLVM_CREATE_FUNCTION_PASS_MANAGER_FOR_MODULE
-    LLVM_ADD_PROMOTE_MEMORY_TO_REGISTER_PASS
-    LLVM_ADD_INSTRUCTION_COMBINING_PASS
-    LLVM_ADD_REASSOCIATE_PASS
-    LLVM_ADD_GVNPASS
-    LLVM_ADD_CFGSIMPLIFICATION_PASS
-    LLVM_INITIALIZE_FUNCTION_PASS_MANAGER
-    LLVM_RUN_FUNCTION_PASS_MANAGER
-    LLVM_DISPOSE_PASS_MANAGER
     LLVM_GET_PARAM
     LLVM_BUILD_ICMP
     LLVM_INT1TYPE_IN_CONTEXT
@@ -133,9 +122,6 @@ $(
     LLVM_GET_NEXT_INSTRUCTION
     LLVM_GET_FIRST_INSTRUCTION
     LLVM_IS_ATERMINATOR_INST
-    LLVM_ADD_NEW_GVNPASS
-    LLVM_ADD_CONSTANT_PROPAGATION_PASS
-    LLVM_ADD_PARTIALLY_INLINE_LIB_CALLS_PASS
     LLVM_SET_ALIGNMENT
     LLVM_DELETE_BASIC_BLOCK
     LLVM_BUILD_FREE
@@ -160,7 +146,6 @@ $(
 $)
 
 LET llvm_set_message_buffer(s) = sys(Sys_ext, LLVM_SET_MESSAGE_BUFFER, s)
-LET llvm_initialize_core(r) = sys(Sys_ext, LLVM_INITIALIZE_CORE, r)
 LET llvm_shutdown() = sys(Sys_ext, LLVM_SHUTDOWN)
 LET llvm_context_create() = sys(Sys_ext, LLVM_CONTEXT_CREATE)
 LET llvm_get_global_context() = sys(Sys_ext, LLVM_GET_GLOBAL_CONTEXT)
@@ -245,7 +230,6 @@ LET llvm_build_fneg(b, v, name) = sys(Sys_ext, LLVM_BUILD_FNEG, b, v, name)
 LET llvm_build_not(b, v, name) = sys(Sys_ext, LLVM_BUILD_NOT, b, v, name)
 LET llvm_build_alloca(b, ty, name) = sys(Sys_ext, LLVM_BUILD_ALLOCA, b, ty, name)
 LET llvm_build_array_alloca(b, ty, val, name) = sys(Sys_ext, LLVM_BUILD_ARRAY_ALLOCA, b, ty, val, name)
-LET llvm_build_load(b, pointer_val, name) = sys(Sys_ext, LLVM_BUILD_LOAD, b, pointer_val, name)
 LET llvm_build_load2(b, ty, pointer_val, name) = sys(Sys_ext, LLVM_BUILD_LOAD2, b, ty, pointer_val, name)
 LET llvm_build_store(b, val, ptr) = sys(Sys_ext, LLVM_BUILD_STORE, b, val, ptr)
 LET llvm_build_gep2(b, ty, pointer, indices, num_indices, name) = sys(Sys_ext, LLVM_BUILD_GEP2, b, ty, pointer, indices, num_indices, name)
@@ -254,15 +238,6 @@ LET llvm_build_ptr_to_int(b, val, dest_ty, name) = sys(Sys_ext, LLVM_BUILD_PTR_T
 LET llvm_build_int_to_ptr(b, val, dest_ty, name) = sys(Sys_ext, LLVM_BUILD_INT_TO_PTR, b, val, dest_ty, name)
 LET llvm_verify_module(m, action, out_message) = sys(Sys_ext, LLVM_VERIFY_MODULE, m, action, out_message)
 LET llvm_get_initializer(global_var) = sys(Sys_ext, LLVM_GET_INITIALIZER, global_var)
-LET llvm_create_function_pass_manager_for_module(m) = sys(Sys_ext, LLVM_CREATE_FUNCTION_PASS_MANAGER_FOR_MODULE, m)
-LET llvm_add_promote_memory_to_register_pass(pm) = sys(Sys_ext, LLVM_ADD_PROMOTE_MEMORY_TO_REGISTER_PASS, pm)
-LET llvm_add_instruction_combining_pass(pm) = sys(Sys_ext, LLVM_ADD_INSTRUCTION_COMBINING_PASS, pm)
-LET llvm_add_reassociate_pass(pm) = sys(Sys_ext, LLVM_ADD_REASSOCIATE_PASS, pm)
-LET llvm_add_gvnpass(pm) = sys(Sys_ext, LLVM_ADD_GVNPASS, pm)
-LET llvm_add_cfgsimplification_pass(pm) = sys(Sys_ext, LLVM_ADD_CFGSIMPLIFICATION_PASS, pm)
-LET llvm_initialize_function_pass_manager(fpm) = sys(Sys_ext, LLVM_INITIALIZE_FUNCTION_PASS_MANAGER, fpm)
-LET llvm_run_function_pass_manager(fpm, f) = sys(Sys_ext, LLVM_RUN_FUNCTION_PASS_MANAGER, fpm, f)
-LET llvm_dispose_pass_manager(pm) = sys(Sys_ext, LLVM_DISPOSE_PASS_MANAGER, pm)
 LET llvm_get_param(fn, index) = sys(Sys_ext, LLVM_GET_PARAM, fn, index)
 LET llvm_build_icmp(b, op, lhs, rhs, name) = sys(Sys_ext, LLVM_BUILD_ICMP, b, op, lhs, rhs, name)
 LET llvm_int1type_in_context(c) = sys(Sys_ext, LLVM_INT1TYPE_IN_CONTEXT, c)
@@ -291,9 +266,6 @@ LET llvm_const_array(element_ty, constant_vals, length) = sys(Sys_ext, LLVM_CONS
 LET llvm_get_next_instruction(inst) = sys(Sys_ext, LLVM_GET_NEXT_INSTRUCTION, inst)
 LET llvm_get_first_instruction(bb) = sys(Sys_ext, LLVM_GET_FIRST_INSTRUCTION, bb)
 LET llvm_is_aterminator_inst(inst) = sys(Sys_ext, LLVM_IS_ATERMINATOR_INST, inst)
-LET llvm_add_new_gvnpass(pm) = sys(Sys_ext, LLVM_ADD_NEW_GVNPASS, pm)
-LET llvm_add_constant_propagation_pass(pm) = sys(Sys_ext, LLVM_ADD_CONSTANT_PROPAGATION_PASS, pm)
-LET llvm_add_partially_inline_lib_calls_pass(pm) = sys(Sys_ext, LLVM_ADD_PARTIALLY_INLINE_LIB_CALLS_PASS, pm)
 LET llvm_set_alignment(v, bytes) = sys(Sys_ext, LLVM_SET_ALIGNMENT, v, bytes)
 LET llvm_delete_basic_block(bb) = sys(Sys_ext, LLVM_DELETE_BASIC_BLOCK, bb)
 LET llvm_build_free(b, pointer_val) = sys(Sys_ext, LLVM_BUILD_FREE, b, pointer_val)

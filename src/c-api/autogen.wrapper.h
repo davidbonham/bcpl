@@ -1,6 +1,4 @@
 BCPLWORD llvm_set_message_buffer(BCPLWORD s);
-BCPLWORD llvm_initialize_core(BCPLWORD r);
-
 BCPLWORD llvm_shutdown(void);
 
 BCPLWORD llvm_context_create(void);
@@ -169,8 +167,6 @@ BCPLWORD llvm_build_alloca(BCPLWORD b, BCPLWORD ty, BCPLWORD name);
 
 BCPLWORD llvm_build_array_alloca(BCPLWORD b, BCPLWORD ty, BCPLWORD val, BCPLWORD name);
 
-BCPLWORD llvm_build_load(BCPLWORD b, BCPLWORD pointer_val, BCPLWORD name);
-
 BCPLWORD llvm_build_load2(BCPLWORD b, BCPLWORD ty, BCPLWORD pointer_val, BCPLWORD name);
 
 BCPLWORD llvm_build_store(BCPLWORD b, BCPLWORD val, BCPLWORD ptr);
@@ -186,24 +182,6 @@ BCPLWORD llvm_build_int_to_ptr(BCPLWORD b, BCPLWORD val, BCPLWORD dest_ty, BCPLW
 BCPLWORD llvm_verify_module(BCPLWORD m, BCPLWORD action, BCPLWORD out_message);
 
 BCPLWORD llvm_get_initializer(BCPLWORD global_var);
-
-BCPLWORD llvm_create_function_pass_manager_for_module(BCPLWORD m);
-
-BCPLWORD llvm_add_promote_memory_to_register_pass(BCPLWORD pm);
-
-BCPLWORD llvm_add_instruction_combining_pass(BCPLWORD pm);
-
-BCPLWORD llvm_add_reassociate_pass(BCPLWORD pm);
-
-BCPLWORD llvm_add_gvnpass(BCPLWORD pm);
-
-BCPLWORD llvm_add_cfgsimplification_pass(BCPLWORD pm);
-
-BCPLWORD llvm_initialize_function_pass_manager(BCPLWORD fpm);
-
-BCPLWORD llvm_run_function_pass_manager(BCPLWORD fpm, BCPLWORD f);
-
-BCPLWORD llvm_dispose_pass_manager(BCPLWORD pm);
 
 BCPLWORD llvm_get_param(BCPLWORD fn, BCPLWORD index);
 
@@ -260,12 +238,6 @@ BCPLWORD llvm_get_next_instruction(BCPLWORD inst);
 BCPLWORD llvm_get_first_instruction(BCPLWORD bb);
 
 BCPLWORD llvm_is_aterminator_inst(BCPLWORD inst);
-
-BCPLWORD llvm_add_new_gvnpass(BCPLWORD pm);
-
-BCPLWORD llvm_add_constant_propagation_pass(BCPLWORD pm);
-
-BCPLWORD llvm_add_partially_inline_lib_calls_pass(BCPLWORD pm);
 
 BCPLWORD llvm_set_alignment(BCPLWORD v, BCPLWORD bytes);
 
