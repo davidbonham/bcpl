@@ -243,7 +243,7 @@ def generate_wrapper(return_type, function, arguments, has_args=True):
         result += f'    {function}({llvm_arguments});\n'
         result += '    return 0;\n'
     else:
-        result += f'    return (BCPLWORD){function}({llvm_arguments});\n'
+        result += f'    return (BCPLWORD)(uintptr_t){function}({llvm_arguments});\n'
     result += '}\n'
     #if has_strings: result += '*/\n'
     result += '\n'
