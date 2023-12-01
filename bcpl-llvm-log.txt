@@ -14,15 +14,57 @@ set up
            genif.py      generates the LLVM C API
 
 
+Note that the comments about not needing all of the BCPL64* enviroment
+variables in MR's README are lies. My setup defines them because it 
+needs to.
+
 Now I can compile hello.b to ocode in /tmp
 
--- building of c api files
+done -- building of c api files
 
 export BL_ROOT=/home/david/bcpl-llvm
 python3 $BL_ROOT/scripts/genif.py <$BL_ROOT/src/selected_api.h $BL_ROOT/src/c-api/autogen
 
 -- building of my own cintsys64 including the c-api
+
+Let's not modify the official distribution, we'll just copy files from there and add
+our own. We'll need to take a copy of extfn64.c to extend.
+
+Problem: the llvm-c include files are not present. It looks like the llvm package
+doesn't contain as much as I need and I need to build the llvm libraries myself.
+
+Download and untar llvm-project-17.0.6
+tar --xz -x -v -f llvm...
+cd llvm-project-17
+sudo apt install cmake
+cmake -S llvm -B build -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug
+make -C build
+
+The above seemed to be using the clang++ in /usr/lib/llvm-17/bin so
+the earlier 
+
+   22  sudo apt install llvm-toolchain-jammy
+
+might be needed.
+
+
+My own cintsys64 now linking and running in bin. Problems:
+
+1. Removal of optimisation because of pass manager rework
+
+Look at the git history for the passes we removed:
+
+LLVMAddPromoteMemoryToRegisterPass
+LLVMAddReassociatePass
+LLVMAddGVNPass
+LLVMAddCFGSimplificationPass
+LLVMAddConstantPropagatePass
+LLVMAddPartiallyInlineLibCallsPass
+
+
 -- execution of bcpl
+
+1. Try to compile my bcpl - 
 
 
 
