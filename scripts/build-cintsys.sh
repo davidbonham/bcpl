@@ -19,11 +19,11 @@ echo OBJ=$OBJ
 
 
 # Create the LLVM C binding
-gcc -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I `llvm-config --includedir` \
+gcc -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I `llvm-config --includedir` \
     -o ${BL_ROOT}/obj/llvm_bcpl_binding.o -c ${BL_ROOT}/src/llvm_bcpl_binding.c
 
 # Create our bespoke cintsys dispatcher for external functions
-gcc -DEXTavail -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o ${BL_ROOT}/obj/extfn.o -c ${BL_ROOT}/src/extfn.c
+gcc -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o ${BL_ROOT}/obj/extfn.o -c ${BL_ROOT}/src/extfn.c
 
 gcc  -Xlinker -Map=/tmp/output.map -o ${BL_ROOT}/bin/cintsys64  ${OBJ}/cinterp.o ${OBJ}/fasterp.o \
        ${OBJ}/kblib.o ${OBJ}/cfuncs.o \
