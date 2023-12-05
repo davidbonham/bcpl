@@ -48,7 +48,18 @@ the earlier
 might be needed.
 
 
-My own cintsys64 now linking and running in bin. Problems:
+My own cintsys64 now linking and running in bin. 
+
+Assumptions:
+
+The official distribution is in ~/official_bcpl_release and has been
+built - the scripts in my scripts directory define environment 
+variables to allow the location to be changed
+
+There is a built version of LLVM 
+
+
+Problems:
 
 1. Removal of optimisation because of pass manager rework
 
@@ -61,12 +72,53 @@ LLVMAddCFGSimplificationPass
 LLVMAddConstantPropagatePass
 LLVMAddPartiallyInlineLibCallsPass
 
+It looks like everything was built against the ubuntu apt installed llvm-17?
+In which case I don't need my own build unless I need to debug.
 
--- execution of bcpl
+To make a debug build:
 
-1. Try to compile my bcpl - 
+tar --xz -x -f '/mnt/c/Users/David Bonham/Downloads/llvm-project-17.0.6.src.tar.xz'
+mkdir llvm-build
+cd llvm-build
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DLLVM_TARGETS_TO_BUILD=host ~/llvm-project-17.0.6.src/llvm
 
+Currently compiling the llvm bcpl compiler like this, to get the syn and trn headers:
 
+env BCPL64HDRS=/home/david/official_bcpl_release/BCPL/cintcode:bcpl-llvm/src:$BCPL64HDRS ~/bcpl-llvm/bin/cintsys64  -c  bcpl t64 gdefs bcpl-llvm/src/bcpl-llvm.b to mybcpl
 
+and running it like this:
 
+env BCPL64HDRS=/home/david/official_bcpl_release/BCPL/cintcode:bcpl-llvm/src:$BCPL64HDRS gdb ~/bcpl-llvm/bin/cintsys64 # -f -v -c  mybcpl /tmp/foo.b to foo.ll
+
+to discover that arguments are being passed as 0.
+
+---------------------------------------------------------------
+To push my repo to github I did:
+
+1. Login to github 
+2. Create a new repo bcpl
+3. In bcpl-llvm directory:
+4. git branch --move master main
+5. git remote add origin https://github.com/davidbonham/bcpl.git
+
+Now at github.org, add a personal access token that expires one day with scopes repo and read:org
+
+6. Install githup app: sudo apt install gh
+7. Start a session: 
+
+bcpl-llvm> gh auth login
+? What account do you want to log into? GitHub.com
+? What is your preferred protocol for Git operations? HTTPS
+? Authenticate Git with your GitHub credentials? Yes
+? How would you like to authenticate GitHub CLI? Paste an authentication token
+Tip: you can generate a Personal Access Token here https://github.com/settings/tokens
+The minimum required scopes are 'repo', 'read:org', 'workflow'.
+? Paste your authentication token: ****************************************
+- gh config set -h github.com git_protocol https
+✓ Configured git protocol
+✓ Logged in as davidbonham
+
+8. git push -u origin main
+
+and all is done.
 
