@@ -1,7 +1,7 @@
 GET "libhdr"
 GET "bcplfecg"
 
-GET "../capi/autogen.llvmhdr"
+GET "c-api/autogen.llvmhdr"
 
 MANIFEST
 $(
@@ -353,7 +353,7 @@ $)
 
 LET ss_pop(name) = VALOF $(
     LET lv = ss_popleft()
-    RESULTIS llvm_build_load(builder, lv, name)
+    RESULTIS llvm_build_load2(builder, word_type, lv, name)
 $)
 
 LET stk_backtrace() BE $(
@@ -1296,7 +1296,7 @@ $(
     char_ptr := llvm_build_gep2(builder, char_type, string_ptr, indices, 1, "getbyte.charptr")
 
     // Load the character from the string
-    char := llvm_build_load(builder, char_ptr, "getbyte.char")
+    char := llvm_build_load2(builder, char, char_ptr, "getbyte.char")
 
     // Extend it to a bcpl word
     charword := llvm_build_zext(builder, char, word_type, "getbyte.charword")
@@ -1498,7 +1498,7 @@ $(
         $)
     $)
 
-    static_contents := llvm_build_load(builder, lab_get_static(label), "lf.static.value")
+    static_contents := llvm_build_load2(builder, word_type, lab_get_static(label), "lf.static.value")
     ss_push(static_contents)
 $)
 
@@ -1506,7 +1506,7 @@ AND cg_lg(n) BE
 $(
     // Push the contents of a global onto the stack
     LET gv_address = build_array_element_ref(builder, llvm_array_type(word_type, GLOBALVECTORSIZE), G, n)
-    LET gv_value = llvm_build_load(builder, gv_address, "lg.value")
+    LET gv_value = llvm_build_load2(builder, word_type, gv_address, "lg.value")
     ss_push(gv_value)
  $)
 
@@ -1539,7 +1539,7 @@ $(
     // for the right value only for statics, not tables so we know this
     // value is a bcpl word.
     LET dummy = lab_declare(n, LABEL_STATIC)
-    LET value = llvm_build_load(builder, lab_get_static(n), "ll.value")
+    LET value = llvm_build_load2(builder, word_type, lab_get_static(n), "ll.value")
 
     // Push it onto our simulated stack
     ss_push(value)
@@ -1583,7 +1583,7 @@ $)
 AND cg_lp(n) BE 
 $(
     LET cell = ss_get(n)
-    LET value = llvm_build_load(builder, cell, "lp.value")
+    LET value = llvm_build_load2(builder, word_type, cell, "lp.value")
     ss_push(value)
 $)
 
@@ -1668,7 +1668,7 @@ AND cg_rstack(n) BE $(
 
     // Restore the pending result held in A to the top of the stack once
     // we have adjusted the stack top
-    LET pending_result = llvm_build_load(builder, A, "rstack.pending")
+    LET pending_result = llvm_build_load2(builder, word_type, A, "rstack.pending")
     ss_stack(n)
     ss_push(pending_result)
 $)
@@ -1740,7 +1740,7 @@ $(
     LET bcpl_address = ss_pop("rv.bcpladdress")
     LET llvm_address = llvm_build_shl(builder, bcpl_address, llvm_const_int(word_type, 3, 0), "rv.llvmaddr")
     LET lv = llvm_build_int_to_ptr(builder, llvm_address, llvm_pointer_type(word_type, 0), "rv.lv")
-    LET rv = llvm_build_load(builder, lv, "rv.rv")
+    LET rv = llvm_build_load2(builder, word_type, lv, "rv.rv")
     ss_push(rv)
 $)
 
