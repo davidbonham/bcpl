@@ -518,7 +518,7 @@ BCPLWORD llvm_build_call2(BCPLWORD builder, BCPLWORD signature, BCPLWORD functio
     if (extfn_tracing)
     {
         print_message("signature", LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)signature));
-        printf("num_args=%d\n", num_args);
+        printf("num_args=%ld\n", num_args);
         for (i = 0; i < num_args; i += 1) print_message("arg", LLVMPrintValueToString((LLVMValueRef)args_copy[i]));
     }
 
