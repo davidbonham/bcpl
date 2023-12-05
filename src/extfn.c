@@ -65,14 +65,13 @@ const char* llvm_name[] =
 bool extfn_tracing;
 
 BCPLWORD extfn(BCPLWORD *a, BCPLWORD *g, BCPLWORD *W) {
-
   if (LLVM_START_MARKER < a[0] && a[0] < LLVM_END_MARKER)
   {
     EXT_LLVM_table_entry_t* entry = &EXT_LLVM_table[a[0]];
     if (extfn_tracing)
     {
-        printf("          llvm fno=%d(%s)", a[0], llvm_name[a[0]]);
-        for (int i = 1; i <= entry->args; i += 1) printf(" a%d=0x%x", i, a[i]);
+        printf("          llvm fno=%ld(%s)", a[0], llvm_name[a[0]]);
+        for (int i = 1; i <= entry->args; i += 1) printf(" a%d=0x%lx", i, a[i]);
         printf("\n");
     }
     switch (entry->args)
@@ -89,12 +88,12 @@ BCPLWORD extfn(BCPLWORD *a, BCPLWORD *g, BCPLWORD *W) {
     }
   }
 
-  printf("extfn: not in %d < f < %d - fno=%d a1=%d a2=%d a3=%d a4=%d\n",
+  printf("extfn: not in %d < f < %d - fno=%ld a1=%ld a2=%ld a3=%ld a4=%ld\n",
           LLVM_START_MARKER, LLVM_END_MARKER, a[0], a[1], a[2], a[3], a[4]);
   switch(a[0]) 
   {
     default:
-      printf("extfn: Unknown op: fno=%d a1=%d a2=%d a3=%d a4=%d\n",
+      printf("extfn: Unknown op: fno=%ld a1=%ld a2=%ld a3=%ld a4=%ld\n",
               a[0], a[1], a[2], a[3], a[4]);
       return 0;
 
@@ -106,13 +105,13 @@ BCPLWORD extfn(BCPLWORD *a, BCPLWORD *g, BCPLWORD *W) {
       }
 
     case EXT_Testfn:  // Set result2 and return a result.
-        printf("extfn: fno=%d a1=%d a2=%d a3=%d\n",
+        printf("extfn: fno=%ld a1=%ld a2=%ld a3=%ld\n",
               a[0], a[1], a[2], a[3]);
         g[Gn_result2] = a[1]*a[2] - a[3];
         return a[1]*a[2] + a[3];
 
     case EXT_Hello:
-	      printf("extfn: hello %d %d\n", a[0], a[1]);
+	      printf("extfn: hello %ld %ld\n", a[0], a[1]);
 	      return a[0] > a[1] ? a[0] : a[1];
   }
 }
