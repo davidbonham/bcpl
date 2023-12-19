@@ -8,4 +8,4 @@ GET "../com/bcpltrn.b"
 
 .
 
-GET "llvmcg.b"
+GET "bcplcgllvm.b"
