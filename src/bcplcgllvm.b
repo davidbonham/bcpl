@@ -128,6 +128,7 @@ $(
 
     section_mark             // workspace level at start of section
     is_current_section_empty // Stops us emitting unused initial section
+    is_unreachable           // Last OCODE op was a FNRN or RTRN
 
     ocode_buffer             // Read ahead of incoming O-code
     ocode_buffer_next = READAHEAD 
@@ -180,7 +181,11 @@ LET ws_avail() = workspace_size - (workspace_free - workspace_base)
 //  #####  # # ## # #    # #      #    #   #   #####  #    #     #####    #   #    # #      ####   
 //       # # #    # #    # #      ######   #   #      #    #          #   #   ###### #      #  #   
 // #     # # #    # #    # #      #    #   #   #      #    #    #     #   #   #    # #    # #   #  
-//  #####  # #    #  ####  ###### #    #   #   ###### #####      #####    #   #    #  ####  #    #                                                                       
+//  #####  # #    #  ####  ###### #    #   #   ###### #####      #####    #   #    #  ####  #    # 
+//
+// Because the simulated stack may be huge (containing VECs and so on) we only keep track of the
+// significant locations. We use a map (F_MAP) that maps a value X onto the LLVM location (an 
+// alloca node) for P!X.
 
 STATIC $( 
     stk_workspace   // Contents of our stack of call frames
@@ -204,7 +209,7 @@ MANIFEST $(
     F_H        = 3      // This frame's high water mark
     F_ALLOC    = 4      // The last alloca instruction for this frame
     F_MAP      = 5      // Address of the first cell of the map
-    F_P        = 6      // Address of the first cell in this frame's P
+    F_P        = 6      // Address of the first cell in this frame's Psparse
     F_FUNCTION = 7      // The function being compiled
     F_BB       = 8      // The function's current basic block
     F_HDRSIZE  = 9      // Number of fixed words in the frame header
@@ -212,7 +217,9 @@ $)
 
 
 LET stk_trimframe() BE $(
-    // Trim P in the emitted code to the size we actually used
+    // Trim P in the emitted code to the size we actually used. All of the
+    // alloca instructions we have created above the hight water mark are
+    // deleted from their owning parent block.
     LET deletions = stk_frame!F_SIZE - stk_frame!F_H
     LET current = stk_frame!F_ALLOC
     FOR i = 1 TO deletions DO $(
@@ -224,6 +231,7 @@ $)
 
 LET stk_popframe() BE $(
 
+    
     function := stk_frame!F_FUNCTION
     basicblock := stk_frame!F_BB
 
@@ -245,12 +253,16 @@ $(
         UNLESS M!i < n DO M!i := -1
     $)
 
-    stk_frame!F_S := n    
+    stk_frame!F_S := n   
+    stk_frame!F_H := n 
     IF debug = 2 THEN writef("ss_stack: S=%N*N", stk_frame!F_S)
 $)
 
 // Given n, a position in the simulated stack, return the corresponding 
-// index in P of the alloca variable holding its contents.
+// index X in our sparse vector Psparse (so Psparse!X holds the alloca 
+// variable holding its contents). M!i is the index in Psparse of P!i.
+//
+// If there is no such entry, return -1.
 LET ss_lookup(n) = VALOF
 $(
     // Find the index of stack position n else -1
@@ -259,10 +271,10 @@ $(
     $(
         IF M!i = n THEN
         $(
-            IF debug = 2 THEN writef("ss_lookup: P!%N at index %N*N", n, i)
+            IF debug = 2 THEN writef("ss_lookup: P!%N at Psparse!%N*N", n, i)
             RESULTIS i
         $)
-    $)  
+    $) 
     RESULTIS -1  
 $)
 
@@ -278,26 +290,27 @@ $)
 
 LET ss_set(location, value) BE $(
 
-    LET M, P = stk_frame!F_MAP, stk_frame!F_P
+    LET M, Psparse = stk_frame!F_MAP, stk_frame!F_P
 
     // Create a stack variable above the current stack top as a reference
     // to a stack variable to be declared in the near future
     UNLESS ss_lookup(location) = -1 THEN cgerror("ss_set: %N already exists*N", location)
     M!location := location
-    P!location := value
+    Psparse!location := value
 $)
 
 LET ss_push(value) BE 
 $(
-    LET M, P, S = stk_frame!F_MAP, stk_frame!F_P, stk_frame!F_S
+    LET M, Psparse, S = stk_frame!F_MAP, stk_frame!F_P, stk_frame!F_S
 
-    // Find a free cell in P 
+    // Find a free cell in Psparse - that is, an alloca location not 
+    // currently in use. 
     LET free = ss_lookup(-1)
     IF free = -1 THEN cgerror("simulated stack has overflowed")
 
     // Push the value into the free cell and mark it in the map as representing
     // P[S]
-    llvm_build_store(builder, value, P!free)
+    llvm_build_store(builder, value, Psparse!free)
     M!free := S
     S +:= 1
 
@@ -320,19 +333,19 @@ $)
 
 LET ss_get(n) = VALOF
 $(
-    LET M, P = stk_frame!F_MAP, stk_frame!F_P
+    LET M, Psparse = stk_frame!F_MAP, stk_frame!F_P
 
     // Find the stack element at S-1
     LET location = ss_lookup(n)
     IF location = -1 DO cgerror("Simulated stack element %N missing*N", n)
     IF debug = 2 THEN writef("ss_get %N*N", n)
-    RESULTIS P!location
+    RESULTIS Psparse!location
 $)
 
 // Pop the top item off the stack, returning a load from its cell
 LET ss_popleft() = VALOF
 $(
-    LET M, P, S = stk_frame!F_MAP, stk_frame!F_P, stk_frame!F_S
+    LET M, Psparse, S = stk_frame!F_MAP, stk_frame!F_P, stk_frame!F_S
 
     // Find the cell that holds P[S-1], the top of the stack
     LET location = ss_lookup(S-1)
@@ -348,7 +361,7 @@ $(
 
     IF debug = 2 THEN writef("ss_pop S now %N*N", S-1)
 
-    RESULTIS P!location
+    RESULTIS Psparse!location
 $)
 
 LET ss_pop(name) = VALOF $(
@@ -378,7 +391,7 @@ $)
 
 LET stk_pushframe(size) BE $(
 
-    LET P = ?
+    LET Psparse = ?
 
     // Point to the base of the new frame
     LET new_frame = stk_free
@@ -398,11 +411,11 @@ LET stk_pushframe(size) BE $(
     new_frame!F_FUNCTION := function
     new_frame!F_BB       := basicblock
 
-    // Allocate stack locations to the cells in P and record the last
-    // of them 
-    P := new_frame!F_P
+    // Allocate stack locations to the cells in Psparse and record the last
+    // of them. 
+    Psparse := new_frame!F_P
     FOR i = 0 TO size-1 DO $(
-        P!i := llvm_build_alloca(builder, word_type, "M")
+        Psparse!i := llvm_build_alloca(builder, word_type, "M")
     $)
     new_frame!F_ALLOC := llvm_get_last_instruction(basicblock)
 
@@ -778,8 +791,7 @@ $)
 LET emit_and_destroy_module() BE
 $(
     // We don't keep the global function, which should now be current
-    llvm_delete_function(function)
-
+    // DB 19-dec-2023 - doing this makes module unprintable: llvm_delete_function(function)
     UNLESS is_current_section_empty DO
     $(
         LET r = llvm_verify_module(module, LLVM_PRINT_MESSAGE_ACTION)
@@ -821,9 +833,7 @@ $)
 
 AND codegenerate(workspace, workspace_size) BE
 $(
-
     LET l_param_types = VEC 10
-     
     IF errcount > 0 RETURN
     writef("LLVM code generator with %N words of workspace*N", workspace_size)
     llvm_tracing(debug = 2 -> 1, 0)
@@ -847,6 +857,7 @@ $(
 
     section_mark := ws_mark()
     is_current_section_empty := TRUE
+    is_unreachable := FALSE
     // A default section
     cg_section("bcplmain")
 
@@ -911,6 +922,7 @@ $(
     LET op = llvm_rdn()
     LET n, label, save, num_globals, global_number = ?, ?, ?, ?, ?
 
+    is_unreachable := FALSE
     UNTIL op = 0 DO
     $(
         IF debug=2 THEN dump_stack()
@@ -925,11 +937,11 @@ $(
             CASE s_eq:          nl(); cg_eq();          ENDCASE
             CASE s_eqv:         nl(); cg_eqv();         ENDCASE
             CASE s_false:       nl(); cg_const(FALSE);  ENDCASE
-            CASE s_finish:      nl(); cg_finish();      ENDCASE
-            CASE s_fnrn:        nl(); cg_fnrn();        ENDCASE
+            CASE s_finish:      nl(); cg_finish();  is_unreachable := TRUE;    ENDCASE
+            CASE s_fnrn:        nl(); cg_fnrn(); is_unreachable := TRUE; ENDCASE
             CASE s_ge:          nl(); cg_ge();          ENDCASE
             CASE s_getbyte:     nl(); cg_getbyte();     ENDCASE
-            CASE s_goto:        nl(); cg_goto();        ENDCASE
+            CASE s_goto:        nl(); cg_goto(); is_unreachable := TRUE;       ENDCASE
             CASE s_gr:          nl(); cg_gr();          ENDCASE
             CASE s_le:          nl(); cg_le();          ENDCASE
             CASE s_logand:      nl(); cg_logand();      ENDCASE
@@ -944,7 +956,7 @@ $(
             CASE s_putbyte:     nl(); cg_putbyte();     ENDCASE
             CASE s_query:       nl(); cg_query();       ENDCASE
             CASE s_rshift:      nl(); cg_rshift();      ENDCASE
-            CASE s_rtrn:        nl(); cg_rtrn();        ENDCASE
+            CASE s_rtrn:        nl(); cg_rtrn(); is_unreachable := TRUE; ENDCASE
             CASE s_rv:          nl(); cg_rv();          ENDCASE
             CASE s_stind:       nl(); cg_stind();       ENDCASE
             CASE s_store:       nl(); cg_store();       ENDCASE
@@ -956,8 +968,8 @@ $(
             CASE s_fnap:        n := llvm_rdn(); wf(" %N*N", n); cg_rtap(n,TRUE);  ENDCASE
             CASE s_jf:          n := llvm_rdn(); wf(" %N*N", n); cg_jf(n);         ENDCASE
             CASE s_jt:          n := llvm_rdn(); wf(" %N*N", n); cg_jt(n);         ENDCASE
-            CASE s_jump:        n := llvm_rdn(); wf(" %N*N", n); cg_jump(n);       ENDCASE
-            CASE s_lab:         n := llvm_rdn(); wf(" %N*N", n); cg_lab(n);        ENDCASE
+            CASE s_jump:        n := llvm_rdn(); wf(" %N*N", n); cg_jump(n);       is_unreachable := TRUE; ENDCASE
+            CASE s_lab:         n := llvm_rdn(); wf(" %N*N", n); cg_lab(n);        is_unreachable := FALSE; ENDCASE
             CASE s_lf:          n := llvm_rdn(); wf(" %N*N", n); cg_lf(n);         ENDCASE
             CASE s_lg:          n := llvm_rdn(); wf(" %N*N", n); cg_lg(n);         ENDCASE
             CASE s_ll:          n := llvm_rdn(); wf(" %N*N", n); cg_ll(n);         ENDCASE
@@ -1004,6 +1016,7 @@ $(
                 wf(" %s*N", name)
                 cg_section(name)
                 is_current_section_empty := TRUE
+                is_unreachable := FALSE
             ENDCASE
 
             CASE s_entry:      
@@ -1013,6 +1026,7 @@ $(
                 llvm_rdn() // skip SAVE
                 save := llvm_rdn()
                 wf(" %N %S SAVE %N*N", label, name, save)
+                is_unreachable := FALSE
                 cg_entry(label, name, save)
             ENDCASE
 
@@ -1174,7 +1188,6 @@ $(
     LET r = ?
 
     // Get rid of the excess allocs
-    
     stk_trimframe()
 
     // If the last operation is a jump back to the top of the loop, we will
@@ -1193,7 +1206,7 @@ $(
     dump_function_bbs("", function)
 
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
-    UNLESS r= 0 DO cgerror("unable to verify function*N")
+    UNLESS r = 0 DO cgerror("unable to verify function*N")
 
     // This is the end of the function so we are no longer nested in it.
     // Restore the state for the outer function
@@ -1217,10 +1230,6 @@ $(
     LET argc = save - savespacesize
     LET function_type = llvm_function_type(word_type, parameter_types, argc, 0)
 
-    // Stack the current function - there will always be one because of
-    // the enclosing dummy function that deals with jumps around routines
-    stk_pushframe(MAXFRAMESIZE)
-
     // Add a function of this type to the current module
     function := llvm_add_function(module, name, function_type)
     llvm_set_section(function, module_text_section)
@@ -1235,6 +1244,10 @@ $(
     // Start the function of with a basic block at its entry
     basicblock := llvm_append_basic_block(function, "entry")
     llvm_position_builder_at_end(builder, basicblock)
+
+    // Stack the current function - there will always be one because of
+    // the enclosing dummy function that deals with jumps around routines
+    stk_pushframe(MAXFRAMESIZE)
 
 
     // Set the stack frame up to be empty (bar the three linkage words).
@@ -1268,10 +1281,14 @@ $)
 
 AND cg_fnrn() BE
 $(
-    // The variable on the top of the stack should be the result so get
-    // its value 
-    LET result = ss_pop("fnrn.result")
-    llvm_build_ret(builder, result)
+    // See cg_ln for the fix for unreachable code we've added here
+    UNLESS is_unreachable
+    $(
+        // The variable on the top of the stack should be the result so get
+        // its value 
+        LET result = ss_pop("fnrn.result")
+        llvm_build_ret(builder, result)
+    $)
 $)
 
 AND cg_getbyte() BE
@@ -1512,9 +1529,16 @@ $(
 
 AND cg_ln(n) BE 
 $(
-    // Create a constant and push its LLVMValueRef
-    LET value = llvm_const_int(word_type, n, 0)
-    ss_push(value)
+    // This is a fix for an oddity in BCPLTRN which generates an LN 0 FNRN
+    // at the end of a function even if we have already emitted a FNRN or
+    // RTRN. We track this case and if we are unreachable, ignore this LN 
+    // (and we will igore the following FNRN)
+    UNLESS is_unreachable 
+    $(
+        // Create a constant and push its LLVMValueRef
+        LET value = llvm_const_int(word_type, n, 0)
+        ss_push(value)
+    $)
 $)
 
 AND cg_llg(n) BE
@@ -1813,12 +1837,14 @@ $(
     // We create an outmost function in the module (so that the initual 
     // JUMP around the text can be handled normally &c) which will be
     // discarded when we reach the end of the current module.
-
     signature := llvm_function_type(word_type, parameter_types, 0, 0)
     function := llvm_add_function(module, "__bcpl_dummy_function", signature)
     basicblock := llvm_append_basic_block(function, "__bcpl_dummy_function_entry")
     llvm_position_builder_at_end(builder, basicblock)
-    stk_pushframe(8)
+    stk_pushframe(3)
+
+    // Fake a RTRN
+    cg_rtrn()
 $)
 
 AND cg_stind() BE
@@ -1933,7 +1959,7 @@ $(
 
         FOR p_index = stk_frame!F_S TO new_S DO $(
 
-            // NB: This is the index into the map, not into P:
+            // NB: This is the index into the map, not into Psparse:
             LET ss_location = ss_lookup(p_index)
             UNLESS ss_location = -1 DO $(
 
