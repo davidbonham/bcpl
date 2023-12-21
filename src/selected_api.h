@@ -299,4 +299,28 @@ void LLVMAddIncoming(LLVMValueRef PhiNode, LLVMValueRef *IncomingValues,
 
 unsigned LLVMCountIncoming(LLVMValueRef PhiNode);
 
+LLVMErrorRef LLVMRunPasses(LLVMModuleRef M, const char *Passes,
+                           LLVMTargetMachineRef TM,
+                           LLVMPassBuilderOptionsRef Options);
+
+void LLVMInitializeAllTargetInfos(void);
+
+void LLVMGetDefaultTargetTriple(void);
+
+LLVMBool LLVMGetTargetFromTriple(const char *Triple, LLVMTargetRef* T, char** ErrorMessage);
+
+LLVMTargetMachineRef LLVMCreateTargetMachine(LLVMTargetRef T, const char* Triple, 
+                                             const char* CPU, const char* Features,  
+                                             LLVMCodeGenOptLevel Level, LLVMRelocMode Reloc, LLVMCodeModel CodeModel);
+
+void LLVMDisposeTargetMachine(LLVMTargetMachineRef T);
+
+LLVMPassBuilderOptionsRef LLVMCreatePassBuilderOptions(void);
+
+void LLVMGetErrorMessage(LLVMErrorRef Err);
+
+void LLVMDisposePassBuilderOptions(LLVMPassBuilderOptionsRef Options);
+
+void LLVMGetTargetName(LLVMTargetRef T);
+
 

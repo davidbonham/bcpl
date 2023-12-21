@@ -188,6 +188,24 @@ BCPLWORD llvm_add_incoming(BCPLWORD phi_node, BCPLWORD incoming_values, BCPLWORD
 }
 
 ''',
+
+    'LLVMGetDefaultTargetTriple': '''
+BCPLWORD llvm_get_default_target_triple()
+{
+    char* const message = LLVMGetDefaultTargetTriple();
+    return build_message("llvm_get_default_target_triple", message);
+}
+''',
+    'LLVMGetTargetFromTriple': '''
+BCPLWORD llvm_get_target_from_triple(BCPLWORD target_triple, BCPLWORD unused_target, BCPLWORD unused_error)
+{
+    // We return the triple as the result and the error via llvm_result
+    char* error_message;
+    LLVMTargetRef target;
+    LLVMBool failed = LLVMGetTargetFromTriple(b2c_string1(target_triple), &target, &error_message);
+    return failed ? build_message("llvm_get_target_from_triple", error_message) : (BCPLWORD)(uintptr_t)target;
+}    
+''',
 }
 
 def convert(camel):
@@ -256,7 +274,6 @@ def generate_header(return_type, function, arguments, has_args=True):
         parameter_list = ', '.join([f'BCPLWORD {convert(argument[1])}' for argument in arguments])
     else:
         parameter_list = 'void'
-
     return f'BCPLWORD {convert(function)}({parameter_list});\n\n'
 
 wrappers = ''

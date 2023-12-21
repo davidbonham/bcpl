@@ -142,6 +142,16 @@ $(
     LLVM_BUILD_PHI
     LLVM_ADD_INCOMING
     LLVM_COUNT_INCOMING
+    LLVM_RUN_PASSES
+    LLVM_INITIALIZE_ALL_TARGET_INFOS
+    LLVM_GET_DEFAULT_TARGET_TRIPLE
+    LLVM_GET_TARGET_FROM_TRIPLE
+    LLVM_CREATE_TARGET_MACHINE
+    LLVM_DISPOSE_TARGET_MACHINE
+    LLVM_CREATE_PASS_BUILDER_OPTIONS
+    LLVM_GET_ERROR_MESSAGE
+    LLVM_DISPOSE_PASS_BUILDER_OPTIONS
+    LLVM_GET_TARGET_NAME
     LLVM_END_MARKER
 $)
 
@@ -286,3 +296,13 @@ LET llvm_type_of(val) = sys(Sys_ext, LLVM_TYPE_OF, val)
 LET llvm_build_phi(b, ty, name) = sys(Sys_ext, LLVM_BUILD_PHI, b, ty, name)
 LET llvm_add_incoming(phi_node, incoming_values, incoming_blocks, count) = sys(Sys_ext, LLVM_ADD_INCOMING, phi_node, incoming_values, incoming_blocks, count)
 LET llvm_count_incoming(phi_node) = sys(Sys_ext, LLVM_COUNT_INCOMING, phi_node)
+LET llvm_run_passes(m, passes, tm, options) = sys(Sys_ext, LLVM_RUN_PASSES, m, passes, tm, options)
+LET llvm_initialize_all_target_infos() = sys(Sys_ext, LLVM_INITIALIZE_ALL_TARGET_INFOS)
+LET llvm_get_default_target_triple() = sys(Sys_ext, LLVM_GET_DEFAULT_TARGET_TRIPLE)
+LET llvm_get_target_from_triple(triple, t, error_message) = sys(Sys_ext, LLVM_GET_TARGET_FROM_TRIPLE, triple, t, error_message)
+LET llvm_create_target_machine(t, triple, cpu, features, level, reloc, code_model) = sys(Sys_ext, LLVM_CREATE_TARGET_MACHINE, t, triple, cpu, features, level, reloc, code_model)
+LET llvm_dispose_target_machine(t) = sys(Sys_ext, LLVM_DISPOSE_TARGET_MACHINE, t)
+LET llvm_create_pass_builder_options() = sys(Sys_ext, LLVM_CREATE_PASS_BUILDER_OPTIONS)
+LET llvm_get_error_message(err) = sys(Sys_ext, LLVM_GET_ERROR_MESSAGE, err)
+LET llvm_dispose_pass_builder_options(options) = sys(Sys_ext, LLVM_DISPOSE_PASS_BUILDER_OPTIONS, options)
+LET llvm_get_target_name(t) = sys(Sys_ext, LLVM_GET_TARGET_NAME, t)

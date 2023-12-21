@@ -12,6 +12,7 @@ extern BCPLWORD getvec(BCPLWORD upb);
 //#include "llvm-c/Transforms/Scalar.h"
 //#include "llvm-c/Transforms/InstCombine.h"
 //#include "llvm-c/Transforms/Utils.h"
+#include "llvm-c/Transforms/PassBuilder.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -63,6 +64,13 @@ char const* b2c_string2(BCPLWORD b)
     static char string2[256];
     return b2c_str(b, string2);
 }
+
+char const* b2c_string3(BCPLWORD b)
+{
+    static char string3[256];
+    return b2c_str(b, string3);
+}
+
 
 BCPLWORD LLVM_init(void)
 {

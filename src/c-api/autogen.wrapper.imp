@@ -817,3 +817,63 @@ BCPLWORD llvm_count_incoming(BCPLWORD phi_node)
     return (BCPLWORD)(uintptr_t)LLVMCountIncoming((LLVMValueRef)(uintptr_t)phi_node);
 }
 
+BCPLWORD llvm_run_passes(BCPLWORD m, BCPLWORD passes, BCPLWORD tm, BCPLWORD options)
+{
+    return (BCPLWORD)(uintptr_t)LLVMRunPasses((LLVMModuleRef)(uintptr_t)m, (const char*)(uintptr_t)b2c_string1(passes), (LLVMTargetMachineRef)(uintptr_t)tm, (LLVMPassBuilderOptionsRef)(uintptr_t)options);
+}
+
+BCPLWORD llvm_initialize_all_target_infos(void)
+{
+    LLVMInitializeAllTargetInfos();
+    return 0;
+}
+
+
+BCPLWORD llvm_get_default_target_triple()
+{
+    char* const message = LLVMGetDefaultTargetTriple();
+    return build_message("llvm_get_default_target_triple", message);
+}
+
+BCPLWORD llvm_get_target_from_triple(BCPLWORD target_triple, BCPLWORD unused_target, BCPLWORD unused_error)
+{
+    // We return the triple as the result and the error via llvm_result
+    char* error_message;
+    LLVMTargetRef target;
+    LLVMBool failed = LLVMGetTargetFromTriple(b2c_string1(target_triple), &target, &error_message);
+    return failed ? build_message("llvm_get_target_from_triple", error_message) : (BCPLWORD)(uintptr_t)target;
+}    
+BCPLWORD llvm_create_target_machine(BCPLWORD t, BCPLWORD triple, BCPLWORD cpu, BCPLWORD features, BCPLWORD level, BCPLWORD reloc, BCPLWORD code_model)
+{
+    return (BCPLWORD)(uintptr_t)LLVMCreateTargetMachine((LLVMTargetRef)(uintptr_t)t, (const char*)(uintptr_t)b2c_string1(triple), (const char*)(uintptr_t)b2c_string2(cpu), (const char*)(uintptr_t)b2c_string3(features), (LLVMCodeGenOptLevel)(uintptr_t)level, (LLVMRelocMode)(uintptr_t)reloc, (LLVMCodeModel)(uintptr_t)code_model);
+}
+
+BCPLWORD llvm_dispose_target_machine(BCPLWORD t)
+{
+    LLVMDisposeTargetMachine((LLVMTargetMachineRef)(uintptr_t)t);
+    return 0;
+}
+
+BCPLWORD llvm_create_pass_builder_options(void)
+{
+    return (BCPLWORD)(uintptr_t)LLVMCreatePassBuilderOptions();
+}
+
+BCPLWORD llvm_get_error_message(BCPLWORD err)
+{
+    LLVMGetErrorMessage((LLVMErrorRef)(uintptr_t)err);
+    return 0;
+}
+
+BCPLWORD llvm_dispose_pass_builder_options(BCPLWORD options)
+{
+    LLVMDisposePassBuilderOptions((LLVMPassBuilderOptionsRef)(uintptr_t)options);
+    return 0;
+}
+
+BCPLWORD llvm_get_target_name(BCPLWORD t)
+{
+    LLVMGetTargetName((LLVMTargetRef)(uintptr_t)t);
+    return 0;
+}
+

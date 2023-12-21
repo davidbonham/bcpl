@@ -83,6 +83,8 @@ BCPLWORD extfn(BCPLWORD *a, BCPLWORD *g, BCPLWORD *W) {
       case 4: return ((BCPLWORD (*)(BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD))entry->function)(a[1], a[2], a[3], a[4]);
       case 5: return ((BCPLWORD (*)(BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD))entry->function)(a[1], a[2], a[3], a[4], a[5]);
       case 6: return ((BCPLWORD (*)(BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD))entry->function)(a[1], a[2], a[3], a[4], a[5], a[6]);
+      case 7: return ((BCPLWORD (*)(BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD))entry->function)(a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
+      case 8: return ((BCPLWORD (*)(BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD, BCPLWORD))entry->function)(a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]);
       default:
         printf("too many arguments for EXT_LLVM\n");
     }

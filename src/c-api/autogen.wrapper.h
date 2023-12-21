@@ -279,3 +279,23 @@ BCPLWORD llvm_add_incoming(BCPLWORD phi_node, BCPLWORD incoming_values, BCPLWORD
 
 BCPLWORD llvm_count_incoming(BCPLWORD phi_node);
 
+BCPLWORD llvm_run_passes(BCPLWORD m, BCPLWORD passes, BCPLWORD tm, BCPLWORD options);
+
+BCPLWORD llvm_initialize_all_target_infos(void);
+
+BCPLWORD llvm_get_default_target_triple(void);
+
+BCPLWORD llvm_get_target_from_triple(BCPLWORD triple, BCPLWORD t, BCPLWORD error_message);
+
+BCPLWORD llvm_create_target_machine(BCPLWORD t, BCPLWORD triple, BCPLWORD cpu, BCPLWORD features, BCPLWORD level, BCPLWORD reloc, BCPLWORD code_model);
+
+BCPLWORD llvm_dispose_target_machine(BCPLWORD t);
+
+BCPLWORD llvm_create_pass_builder_options(void);
+
+BCPLWORD llvm_get_error_message(BCPLWORD err);
+
+BCPLWORD llvm_dispose_pass_builder_options(BCPLWORD options);
+
+BCPLWORD llvm_get_target_name(BCPLWORD t);
+
