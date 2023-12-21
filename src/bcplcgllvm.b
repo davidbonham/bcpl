@@ -71,6 +71,32 @@ MANIFEST $(
   LLVM_REAL_PREDICATE_TRUE  // Always true (always folded) 
 $)
 
+MANIFEST $(
+  // LLVMCodeGenOptLevel
+  LLVM_CODEGENLEVEL_NONE       = 0
+  LLVM_CODEGENLEVEL_LESS       = 1
+  LLVM_CODEGENLEVEL_DEFAULT    = 2
+  LLVM_CODEGENLEVEL_AGGRESSIVE = 3
+$)
+
+MANIFEST $(
+  // LLVMRelocMode
+  LLVM_RELOC_DEFAULT        = 0
+  LLVM_RELOC_STATIC         = 1
+  LLVM_RELOC_PIC            = 2
+  LLVM_RELOC_DYNAMICNOPIC   = 3
+$)
+
+MANIFEST $(
+  // LLVMCodeModel
+  LLVM_CODEMODEL_DEFAULT    = 0
+  LLVM_CODEMODEL_JITDEFAULT = 1
+  LLVM_CODEMODEL_SMALL      = 2
+  LLVM_CODEMODEL_KERNEL     = 3
+  LLVM_CODEMODEL_MEDIUM     = 4
+  LLVM_CODEMODEL_LARGE      = 5
+$)
+
 // The workspace is given to us a one long vector which we allocate
 // like a stack
 STATIC $( workspace_base; workspace_size; workspace_free;  $)
@@ -786,7 +812,39 @@ $(
     declare_global(module, number, function_as_word_ref)
 $)
 
+LET optimise_module(module) = VALOF $(
+    
+    // Use the new LLVM pass manager via the simplified llvm C binding
+    // where we pass an opt-style string. The call sequence was deduced
+    // from the LLVM unit test for the pass manager.
 
+    LET target_triple = ?
+    LET target = ?
+    LET target_machine = ?
+    LET pass_builder_options = ?
+    LET error_ref = ?
+
+    // This is a BCPL string copied from the actual triple, which the
+    // call will already have deleted by the time it returns
+    llvm_get_default_target_triple()
+    target_triple := llvm_result
+
+    llvm_initialize_all_target_infos()
+    target := llvm_get_target_from_triple(target_triple)
+    target_machine := llvm_create_target_machine(target, target_triple, "generic", "", LLVM_CODEGENLEVEL_DEFAULT, LLVM_RELOC_DEFAULT, LLVM_CODEMODEL_DEFAULT)
+    pass_builder_options := llvm_create_pass_builder_options()
+
+    error_ref := llvm_run_passes(module, "default<O2>", target_machine, pass_builder_options)
+    IF error_ref ~= 0 DO $(
+       LET message = llvm_get_error_message(error_ref)
+       writef("Optimisation pass failed: %S*N", message)
+       RESULTIS 1
+    $)
+    
+    llvm_dispose_pass_builder_options(pass_builder_options)
+    llvm_dispose_target_machine(target)
+    RESULTIS 0
+$)
 
 LET emit_and_destroy_module() BE
 $(
@@ -794,33 +852,42 @@ $(
     // DB 19-dec-2023 - doing this makes module unprintable: llvm_delete_function(function)
     UNLESS is_current_section_empty DO
     $(
-        LET r = llvm_verify_module(module, LLVM_PRINT_MESSAGE_ACTION)
-        TEST r = 0 DO
+        LET r = optimise_module(module)
+        TEST r ~= 0 DO 
         $(
-            LET text = llvm_print_module_to_string(module)
-            TEST text = 0 THEN
-            $(
-                writes("Unable to get text of module*N")
-                longjump(fin_p, fin_l)
-            $)
-            ELSE
-            $(
-                LET saved_output = output()
-                LET i = 0
-
-                selectoutput(gostream)
-                UNTIL text%i = 0 DO $(
-                    wrch(text%i)
-                    i +:= 1
-                $)
-                selectoutput(saved_output)
-                writef("Compiled section %S - %N bytes of IR*N", module_name, i)
-            $)
+            writef("Failed to optimise section %S*N", module_name)
+            longjump(fin_p, fin_l)
         $)
         ELSE
         $(
-            writef("Section %S not verified by LLVM*N", module_name)
-            longjump(fin_p, fin_l)
+            r := llvm_verify_module(module, LLVM_PRINT_MESSAGE_ACTION)
+            TEST r = 0 DO
+            $(
+                LET text = llvm_print_module_to_string(module)
+                TEST text = 0 THEN
+                $(
+                    writes("Unable to get text of module*N")
+                    longjump(fin_p, fin_l)
+                $)
+                ELSE
+                $(
+                    LET saved_output = output()
+                    LET i = 0
+
+                    selectoutput(gostream)
+                    UNTIL text%i = 0 DO $(
+                        wrch(text%i)
+                        i +:= 1
+                    $)
+                    selectoutput(saved_output)
+                    writef("Compiled section %S - %N bytes of IR*N", module_name, i)
+                $)
+            $)
+            ELSE
+            $(
+                writef("Section %S not verified by LLVM*N", module_name)
+                longjump(fin_p, fin_l)
+            $)
         $)
 
         //FIXME new pass manager llvm_dispose_pass_manager(fpm)
