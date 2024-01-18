@@ -248,8 +248,12 @@ LET stk_trimframe() BE $(
     // deleted from their owning parent block.
     LET deletions = stk_frame!F_SIZE - stk_frame!F_H
     LET current = stk_frame!F_ALLOC
+    writef("stk_trimframe: size=%N H=%N so deleting %N*N", stk_frame!F_SIZE, stk_frame!F_H, deletions)
     FOR i = 1 TO deletions DO $(
         LET t = current
+        llvm_print_value_to_string(t)
+        writef("deleting %s*n", llvm_result)
+
         current := llvm_get_previous_instruction(current)
         llvm_instruction_erase_from_parent(t)
     $)
@@ -402,7 +406,10 @@ LET stk_backtrace() BE $(
 
         writef("Frame at %N(size %N, parent=%N): S=%N H=%N*N", stk_frame, stk_frame!F_SIZE, stk_frame!F_BACK, stk_frame!F_S, stk_frame!F_H)
         FOR i = 0 TO stk_frame!F_S-1 DO $(
-            UNLESS ss_lookup(i) = -1 DO $(
+            TEST ss_lookup(i) = -1 THEN $(
+                writef("P[%N] not found*N", i)
+            $)
+            ELSE $(
                 LET cell = ss_get(i)
                 llvm_print_value_to_string(cell)
                 writef("P[%N] %S*N", i, llvm_result)
@@ -430,7 +437,7 @@ LET stk_pushframe(size) BE $(
     // Fill in the header of the new stack
     new_frame!F_BACK     := stk_frame
     new_frame!F_SIZE     := size
-    new_frame!F_S        := 0
+    new_frame!F_S        := savespacesize
     new_frame!F_H        := 0
     new_frame!F_MAP      := new_frame + F_HDRSIZE
     new_frame!F_P        := new_frame!F_MAP + size
@@ -505,7 +512,7 @@ LET dump_labels() BE $(
 $)
 
 LET dump_stack() BE $(
-    writef("dump_stack: S=%N*N", stk_frame!F_S)
+    writef("dump_stack: P=%N S=%N H=%N*N", stk_frame!F_P, stk_frame!F_S, stk_frame!F_H)
     FOR i = 0 TO stk_frame!F_S-1 DO $(
         UNLESS ss_lookup(i) = -1 DO $(
             LET value = ss_get(i)
@@ -903,14 +910,14 @@ $(
     LET l_param_types = VEC 10
     IF errcount > 0 RETURN
     writef("LLVM code generator with %N words of workspace*N", workspace_size)
-    llvm_tracing(debug = 2 -> 1, 0)
+    llvm_tracing((debug & 2) = 0 -> 0, 1)
 
     // Set up the workspace
     ws_init(workspace, workspace_size)
     context := llvm_context_create()
     builder := llvm_create_builder_in_context()
 
-    // A type for a BCPLWORD
+    // LLVM types for BCPLWORD &c, commonly used
     word_type := llvm_int64_type_in_context(context)
     char_type := llvm_int8type_in_context(context)
     float_type := llvm_double_type_in_context(context)
@@ -918,13 +925,14 @@ $(
     // Space for the readahead we need when reading O-code
     ocode_buffer := ws_alloc(READAHEAD)
 
-    // Space for LLVM to return messages
+    // Space for LLVM to return messages as BCPL strings
     llvm_result := ws_alloc(256 / 8)
     llvm_set_message_buffer(llvm_result)
 
     section_mark := ws_mark()
     is_current_section_empty := TRUE
     is_unreachable := FALSE
+
     // A default section
     cg_section("bcplmain")
 
@@ -1343,7 +1351,7 @@ $(
     // The standard says this is stop(0) and we say stop is global 2
     cg_ln(0)
     cg_lg(2)
-    cg_rtap(4)
+    cg_rtap(4, FALSE)
 $)
 
 AND cg_fnrn() BE
@@ -1818,9 +1826,10 @@ $)
 
 AND cg_rtrn() BE
 $(
+
     // This is a routine so if it is called as a function, we want something
     // recognisable
-    llvm_build_ret(builder, llvm_const_int(word_type, #XBAD0BAD0BAD0BAD0, 0))
+    UNLESS is_unreachable DO llvm_build_ret(builder, llvm_const_int(word_type, #XBAD0BAD0BAD0BAD0, 0))
 $)
 
 AND cg_rv() BE
@@ -1850,19 +1859,7 @@ $(
     // Create the new module and set up a function pass manager for
     // optimisation
     module := llvm_module_create_with_name_in_context(name, context)
-    //FIXME new pass manager fpm := llvm_create_function_pass_manager_for_module(module)
-
-    //FIXME new pass manager llvm_add_promote_memory_to_register_pass(fpm);
-    //FIXME new pass manager llvm_add_cfgsimplification_pass(fpm)
-    //FIXME new pass manager llvm_add_constant_propagation_pass(fpm)
-    //FIXME new pass manager llvm_add_new_gvnpass(fpm)
-    //FIXME new pass manager llvm_add_reassociate_pass(fpm)
-    //FIXME new pass manager llvm_add_partially_inline_lib_calls_pass(fpm)
-    //FIXME new pass manager llvm_add_instruction_combining_pass(fpm);
-    //FIXME new pass manager llvm_add_cfgsimplification_pass(fpm)
-
-    //FIXME new pass manager llvm_initialize_function_pass_manager(fpm)
-
+ 
     // Declare the global vector as an external reference
     gv_type := llvm_array_type(word_type, GLOBALVECTORSIZE)
 
@@ -1908,6 +1905,8 @@ $(
     function := llvm_add_function(module, "__bcpl_dummy_function", signature)
     basicblock := llvm_append_basic_block(function, "__bcpl_dummy_function_entry")
     llvm_position_builder_at_end(builder, basicblock)
+
+    // Create a dummy stack frame for the function
     stk_pushframe(3)
 
     // Fake a RTRN
