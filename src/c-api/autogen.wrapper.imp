@@ -643,7 +643,7 @@ BCPLWORD llvm_dispose_message(BCPLWORD message)
 BCPLWORD llvm_tracing(BCPLWORD flag)
 {
     extern bool extfn_tracing;
-    extfn_tracing = flag != 0;
+    extfn_tracing = (flag & 2) != 0;
     return 0;
 }
 

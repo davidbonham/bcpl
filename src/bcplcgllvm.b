@@ -910,7 +910,7 @@ $(
     LET l_param_types = VEC 10
     IF errcount > 0 RETURN
     writef("LLVM code generator with %N words of workspace*N", workspace_size)
-    llvm_tracing((debug & 2) = 0 -> 0, 1)
+    llvm_tracing(debug)
 
     // Set up the workspace
     ws_init(workspace, workspace_size)
@@ -1000,8 +1000,7 @@ $(
     is_unreachable := FALSE
     UNTIL op = 0 DO
     $(
-        IF debug=2 THEN dump_stack()
-        wf("%S:", opname(op))
+        wf("S=%N: %S ", stk_frame!F_S, opname(op))
         SWITCHON op INTO 
         $(
             // OCODE instructions that take no arguments
