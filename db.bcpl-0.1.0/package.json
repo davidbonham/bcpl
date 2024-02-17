@@ -1,0 +1,20 @@
+{
+    "name": "bcpl",
+    "version": "0.1.0",
+    "engines": {
+        "vscode": "^1.70.0"
+    },
+    "publisher": "David Bonham",
+    "contributes": {
+        "languages": [{
+            "id": "bcpl",
+            "aliases": ["BCPL"],
+            "extensions": ["b", "bcpl", "B", "BCPL"]
+        }],
+        "grammars": [{
+            "language": "bcpl",
+            "scopeName": "source.bcpl",
+            "path": "./syntaxes/bcpl.tmLanguage.json"
+        }]
+    }
+}
