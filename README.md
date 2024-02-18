@@ -16,21 +16,21 @@ This means:
 The current target language and runtime is that specified by
 
     A PROPOSED DEFINITION OF THE LANGUAGE BCPL,
-    R. First, M. Richards, I. Willers,
+    R. Firth, M. Richards, I. Willers,
     1st October 1979
-    
+
 up to but not including the appendix (which defines extensions). Once that
 target has been reached, the appendix will be included (providing floating
 point and the heap, among other things).
 
 ## History
 As a proof of concept, the compiler running under CINTPOS and using LLVM 14
-had compiled all of the program examples in the BCPL kit I've attempted and 
-the code generated was of the quality one would expect after passing though 
-the LLVM optimisation pipeline. 
+had compiled all of the program examples in the BCPL kit I've attempted and
+the code generated was of the quality one would expect after passing though
+the LLVM optimisation pipeline.
 
-Alas, the one program that failed to compile is *TRN*, which makes use of 
-the ability to assigne a label to a variable and later GOTO that variable. 
+Alas, the one program that failed to compile is *TRN*, which makes use of
+the ability to assigne a label to a variable and later GOTO that variable.
 I was trying to discover how to use the LLVM indirect branch support.
 
 ## The Current State of Play
