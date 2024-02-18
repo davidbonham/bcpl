@@ -8,14 +8,14 @@ set up
        src
            bcpl-llvm.b   the wrapper including the fe and my cg
            llvmcg.b      my cg
-           c-api         holds the generated source for the LLVM C API 
+           c-api         holds the generated source for the LLVM C API
        scripts
            setup.sh      set up for official_bcpl_release cintsys
            genif.py      generates the LLVM C API
 
 
 Note that the comments about not needing all of the BCPL64* enviroment
-variables in MR's README are lies. My setup defines them because it 
+variables in MR's README are lies. My setup defines them because it
 needs to.
 
 Now I can compile hello.b to ocode in /tmp
@@ -41,22 +41,22 @@ cmake -S llvm -B build -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug
 make -C build
 
 The above seemed to be using the clang++ in /usr/lib/llvm-17/bin so
-the earlier 
+the earlier
 
    22  sudo apt install llvm-toolchain-jammy
 
 might be needed.
 
 
-My own cintsys64 now linking and running in bin. 
+My own cintsys64 now linking and running in bin.
 
 Assumptions:
 
 The official distribution is in ~/official_bcpl_release and has been
-built - the scripts in my scripts directory define environment 
+built - the scripts in my scripts directory define environment
 variables to allow the location to be changed
 
-There is a built version of LLVM 
+There is a built version of LLVM
 
 
 Problems:
@@ -92,33 +92,22 @@ env BCPL64HDRS=/home/david/official_bcpl_release/BCPL/cintcode:bcpl-llvm/src:$BC
 
 to discover that arguments are being passed as 0.
 
----------------------------------------------------------------
-To push my repo to github I did:
+--------------------------------------------------------------------------------
+Sunday 18-Feb-2024
+--------------------------------------------------------------------------------
 
-1. Login to github 
-2. Create a new repo bcpl
-3. In bcpl-llvm directory:
-4. git branch --move master main
-5. git remote add origin https://github.com/davidbonham/bcpl.git
+As a TODO list:
 
-Now at github.org, add a personal access token that expires one day with scopes repo and read:org
+1. Rework the simulated stack and debug why function calls sometimes don't
+   work any more
 
-6. Install githup app: sudo apt install gh
-7. Start a session: 
+2. Figure out how to get the GOTO some_var to work that occurs in TRN.
 
-bcpl-llvm> gh auth login
-? What account do you want to log into? GitHub.com
-? What is your preferred protocol for Git operations? HTTPS
-? Authenticate Git with your GitHub credentials? Yes
-? How would you like to authenticate GitHub CLI? Paste an authentication token
-Tip: you can generate a Personal Access Token here https://github.com/settings/tokens
-The minimum required scopes are 'repo', 'read:org', 'workflow'.
-? Paste your authentication token: ****************************************
-- gh config set -h github.com git_protocol https
-✓ Configured git protocol
-✓ Logged in as davidbonham
+3. Implement the RTL properly without relying on the C one
 
-8. git push -u origin main
+4. Ports to rpi...
 
-and all is done.
+5. A test suite
+
+6. Checkout all is as expected for the proposed standard
 
