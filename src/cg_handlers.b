@@ -1,10 +1,28 @@
+LET strappend(string, appendix) BE
+$(
+    LET old_length = string%0
+    LET next_ch = old_length
+    FOR i = 1 TO appendix%0 DO string%(next_ch+i) := appendix%i
+    string%0 +:= appendix%0
+$)
+
+AND stralloc(string) = VALOF
+$(
+    // Remenber we need a byte for the length
+    LET words_needed = 256 / BYTESPERWORD
+    LET work_string = ws_alloc(words_needed)
+    work_string%0 := 0
+    strappend(work_string, string)
+    RESULTIS work_string
+$)
+
 LET cg_ocode() BE
 $(
     LET nl() BE IF debug > 0 THEN newline()
     LET wf(f,a,b,c,d) BE IF debug > 0 THEN writef(f,a,b,c,d)
 
     LET name = VEC 10
-    LET op = llvm_rdn()
+    LET op = cg_rdn()
     LET n, label, save, num_globals, global_number = ?, ?, ?, ?, ?
 
     is_unreachable := FALSE
@@ -49,26 +67,26 @@ $(
             CASE s_xor:         nl(); cg_xor();         ENDCASE
 
             // OCODE instructions that take a number
-            CASE s_fnap:        n := llvm_rdn(); wf(" %N*N", n); cg_rtap(n,TRUE);  ENDCASE
-            CASE s_jf:          n := llvm_rdn(); wf(" %N*N", n); cg_jf(n);         ENDCASE
-            CASE s_jt:          n := llvm_rdn(); wf(" %N*N", n); cg_jt(n);         ENDCASE
-            CASE s_jump:        n := llvm_rdn(); wf(" %N*N", n); cg_jump(n);       is_unreachable := TRUE; ENDCASE
-            CASE s_lab:         n := llvm_rdn(); wf(" %N*N", n); cg_lab(n);        is_unreachable := FALSE; ENDCASE
-            CASE s_lf:          n := llvm_rdn(); wf(" %N*N", n); cg_lf(n);         ENDCASE
-            CASE s_lg:          n := llvm_rdn(); wf(" %N*N", n); cg_lg(n);         ENDCASE
-            CASE s_ll:          n := llvm_rdn(); wf(" %N*N", n); cg_ll(n);         ENDCASE
-            CASE s_llg:         n := llvm_rdn(); wf(" %N*N", n); cg_llg(n);        ENDCASE
-            CASE s_lll:         n := llvm_rdn(); wf(" %N*N", n); cg_lll(n);        ENDCASE
-            CASE s_llp:         n := llvm_rdn(); wf(" %N*N", n); cg_llp(n);        ENDCASE
-            CASE s_ln:          n := llvm_rdn(); wf(" %N*N", n); cg_ln(n);         ENDCASE
-            CASE s_lp:          n := llvm_rdn(); wf(" %N*N", n); cg_lp(n);         ENDCASE
-            CASE s_res:         n := llvm_rdn(); wf(" %N*N", n); cg_res(n);        ENDCASE
-            CASE s_rstack:      n := llvm_rdn(); wf(" %N*N", n); cg_rstack(n);     ENDCASE
-            CASE s_rtap:        n := llvm_rdn(); wf(" %N*N", n); cg_rtap(n,FALSE); ENDCASE
-            CASE s_sg:          n := llvm_rdn(); wf(" %N*N", n); cg_sg(n);         ENDCASE
-            CASE s_sl:          n := llvm_rdn(); wf(" %N*N", n); cg_sl(n);         ENDCASE
-            CASE s_sp:          n := llvm_rdn(); wf(" %N*N", n); cg_sp(n);         ENDCASE
-            CASE s_stack:       n := llvm_rdn(); wf(" %N*N", n); cg_stack(n);      ENDCASE
+            CASE s_fnap:        n := cg_rdn(); wf(" %N*N", n); cg_rtap(n,TRUE);  ENDCASE
+            CASE s_jf:          n := cg_rdn(); wf(" %N*N", n); cg_jf(n);         ENDCASE
+            CASE s_jt:          n := cg_rdn(); wf(" %N*N", n); cg_jt(n);         ENDCASE
+            CASE s_jump:        n := cg_rdn(); wf(" %N*N", n); cg_jump(n);       is_unreachable := TRUE; ENDCASE
+            CASE s_lab:         n := cg_rdn(); wf(" %N*N", n); cg_lab(n);        is_unreachable := FALSE; ENDCASE
+            CASE s_lf:          n := cg_rdn(); wf(" %N*N", n); cg_lf(n);         ENDCASE
+            CASE s_lg:          n := cg_rdn(); wf(" %N*N", n); cg_lg(n);         ENDCASE
+            CASE s_ll:          n := cg_rdn(); wf(" %N*N", n); cg_ll(n);         ENDCASE
+            CASE s_llg:         n := cg_rdn(); wf(" %N*N", n); cg_llg(n);        ENDCASE
+            CASE s_lll:         n := cg_rdn(); wf(" %N*N", n); cg_lll(n);        ENDCASE
+            CASE s_llp:         n := cg_rdn(); wf(" %N*N", n); cg_llp(n);        ENDCASE
+            CASE s_ln:          n := cg_rdn(); wf(" %N*N", n); cg_ln(n);         ENDCASE
+            CASE s_lp:          n := cg_rdn(); wf(" %N*N", n); cg_lp(n);         ENDCASE
+            CASE s_res:         n := cg_rdn(); wf(" %N*N", n); cg_res(n);        ENDCASE
+            CASE s_rstack:      n := cg_rdn(); wf(" %N*N", n); cg_rstack(n);     ENDCASE
+            CASE s_rtap:        n := cg_rdn(); wf(" %N*N", n); cg_rtap(n,FALSE); ENDCASE
+            CASE s_sg:          n := cg_rdn(); wf(" %N*N", n); cg_sg(n);         ENDCASE
+            CASE s_sl:          n := cg_rdn(); wf(" %N*N", n); cg_sl(n);         ENDCASE
+            CASE s_sp:          n := cg_rdn(); wf(" %N*N", n); cg_sp(n);         ENDCASE
+            CASE s_stack:       n := cg_rdn(); wf(" %N*N", n); cg_stack(n);      ENDCASE
 
             // Floating point extension
             CASE s_fabs:        nl(); cg_fabs();    ENDCASE
@@ -90,13 +108,13 @@ $(
             CASE s_fge:         nl(); cg_fge();     ENDCASE
 
             // OCODE instructions for which we need a bit of lookahead
-            CASE s_datalab:     n := llvm_rdn(); wf(" %N*N", n); cg_datalab(n, llvm_rdn_peek(0)); ENDCASE
-            CASE s_itemn:       n := llvm_rdn(); wf(" %N*N", n); cg_itemn(n, llvm_rdn_peek(0));   ENDCASE
+            CASE s_datalab:     n := cg_rdn(); wf(" %N*N", n); cg_datalab(n, cg_rdn_peek(0)); ENDCASE
+            CASE s_itemn:       n := cg_rdn(); wf(" %N*N", n); cg_itemn(n, cg_rdn_peek(0));   ENDCASE
 
             // Special cases
 
             CASE s_section:
-                rdname(name, 10)
+                cg_rdname(name, 10)
                 wf(" %s*N", name)
                 cg_section(name)
                 is_current_section_empty := TRUE
@@ -105,10 +123,10 @@ $(
 
             CASE s_entry:      
                 // We expect to consume <label> <name> <SAVE> <n>
-                label := llvm_rdn()
-                rdname(name, 10)
-                llvm_rdn() // skip SAVE
-                save := llvm_rdn()
+                label := cg_rdn()
+                cg_rdname(name, 10)
+                cg_rdn() // skip SAVE
+                save := cg_rdn()
                 wf(" %N %S SAVE %N*N", label, name, save)
                 is_unreachable := FALSE
                 cg_entry(label, name, save)
@@ -117,9 +135,9 @@ $(
             CASE s_global:
                 // We expect to read a count followed by that many pairs
                 // of global numbers and labels
-                FOR g = 1 TO llvm_rdn() DO 
+                FOR g = 1 TO cg_rdn() DO 
                 $(
-                    LET g, v = llvm_rdn(), llvm_rdn()
+                    LET g, v = cg_rdn(), cg_rdn()
                     wf("GLOBAL %N %N*N", g, v)
                     cg_global(g, v)
                 $)
@@ -129,12 +147,12 @@ $(
             $(
                 // Read the string into workspace for the duration of
                 // the call. N
-                LET string_length = llvm_rdn()
+                LET string_length = cg_rdn()
                 LET mark = ws_mark()
                 LET string = ws_alloc(string_length/BYTESPERWORD+1)
                 FOR i = 1 TO string_length DO 
                 $( 
-                    LET c = llvm_rdn()
+                    LET c = cg_rdn()
                     string%i := c
                 $)
                 string%0 := string_length
@@ -145,8 +163,8 @@ $(
             ENDCASE
 
             CASE s_switchon: $(
-                LET cases = llvm_rdn()
-                LET default_label = llvm_rdn()
+                LET cases = cg_rdn()
+                LET default_label = cg_rdn()
                 cg_switchon(cases, default_label)
             $)
             ENDCASE
@@ -160,7 +178,7 @@ $(
         UNLESS op = s_section | op = s_jump DO is_current_section_empty := FALSE
 
         // Look for the next OCODE instruction
-        op := llvm_rdn()
+        op := cg_rdn()
     $)
 $)
 
@@ -438,7 +456,7 @@ AND cg_goto() BE $(
     // block for the next operation. However, if there is unreachable code
     // after us, there won't be a LAB so we'll have to create the basic 
     // block
-    UNLESS llvm_rdn_peek(0) = s_lab DO $(
+    UNLESS cg_rdn_peek(0) = s_lab DO $(
         basicblock := llvm_create_basic_block_in_context(context, "goto.dead")
         llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
         llvm_position_builder_at_end(builder, basicblock)
@@ -1003,7 +1021,7 @@ $(
     // point, the only remaining cases will be the result of VEC declarations
     // and in such a case, we expect the following O-code to be a STACK
     // which we will need to peek at to know how must space to allocate
-    IF llvm_rdn_peek(0) = s_store THEN $(
+    IF cg_rdn_peek(0) = s_store THEN $(
 
         // Look at how the top of the stack will be moved by the pending
         // stack
@@ -1078,7 +1096,7 @@ $(
 
     // Now add each of the cases we read
     FOR i = 1 TO num_cases DO $(
-        LET number, case_label = llvm_rdn(), llvm_rdn()
+        LET number, case_label = cg_rdn(), cg_rdn()
         LET case_value = llvm_const_int(word_type, number, 0)
         LET dummy = lab_declare(case_label, LABEL_JUMP)
         LET case_bb = lab_get_bb(case_label)
