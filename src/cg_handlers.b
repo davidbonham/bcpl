@@ -28,7 +28,7 @@ $(
     is_unreachable := FALSE
     UNTIL op = 0 DO
     $(
-        wf("S=%N: %S ", stk_frame!F_S, opname(op))
+        wf("S=%N: %S ", ss_tos(), opname(op))
         SWITCHON op INTO 
         $(
             // OCODE instructions that take no arguments
