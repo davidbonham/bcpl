@@ -6,6 +6,14 @@
 //  #  #   ## #    # # #   #  #      #    #   #      #     # #      #    # #    # #   #  #    # 
 // ### #    # #####  # #    # ######  ####    #      ######  ######  ####   ####  #    #  ####  
 
+STATIC $(
+    ibr_indirect_br_instruction
+    ibr_phi_node
+    ibr_destination_count
+    ibr_destinations
+    ibr_destinations_size
+$)
+
 /** Prepare the indirect branch handling ready for the fist function
  *
  * Initialise our state will enough space to record <count> labels that

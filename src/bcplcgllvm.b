@@ -1,14 +1,10 @@
 GET "libhdr"
 GET "bcplfecg"
-
 GET "c-api/autogen.llvmhdr"
-
 
 MANIFEST $( BYTESPERWORD     =  8  $)
 MANIFEST $( GLOBALVECTORSIZE = 256 $)
-
 MANIFEST $( READAHEAD = 4 $)
-MANIFEST $( MAXFRAMESIZE = 64 $)
 
 STATIC
 $(
@@ -36,10 +32,6 @@ $(
     function                 // The current function
     basicblock               // The current basic block in this function
 
-    label_table_size
-    label_type
-    label_static
-    label_bb
 
     pending_cell_referer     // Vector of n P[n] holds LLP[m] for m >= S
     pending_cell_referenced  // The corresponding m
@@ -58,22 +50,9 @@ $(
     datalab_itemns           // Workspace allocated by DATALAB for ITEMNs
     datalab_itemn_count      // The number of ITEMNs we have collected
 
-    ibr_indirect_br_instruction
-    ibr_phi_node
-    ibr_destination_count
-    ibr_destinations
-    ibr_destinations_size
-$)
+ $)
 
-LET cgerror(message, a0, a1, a2) BE
-$(
-    errcount +:= 1
-    writes("error: ")
-    writef(message, a0, a1, a2)
-    longjump(fin_p, fin_l)
-$)
-LET assert(condition) BE UNLESS condition DO cgerror("assertion failure*N")
-
+GET "cg_errors.b"
 GET "cg_workspace.b"
 GET "cg_stack.b"
 GET "cg_labels.b"
@@ -81,8 +60,6 @@ GET "cg_indirect.b"
 GET "cg_llvmhelpers.b"
 
 // -----------------------------------------------------------------------------
-
-
 
 LET cg_rdn() = VALOF 
 $(
@@ -129,11 +106,7 @@ $(
     buffer%0 := name_length < max_string -> name_length, max_string
 $)
 
-
-
-
 GET "cg_handlers.b"
-
 
 LET codegenerate(workspace, workspace_size) BE
 $(

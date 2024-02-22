@@ -11,6 +11,10 @@
 // significant locations. We use a map (F_MAP) that maps a value X onto the LLVM location (an 
 // alloca node) for P!X.
 
+MANIFEST $(
+    MAXFRAMESIZE = 64 
+$)
+
 STATIC $( 
     stk_workspace   // Contents of our stack of call frames
     stk_free        // Address of the next free word in the above
