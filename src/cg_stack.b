@@ -162,6 +162,9 @@ LET ss_pushquery() BE $(
     stk_frame!F_S +:= 1
 $)
 
+// Return the top of the stack frame (next free cell) as an offset from P. 
+LET ss_tos() = stk_frame!F_S
+
 LET ss_get(n) = VALOF
 $(
     LET M, Psparse = stk_frame!F_MAP, stk_frame!F_P

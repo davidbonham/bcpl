@@ -686,7 +686,8 @@ $)
 AND cg_llp(n) BE
 $(
     LET llvm_address, bcpl_address, lv, lv_holder = ?, ?, ?, ?
-    LET S = stk_frame!F_S
+    LET S = ss_tos()
+
     // If this is the start of a vector declaration, the stack variable 
     // may be above the current stack top and not yet allocated. 
     IF ss_lookup(n) = -1 THEN $(
@@ -819,7 +820,7 @@ $(
     //        S                             
     // 
     // if it is a function returning R
-    LET num_args = stk_frame!F_S - n - savespacesize - 1
+    LET num_args = ss_tos() - n - savespacesize - 1
     LET ep = ss_pop("rtap.ep")
 
     // Build a type for a pointer to a function with one argument
@@ -1050,7 +1051,7 @@ $(
         // for VECs
         LET pending_vec = -1
 
-        FOR p_index = stk_frame!F_S TO new_S DO $(
+        FOR p_index = ss_tos() TO new_S DO $(
 
             // NB: This is the index into the map, not into Psparse:
             LET ss_location = ss_lookup(p_index)
