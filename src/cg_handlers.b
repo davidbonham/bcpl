@@ -289,9 +289,6 @@ AND cg_endproc() BE
 $(
     LET r = ?
 
-    // Get rid of the excess allocs
-    stk_trimframe()
-
     // If the last operation is a jump back to the top of the loop, we will
     // have created an unreachable empty basic block which should be deleted
     IF llvm_get_first_instruction(basicblock) = 0 DO 
@@ -312,7 +309,7 @@ $(
 
     // This is the end of the function so we are no longer nested in it.
     // Restore the state for the outer function
-    stk_popframe()
+    ss_popframe()
     llvm_position_builder_at_end(builder, basicblock)
 $)
 
@@ -327,12 +324,19 @@ $)
 
 AND cg_entry(label, name, save) BE 
 $(
-    // Work out the number of parameters from the SAVE value, which includes
-    // STACKSPACESIZE words for the linkage area
+    // This handler combines ENTRY and SAVE so we can work out the number 
+    // of parameters from the SAVE value, which includes STACKSPACESIZE 
+    // words for the linkage area
     LET argc = save - savespacesize
     LET function_type = llvm_function_type(word_type, parameter_types, argc, 0)
 
-    // Add a function of this type to the current module
+    // Stack the current function - there will always be one because of
+    // the enclosing dummy function that deals with jumps around routines
+    // This records the current basic block in the linkage area.
+    ss_pushframe(save)
+
+    // Add a function of this type to the current module and make it
+    // current.
     function := llvm_add_function(module, name, function_type)
     llvm_set_section(function, module_text_section)
 
@@ -343,19 +347,10 @@ $(
     lab_get_static(label)
     lab_set_static(label, llvm_const_ptr_to_int(function, word_type))
 
-    // Start the function of with a basic block at its entry
+    // Start the function off with a basic block at its entry and make
+    // it current
     basicblock := llvm_append_basic_block(function, "entry")
     llvm_position_builder_at_end(builder, basicblock)
-
-    // Stack the current function - there will always be one because of
-    // the enclosing dummy function that deals with jumps around routines
-    stk_pushframe(MAXFRAMESIZE)
-
-
-    // Set the stack frame up to be empty (bar the three linkage words).
-    // Clear any higher cells and the list of pending cells
-    ss_stack(savespacesize)
-    pending_cell_count := 0
 
     // For all of the arguments we expect to be passed, allocate locals
     // set to the argument values and place the locals in P so that the
@@ -370,7 +365,8 @@ $(
     // The temporary RES/STACK holding location is not yet in use
     A := llvm_build_alloca(builder, word_type, "__res_a")
 
-
+    // Set up the VEC pending allocation mechanism
+    pending_vec_allocation := 0
 $)
 
 AND cg_finish() BE
@@ -685,26 +681,28 @@ $)
 
 AND cg_llp(n) BE
 $(
+    // We are loading the address of an local on the stack where n is
+    // the offset of the local from the base of the current stack frame.
     LET llvm_address, bcpl_address, lv, lv_holder = ?, ?, ?, ?
     LET S = ss_tos()
 
-    // If this is the start of a vector declaration, the stack variable 
-    // may be above the current stack top and not yet allocated. 
-    IF ss_lookup(n) = -1 THEN $(
-        ss_allocate(n)
-        IF n >= S THEN $(
-            pending_cell_referer!pending_cell_count := S
-            pending_cell_referenced!pending_cell_count := n
-            pending_cell_count +:= 1
-        $)
+    // The use of LLP in the statement 'LET x = VEC n' appears as 
+    // LLP n STACK m and the use of VEC precludes the multiple
+    // variable form of LET. This means we can peak ahead  and see
+    // if the next ocode operation is a STACK to detect this.
+    TEST cg_rdn_peek(0) = s_stack THEN $(
+        // Defer processing to the STACK hander. It will need to
+        // know n
+        pending_vec_allocation := n
     $)
-
-    // This is a standard LLP
-    // Get the address of the variable P!n and convert it to a BCPL l-value
-    // by dividing by BYTESPERWORD and pushing a variable holding this result
-    llvm_address := llvm_build_ptr_to_int(builder, ss_get(n), word_type, "llp.address")
-    bcpl_address := llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "llp.bcpladdr")
-    ss_push(bcpl_address)
+    ELSE $(
+        // This is a standard LLP
+        // Get the address of the variable P!n and convert it to a BCPL l-value
+        // by dividing by BYTESPERWORD and pushing a variable holding this result
+        llvm_address := llvm_build_ptr_to_int(builder, ss_get(n), word_type, "llp.address")
+        bcpl_address := llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "llp.bcpladdr")
+        ss_push(bcpl_address)
+    $)
 $)
 
 AND cg_lp(n) BE 
@@ -773,7 +771,7 @@ $)
 
 AND cg_query() BE $(
     // This pushes a temp with an undefined value onto the stack
-    ss_pushquery()
+    ss_push(#XBAD0BAD0BAD0BAD0)
 $)
 
 AND cg_res(n) BE $(
@@ -905,7 +903,7 @@ $(
     llvm_set_linkage(G, LLVM_EXTERNAL_LINKAGE)
 
     // Start with a fresh value/type stack
-    stk_init(ws_alloc(1000), 1000)
+    ss_init(ws_alloc(1000), 1000)
 
     // Since all BCPL signatures are just N BCPLWORD parameters, we can just
     // create a single vector for the maximum length we support and use the
@@ -919,13 +917,6 @@ $(
     // Managemnt of indirect branches
     ibr_init(100)
 
-    // A list of all cells on the stack that contain an LLP to a cell that
-    // was above S at the time - likely to be the cell that points to the
-    // base of a vector
-    pending_cell_referer    := ws_alloc(32)
-    pending_cell_referenced := ws_alloc(32)
-    pending_cell_count      := 0
-
     // We create an outmost function in the module (so that the initual 
     // JUMP around the text can be handled normally &c) which will be
     // discarded when we reach the end of the current module.
@@ -935,7 +926,7 @@ $(
     llvm_position_builder_at_end(builder, basicblock)
 
     // Create a dummy stack frame for the function
-    stk_pushframe(3)
+    ss_pushframe(3, FALSE)
 
     // Fake a RTRN
     cg_rtrn()
@@ -989,99 +980,33 @@ $)
 
 AND cg_stack(n) BE 
 $(  
-    LET allocate_vector(p_new, p_old) BE $(
-
-        // The gap bewtween the variables allocate by earlier LLPs tells
-        // us the size of the vector.
-        LET size = p_new - p_old
+    // If we follow an LLP m then m is held in pending_vec_allocation 
+    // and it is our job to allocate the vector and place it in the
+    // local m-1.
+    IF pending_vec_allocation > 0 THEN $(
+        // The stack looks something like this
+        //
+        // | P   | ... | x  | S
+        //
+        // and the first element of the vector is at P!pending_vec_allocation 
+        // and the last at n-1. So we know the number of elements in the vector
+        LET vector_length = n - 1 - pending_vec_allocation
 
         // Create this vector on the stack
-        LET vec_type = llvm_array_type(word_type, size)
+        LET vec_type = llvm_array_type(word_type, vector_length)
         LET vector = llvm_build_array_alloca(builder, vec_type, 0, "stack.vec")
 
         // We need the BCPL address of element 0 of this array
         LET vector_llvmaddress = llvm_build_ptr_to_int(builder, vector, word_type, "stack.vecaddr")
         LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
 
-        // There should be a cell on the stack below us holding the LLP
-        // of this vector.
-        FOR i = 0 TO pending_cell_count-1 DO $(
-            IF pending_cell_referenced!i = p_old THEN $(
-                LET pointer_temp = ss_get(pending_cell_referer!i)
-                llvm_build_store(builder, vector_bcpladdress, pointer_temp)
-                RETURN
-            $)
-        $)
-        cgerror("No LLP for cell %N found when allocating %N element vector*N", p_old, size)
+        // And we store this in the stack cell preceding the vector
+        ss_set(pending_vec_allocation - 1, vector_bcpladdress)
+
+        // Clear the pending operation we have now handled
+        pending_vec_allocation := 0
     $)
 
-
-    // We need to assign space to all stack variables that don't yet
-    // have values. These will fall above the top of the stack, created
-    // by LLP references to locations that did not yet exist. At this
-    // point, the only remaining cases will be the result of VEC declarations
-    // and in such a case, we expect the following O-code to be a STACK
-    // which we will need to peek at to know how must space to allocate
-    IF cg_rdn_peek(0) = s_store THEN $(
-
-        // Look at how the top of the stack will be moved by the pending
-        // stack
-        LET new_S = n
-
-        // Search above the current stack top for declared stack entries.
-        // each time we get one, we note its location and if there is a
-        // previous one we now know it's array size. For example:
-        //
-        //  80    81    82    83    84    85    86    87    88    89
-        // +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-        // | xxx |  V  |  ?  |  ?  |  ?  |  U  |  ?  |  ?  |  ?  |  ?  |
-        // +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-        //          ^                                         ^
-        //          S                                         new S
-        //
-        // The alloca's at 81 and 85 are both VECs. Because U-V = 4,
-        // V must be a VEC 4 and because new S - U = 3, U must be a VEC 3
-        // (Note that VEC N allocates N+1 cells)
-        //
-        // The BCPL variable holding the addresses of the vectors (@V and
-        // @U) are, as generated by the compiler emitting LLPs, located 
-        // immediately before the vector.
-
-        // Loop over all of the possible locations S <= n < new S looking
-        // for VECs
-        LET pending_vec = -1
-
-        FOR p_index = ss_tos() TO new_S DO $(
-
-            // NB: This is the index into the map, not into Psparse:
-            LET ss_location = ss_lookup(p_index)
-            UNLESS ss_location = -1 DO $(
-
-                // A location that exists above the stack top - we have 
-                // found the next vector. If there is one pending, we now
-                // know its size so we can allocate it and store its
-                // bcpl address in the location's variable
-                UNLESS pending_vec = -1 DO $(
-                    allocate_vector(p_index, pending_vec)
-                $)
-                
-                // Our current VEC is now the pending one
-                pending_vec := p_index
-            $)
-        $)
-
-        // If there is a pending vec here, it is the last one and so extends
-        // up to the new top of the stack
-        UNLESS pending_vec = -1 DO $(
-            allocate_vector(new_S, pending_vec)
-        $)
-
-        // All our vectors are now defined. The next STACK will push the
-        // stack pointer above them
-    $)
-
-    // Set the stack pointer - either creating a new frame or discarding
-    // the current one
     ss_stack(n)
 $)
 

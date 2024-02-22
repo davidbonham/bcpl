@@ -32,11 +32,8 @@ $(
     function                 // The current function
     basicblock               // The current basic block in this function
 
-
-    pending_cell_referer     // Vector of n P[n] holds LLP[m] for m >= S
-    pending_cell_referenced  // The corresponding m
-    pending_cell_count       // The number of entries
-
+    pending_vec_allocation   // Holds the n of LLP n when a STACK follows 
+ 
     //FIXME new pass manager fpm                      // The function pass manager for this module
 
     section_mark             // workspace level at start of section
@@ -54,7 +51,7 @@ $(
 
 GET "cg_errors.b"
 GET "cg_workspace.b"
-GET "cg_stack.b"
+GET "cg_simstack.b"
 GET "cg_labels.b"
 GET "cg_indirect.b"
 GET "cg_llvmhelpers.b"
