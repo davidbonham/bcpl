@@ -119,16 +119,7 @@ LET ss_allocate(n) BE $(
     M!cell := n
 $)
 
-LET ss_set(location, value) BE $(
 
-    LET M, Psparse = stk_frame!F_MAP, stk_frame!F_P
-
-    // Create a stack variable above the current stack top as a reference
-    // to a stack variable to be declared in the near future
-    UNLESS ss_lookup(location) = -1 THEN cgerror("ss_set: %N already exists*N", location)
-    M!location := location
-    Psparse!location := value
-$)
 
 LET ss_push(value) BE 
 $(
