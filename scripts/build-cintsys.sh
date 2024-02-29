@@ -34,13 +34,17 @@ gcc -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/
 echo "** compiling our version of extfn"
 gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o ${BL_ROOT}/obj/extfn.o -c ${BL_ROOT}/src/extfn.c
 
+echo "** compiling our zlib stub for LLVM"
+gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o ${BL_ROOT}/obj/stubzlib.o -c ${BL_ROOT}/src/stubzlib.c
+
 # Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
 echo "** building our cintpos64 system"
 gcc  -g -O0 -Xlinker -Map=/tmp/output.map -o ${BL_ROOT}/bin/cintsys64  ${OBJ}/cinterp.o ${OBJ}/fasterp.o \
        ${OBJ}/kblib.o ${OBJ}/cfuncs.o \
        ${OBJ}/joyfn.o ${OBJ}/sdlfn.o ${OBJ}/glfn.o ${OBJ}/alsafn.o \
        ${BL_ROOT}/obj/extfn.o \
+       ${BL_ROOT}/obj/stubzlib.o \
        ${BL_ROOT}/obj/llvm_bcpl_binding.o ${OBJ}/cintmain.o \
-       $(${LLVMBIN}/llvm-config --ldflags --libs) -pthread -ltinfo  -lm -lstdc++ -lz
+       $(${LLVMBIN}/llvm-config --ldflags --libs) -pthread -ltinfo  -lm -lstdc++ 
 
 
