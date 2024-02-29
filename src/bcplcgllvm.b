@@ -32,8 +32,8 @@ $(
     function                 // The current function
     basicblock               // The current basic block in this function
 
-    pending_vec_allocation   // Holds the n of LLP n when a STACK follows 
- 
+    pending_vec_allocation   // Holds the n of LLP n when a STACK follows
+
     //FIXME new pass manager fpm                      // The function pass manager for this module
 
     section_mark             // workspace level at start of section
@@ -41,13 +41,15 @@ $(
     is_unreachable           // Last OCODE op was a FNRN or RTRN
 
     ocode_buffer             // Read ahead of incoming O-code
-    ocode_buffer_next = READAHEAD 
+    ocode_buffer_next = READAHEAD
 
     datalab_label            // The label for the last DATALAB we saw
     datalab_itemns           // Workspace allocated by DATALAB for ITEMNs
     datalab_itemn_count      // The number of ITEMNs we have collected
 
- $)
+$)
+
+LET trace(f,a,b,c,d) BE IF debug > 0 THEN writef(f,a,b,c,d)
 
 GET "cg_errors.b"
 GET "cg_workspace.b"
@@ -58,7 +60,7 @@ GET "cg_llvmhelpers.b"
 
 // -----------------------------------------------------------------------------
 
-LET cg_rdn() = VALOF 
+LET cg_rdn() = VALOF
 $(
     // This value will be in 0.. READAHEAD-1 once we are running
     LET char = ?
@@ -90,12 +92,12 @@ $)
 
 AND cg_rdname(buffer, buflen) BE
 $(
-    // Read a length and that many bytes into the buffer, truncating at 
+    // Read a length and that many bytes into the buffer, truncating at
     // the buffer length. The buffer is a vector of buflen words and on
     // exit it will hold the name as a bcpl string.
     LET name_length = cg_rdn()
     LET max_string = buflen*BYTESPERWORD - 1
-    FOR pos = 1 TO name_length DO 
+    FOR pos = 1 TO name_length DO
     $(
         LET ch = cg_rdn()
         IF pos <= max_string DO buffer%pos := ch
