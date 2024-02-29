@@ -1,45 +1,46 @@
 #!/usr/bin/env bash
 
 # Compile our local version of cintsys64 that includes our C binding
-# to LLVM. We assume that the official release has been build and so
+# to LLVM. We assume that the official release has been built and so
 # all of the object files we need to link in already exist.
 
-# Compile our local extfn64.c
+# We need to use our debug build because we need the C API header files
+LLVMBIN=${DEVROOT}/llvm-debug-install/bin
 
-# Use the release or my own debug build. The debug build is built like this,
-# positioned in the top directory of the cloned LLVM tree:
-#
-# cmake -S llvm -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_INSTALL_PREFIX=/home/david/llvm-debug-install -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_PARALLEL_COMPILE_JOBS=4 -DLLVM_PARALLEL_LINK_JOBS=4 /home/david/llvm-project-17.0.6.src
-# cmake --build build -j 4
-# make -C build install
-
-LLVMBIN=/usr/lib/llvm-17/bin
-#LLVMBIN=/home/david/llvm-debug-install/bin
-
-if [[ -z "${BCPLROOT}" ]]; then
+if [ -z "${BCPLROOT}" ] 
+then
     echo BCPLROOT is unset
-    exit
-elif [[ -z "${BL_ROOT}" ]]; then
+    return
+elif [ -z "${BL_ROOT}" ]
+then
     echo BL_ROOT is unset
-    exit
+    return
 fi
 
+# Our world is 64 bits so we need to take the appropriate objects from the
+# BCPL release
 OBJ=${BCPLROOT}/obj64
-echo OBJ=$OBJ
-echo  `${LLVMBIN}/llvm-config --includedir`
+
+# Make make sure our own results can be created here...
+mkdir -p ${BL_ROOT}/obj
+mkdir -p ${BL_ROOT}/bin
 
 # Create the LLVM C binding
-gcc -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I `${LLVMBIN}/llvm-config --includedir` \
+echo "** compiling the C API binding"
+gcc -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I $(${LLVMBIN}/llvm-config --includedir) \
     -o ${BL_ROOT}/obj/llvm_bcpl_binding.o -c ${BL_ROOT}/src/llvm_bcpl_binding.c
 
 # Create our bespoke cintsys dispatcher for external functions
+echo "** compiling our version of extfn"
 gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o ${BL_ROOT}/obj/extfn.o -c ${BL_ROOT}/src/extfn.c
 
+# Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
+echo "** building our cintpos64 system"
 gcc  -g -O0 -Xlinker -Map=/tmp/output.map -o ${BL_ROOT}/bin/cintsys64  ${OBJ}/cinterp.o ${OBJ}/fasterp.o \
        ${OBJ}/kblib.o ${OBJ}/cfuncs.o \
        ${OBJ}/joyfn.o ${OBJ}/sdlfn.o ${OBJ}/glfn.o ${OBJ}/alsafn.o \
        ${BL_ROOT}/obj/extfn.o \
        ${BL_ROOT}/obj/llvm_bcpl_binding.o ${OBJ}/cintmain.o \
-       `${LLVMBIN}/llvm-config --ldflags --libs` -pthread -ltinfo  -lm -lstdc++
+       $(${LLVMBIN}/llvm-config --ldflags --libs) -pthread -ltinfo  -lm -lstdc++ -lz
 
 
