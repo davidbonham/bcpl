@@ -21,7 +21,7 @@ function main()
 
     name=$(basename --suffix .b "$1")
     show cintsys64 -c ${BL_ROOT}/bin/mybcpl noselst ${name}.b to ${name}.ll
-    show clang -O0 -g3 ${RTL}/bcplinit.s ${name}.ll ${RTL}/blib.ll ${RTL}/bcplmain.c -o ${name} -Wl,-Map=${name}.map
+    show clang -O2 -g3 ${RTL}/bcplinit.s ${name}.ll ${RTL}/blib.ll ${RTL}/bcplmain.c -o ${name} -Wl,-Map=${name}.map
     show ./${name}
     return $?
 }
