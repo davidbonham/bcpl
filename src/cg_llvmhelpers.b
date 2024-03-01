@@ -8,7 +8,7 @@ $(
     llvm_set_initializer(emitted_global, global_ref)
     llvm_set_initializer(emitted_value,  word_ref)
 
-    // Alas, if we declare these with internal linkage, the linker will 
+    // Alas, if we declare these with internal linkage, the linker will
     // discard them as unreferenced when optimising
     llvm_set_linkage(emitted_global, LLVM_INTERNAL_LINKAGE)
     llvm_set_linkage(emitted_value,  LLVM_INTERNAL_LINKAGE)
@@ -30,7 +30,7 @@ $(
 $)
 
 LET optimise_module(module) = VALOF $(
-    
+
     // Use the new LLVM pass manager via the simplified llvm C binding
     // where we pass an opt-style string. The call sequence was deduced
     // from the LLVM unit test for the pass manager.
@@ -51,13 +51,13 @@ LET optimise_module(module) = VALOF $(
     target_machine := llvm_create_target_machine(target, target_triple, "generic", "", LLVM_CODEGENLEVEL_DEFAULT, LLVM_RELOC_DEFAULT, LLVM_CODEMODEL_DEFAULT)
     pass_builder_options := llvm_create_pass_builder_options()
 
-    error_ref := llvm_run_passes(module, "default<O2>", target_machine, pass_builder_options)
+    error_ref := llvm_run_passes(module, "default<O0>", target_machine, pass_builder_options)
     IF error_ref ~= 0 DO $(
        LET message = llvm_get_error_message(error_ref)
        writef("Optimisation pass failed: %S*N", message)
        RESULTIS 1
     $)
-    
+
     llvm_dispose_pass_builder_options(pass_builder_options)
     llvm_dispose_target_machine(target)
     RESULTIS 0
@@ -70,7 +70,7 @@ $(
     UNLESS is_current_section_empty DO
     $(
         LET r = optimise_module(module)
-        TEST r ~= 0 DO 
+        TEST r ~= 0 DO
         $(
             writef("Failed to optimise section %S*N", module_name)
             longjump(fin_p, fin_l)
@@ -150,7 +150,7 @@ $(
     $(
         dump_bb(label, next_bb)
         next_bb := llvm_get_next_basic_block(next_bb)
-    $) 
+    $)
     IF debug > 0 THEN writes("-----------------------*N")
 
 
