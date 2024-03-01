@@ -3,7 +3,6 @@
 # A handy script to compile, link and execute a simple BCPL program:
 #
 # 1. Use my bcpl to translate source to IR
-# 2. Use llc to translate IR to .s
 # 3. Use clang to combine with the runtime support and link an executable
 # 4. execute the executable
 
@@ -11,6 +10,7 @@ function show()
 {
     echo "***" $*
     eval "$*"
+    return $?
 }
 
 function main()
@@ -21,8 +21,7 @@ function main()
 
     name=$(basename --suffix .b "$1")
     show cintsys64 -c ${BL_ROOT}/bin/mybcpl noselst ${name}.b to ${name}.ll
-    show llc ${name}.ll -o ${name}.s
-    show clang -O0 -g3 ${RTL}/bcplinit.s ${name}.s ${RTL}/blib.ll ${RTL}/bcplmain.c -o ${name} -Wl,-Map=${name}.map
+    show clang -O0 -g3 ${RTL}/bcplinit.s ${name}.ll ${RTL}/blib.ll ${RTL}/bcplmain.c -o ${name} -Wl,-Map=${name}.map
     show ./${name}
     return $?
 }
