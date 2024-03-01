@@ -9,7 +9,7 @@ then
             export DEVROOT=/home/david
             ;;
         vanadium)
-            export DEVROOT=/mnt/data/usr/fs/bcpl-development
+            export DEVROOT=/mnt/data/fs/bcpl-development
             ;;
 
         *)
@@ -17,7 +17,7 @@ then
             return 1
             ;;
     esac
-fi 
+fi
 
 export BL_ROOT=${DEVROOT}/bcpl-llvm
 PATH=/usr/lib/llvm-17/bin:${PATH}
