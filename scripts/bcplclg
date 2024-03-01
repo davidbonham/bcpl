@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# A handy script to compile, link and execute a simple BCPL program:
+#
+# 1. Use my bcpl to translate source to IR
+# 2. Use llc to translate IR to .s
+# 3. Use clang to combine with the runtime support and link an executable
+# 4. execute the executable
+
+function show()
+{
+    echo "***" $*
+    eval "$*"
+}
+
+function main()
+{
+    set -e
+    export RTL=${BL_ROOT}/rtl
+    export PATH=${BL_ROOT}/bin:/usr/lib/llvm-17/bin:${PATH}
+
+    name=$(basename --suffix .b "$1")
+    show cintsys64 -c ${BL_ROOT}/bin/mybcpl noselst ${name}.b to ${name}.ll
+    show llc ${name}.ll -o ${name}.s
+    show clang -O0 -g3 ${RTL}/bcplinit.s ${name}.s ${RTL}/blib.ll ${RTL}/bcplmain.c -o ${name} -Wl,-Map=${name}.map
+    show ./${name}
+    return $?
+}
+
+main $*
+
