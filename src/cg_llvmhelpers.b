@@ -9,9 +9,10 @@ $(
     llvm_set_initializer(emitted_value,  word_ref)
 
     // Alas, if we declare these with internal linkage, the linker will
-    // discard them as unreferenced when optimising
-    llvm_set_linkage(emitted_global, LLVM_INTERNAL_LINKAGE)
-    llvm_set_linkage(emitted_value,  LLVM_INTERNAL_LINKAGE)
+    // discard them as unreferenced when optimising. When we link multiple
+    // BCPL objects, we'll generate clashes here at link time.
+    llvm_set_linkage(emitted_global, LLVM_EXTERNAL_LINKAGE)
+    llvm_set_linkage(emitted_value,  LLVM_EXTERNAL_LINKAGE)
 $)
 
 
@@ -51,7 +52,7 @@ LET optimise_module(module) = VALOF $(
     target_machine := llvm_create_target_machine(target, target_triple, "generic", "", LLVM_CODEGENLEVEL_DEFAULT, LLVM_RELOC_DEFAULT, LLVM_CODEMODEL_DEFAULT)
     pass_builder_options := llvm_create_pass_builder_options()
 
-    error_ref := llvm_run_passes(module, "default<O0>", target_machine, pass_builder_options)
+    error_ref := llvm_run_passes(module, "default<O2>", target_machine, pass_builder_options)
     IF error_ref ~= 0 DO $(
        LET message = llvm_get_error_message(error_ref)
        writef("Optimisation pass failed: %S*N", message)
