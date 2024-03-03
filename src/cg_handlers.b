@@ -437,7 +437,7 @@ $(
     char_ptr := llvm_build_gep2(builder, char_type, string_ptr, indices, 1, "getbyte.charptr")
 
     // Load the character from the string
-    char := llvm_build_load2(builder, char, char_ptr, "getbyte.char")
+    char := llvm_build_load2(builder, char_type, char_ptr, "getbyte.char")
 
     // Extend it to a bcpl word
     charword := llvm_build_zext(builder, char, word_type, "getbyte.charword")
