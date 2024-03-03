@@ -31,38 +31,36 @@ LET ss_init(workspace, cellcount) BE $(
     ss_workspace := workspace
     ss_pastworkspace := ss_workspace + cellcount
     ss_p := ss_workspace
+    ss_s := 0
+    trace("ss_init P=%N S=%N*N", ss_p, ss_s)
 $)
 
 // ss_pushframe - start a new frame on the simulated stack
 //
 // We're at the entry point of a called function or routine. At the moment
-// the simulated stack looks like this:
+// the simulated stack looks like this, for an example Fn(A1,A2):
 //
-// +-----+-----+----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-// | Po  | So  |    | ... |     |     |     | A1  | A2  | ... | An  |  Fn |
-// +-----+-----+----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-//    ^----------------------------- S --------------------------------^
-//    ^--------- k ----------^
-//    P
+// +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+// | Po  | So  |     | ... |     |     |     | A1  | A2  |  Fn |
+// +--0--+--1--+--2--+--3--+--4--+--5--+--6--+--7--+--8--+--9--+
+//    P                                                     S
 //
-// Where P points to the base of the caller's frame, S points to the top of
-// its stack and k is the distance from the base of the caller's frame to
-// the base of the new frame.
+// We are called with the argument to the SAVE operation, n=5. Because the
+// savespacesize is 3, we know n - savespacesize = 5 - 3 = 2 so there are
+// two arguments.
 //
-// When we finished, we will have saved the current P and S in the savespace at
-// P[k], P[k+1] and set up P' and S' to represent the new frame like this:
+// We need to set up a new frame pointed to by P with S positioned at the
+// free cell above the arguments:
 //
-// +-----+-----+----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-// | Po  | So  | Bo | ... |  P  |  S  | BB  | A1  | A2  | ... | An  |  Fn |
-// +-----+-----+----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-//                           ^
-//                           P' S'=0
+// +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+// |     |     |  BB | ... | Po  |     | BB  | A1  | A2  |     |     |
+// +-----+-----+-----+-----+--0--+--1--+--2--+--3--+--4--+--5--+--6--+
+//   Po                             Pnew                    S
 //
+// So Pnew = Po + S - save = P0 + 5 - 9
 // These diagrams assume savespacesize = 3 but savespacesize is set by the
 // BCPL compiler and available to us via the global vector. Our current
 // implementation requires it to be at least 3.
-//
-// We expect a following SAVE ocode operation to set S.
 //
 // Note that the savespace cells we use to hold P and S are not LLVM
 // objects but the basicblock value is.
@@ -72,18 +70,17 @@ $)
 // LLVMGetBasicBlockParent.
 //
 // When we pop this frame, the arguments and savespace reserved for us on
-// the stack will be discarded by resetting S to the k we are given. If we
-// are a function, we need to allow an extra 1 for the function result we
-// have left on the stack.
+// the stack will be discarded by resetting S to the k we are given (if
+// RTRN) or k+1 (if FNRN and P[k] is the result)
 
-LET ss_pushframe(k, is_function) BE $(
+LET ss_pushframe(save) BE $(
 
-    LET p1 = ss_p + k
+    LET p1 = ss_p + save
     assert(savespacesize >= 3)
     assert(p1 + 3 < ss_pastworkspace)
 
-    p1!0 := ss_p                         // Caller's frame
-    p1!1 := k + (is_function -> 1, 0)    // Caller's stack on exit, args &c discarded
+    p1!0 := ss_p                         // Caller's P
+    p1!1 := ss_s                         // Caller's S on exit, args &c discarded
     p1!2 := basicblock                   // So we can reset LLVM to the function and basic block
 
     ss_p := p1
@@ -114,12 +111,14 @@ $)
 
 LET ss_popframe() BE $(
 
-     LET our_p = ss_p
+    LET our_p = ss_p
     ss_p := our_p!0
     ss_s := our_p!1
+    // Restore the LLVM building context for the parent, if we haven't
+    // reached to the top
     basicblock := our_p!2
-    function := llvm_get_basic_block_parent(basicblock)
-    trace("ss_popframe P=%N S now %N*N", ss_p, ss_s)
+    function := basicblock = 0 -> 0, llvm_get_basic_block_parent(basicblock)
+    trace("ss_popframe P=%N S now %N basicblock %N function %N *N", ss_p, ss_s, basicblock, function)
 $)
 
 // ss_push - create a store location for the value and push in on the simulated stack
@@ -158,6 +157,7 @@ $)
 
 LET ss_tos() = ss_s
 
+LET ss_frame() = ss_p
 
 LET ss_get(n) = VALOF $(
     // Get the LLVM object at offset n from the base of the current
@@ -176,4 +176,14 @@ $)
 LET ss_stack(n) BE $(
     trace("ss_stack: adjust S from %N to %N*N", ss_s, n)
     ss_s := n
+$)
+
+LET ss_trace(label) BE $(
+    LET top = ss_p
+    trace("%S: ", label)
+    WHILE top > ss_workspace DO $(
+       trace("P=%N(P=%N,S=%N,BB); ", top, top!0, top!1)
+       top := top!0
+    $)
+    trace("P=%N(?,?,?) END*N", top, top!0, top!1)
 $)
