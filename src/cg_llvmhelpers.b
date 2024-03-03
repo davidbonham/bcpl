@@ -1,3 +1,11 @@
+LET write_llvm_string(string) BE $(
+   LET i = 0
+    UNTIL string%i = 0 DO $(
+        wrch(string%i)
+        i +:= 1
+    $)
+$)
+
 LET declare_global(module, number, word_ref) BE
 $(
     LET global_ref     = llvm_const_int(word_type, number, 0)
@@ -54,8 +62,9 @@ LET optimise_module(module) = VALOF $(
 
     error_ref := llvm_run_passes(module, "default<O2>", target_machine, pass_builder_options)
     IF error_ref ~= 0 DO $(
-       LET message = llvm_get_error_message(error_ref)
-       writef("Optimisation pass failed: %S*N", message)
+       writes("Optimisation pass failed: ")
+       write_llvm_string(llvm_get_error_message(error_ref))
+       newline()
        RESULTIS 1
     $)
 
@@ -70,42 +79,44 @@ $(
     // DB 19-dec-2023 - doing this makes module unprintable: llvm_delete_function(function)
     UNLESS is_current_section_empty DO
     $(
-        LET r = optimise_module(module)
-        TEST r ~= 0 DO
-        $(
+        LET r = llvm_verify_module(module, LLVM_PRINT_MESSAGE_ACTION)
+        IF r ~= 0 DO $(
+            writef("Failed to verify section %S*N", module_name)
+            longjump(fin_p, fin_l)
+        $)
+
+        r := optimise_module(module)
+        IF r ~= 0 DO $(
             writef("Failed to optimise section %S*N", module_name)
             longjump(fin_p, fin_l)
         $)
-        ELSE
-        $(
-            r := llvm_verify_module(module, LLVM_PRINT_MESSAGE_ACTION)
-            TEST r = 0 DO
-            $(
-                LET text = llvm_print_module_to_string(module)
-                TEST text = 0 THEN
-                $(
-                    writes("Unable to get text of module*N")
-                    longjump(fin_p, fin_l)
-                $)
-                ELSE
-                $(
-                    LET saved_output = output()
-                    LET i = 0
 
-                    selectoutput(gostream)
-                    UNTIL text%i = 0 DO $(
-                        wrch(text%i)
-                        i +:= 1
-                    $)
-                    selectoutput(saved_output)
-                    writef("Compiled section %S - %N bytes of IR*N", module_name, i)
-                $)
+        TEST r = 0 DO
+        $(
+            LET text = llvm_print_module_to_string(module)
+            TEST text = 0 THEN
+            $(
+                writes("Unable to get text of module*N")
+                longjump(fin_p, fin_l)
             $)
             ELSE
             $(
-                writef("Section %S not verified by LLVM*N", module_name)
-                longjump(fin_p, fin_l)
+                LET saved_output = output()
+                LET i = 0
+
+                selectoutput(gostream)
+                UNTIL text%i = 0 DO $(
+                    wrch(text%i)
+                    i +:= 1
+                $)
+                selectoutput(saved_output)
+                writef("Compiled section %S - %N bytes of IR*N", module_name, i)
             $)
+        $)
+        ELSE
+        $(
+            writef("Section %S not verified by LLVM*N", module_name)
+            longjump(fin_p, fin_l)
         $)
 
         //FIXME new pass manager llvm_dispose_pass_manager(fpm)
