@@ -38,4 +38,5 @@ I was trying to discover how to use the LLVM indirect branch support.
 Also, over time, things have rotted: Martin Richards has changed things in
 the distribution and the LLVM world has moved on, rewriting the optimisation
 pipeline and making other changes which broke my code generator. The current
-state of the repository reflects the broken state of the world.
+state of the repository reflects the broken state of the world. Currently,
+all of the trivial small tests in regress/ compile and execute correctly.
