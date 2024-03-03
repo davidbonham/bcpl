@@ -386,9 +386,11 @@ $(
         ss_push(parameter)
     $)
 
-    // The temporary RES/STACK holding location is not needed because
-    // the call object we build will return a result object to us.
-    // A := llvm_build_alloca(builder, word_type, "__res_a")
+    // The temporary RES/STACK holding location is not needed for function
+    // call and return because the call object we build will return a 
+    // result object to us. However, it is needed for the RES and RSTACK
+    // operations used in SWITCHON statements
+    A := llvm_build_alloca(builder, word_type, "__res_a")
 
     // Set up the VEC pending allocation mechanism
     pending_vec_allocation := 0
