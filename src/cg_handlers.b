@@ -29,7 +29,7 @@ $(
     UNTIL op = 0 DO
     $(
         wf("S=%N: %S ", ss_tos(), opname(op))
-        SWITCHON op INTO 
+        SWITCHON op INTO
         $(
             // OCODE instructions that take no arguments
             CASE s_abs:         nl(); cg_abs();         ENDCASE
@@ -121,7 +121,7 @@ $(
                 is_unreachable := FALSE
             ENDCASE
 
-            CASE s_entry:      
+            CASE s_entry:
                 // We expect to consume <label> <name> <SAVE> <n>
                 label := cg_rdn()
                 cg_rdname(name, 10)
@@ -135,7 +135,7 @@ $(
             CASE s_global:
                 // We expect to read a count followed by that many pairs
                 // of global numbers and labels
-                FOR g = 1 TO cg_rdn() DO 
+                FOR g = 1 TO cg_rdn() DO
                 $(
                     LET g, v = cg_rdn(), cg_rdn()
                     wf("GLOBAL %N %N*N", g, v)
@@ -150,8 +150,8 @@ $(
                 LET string_length = cg_rdn()
                 LET mark = ws_mark()
                 LET string = ws_alloc(string_length/BYTESPERWORD+1)
-                FOR i = 1 TO string_length DO 
-                $( 
+                FOR i = 1 TO string_length DO
+                $(
                     LET c = cg_rdn()
                     string%i := c
                 $)
@@ -169,7 +169,7 @@ $(
             $)
             ENDCASE
 
-            DEFAULT: 
+            DEFAULT:
                 writef("Bad OCODE operation %N(%S)", op, opname(op))
                 longjump(fin_p, fin_l)
         $)
@@ -183,7 +183,7 @@ $(
 $)
 
 AND cg_intrinsic(intrinsic, arity, result_type, type1, type2, type3) BE $(
-    LET parameter_types = VEC 10 
+    LET parameter_types = VEC 10
     LET parameters = VEC 10
     LET signature, intrinsic_fn, result = ?, ?, ?
     FOR i = 0 TO arity -1 DO $(
@@ -232,7 +232,7 @@ AND cg_sub()    BE cg_binary_op(llvm_build_sub,    "sub")
 AND cg_mod()    BE cg_binary_op(llvm_build_srem,   "mod")
 AND cg_mul()    BE cg_binary_op(llvm_build_mul,    "mul")
 AND cg_div()    BE cg_binary_op(llvm_build_sdiv,   "div")
-AND cg_lshift() BE cg_binary_op(llvm_build_shl,    "lshift") 
+AND cg_lshift() BE cg_binary_op(llvm_build_shl,    "lshift")
 AND cg_rshift() BE cg_binary_op(llvm_build_lshr,   "rshift") // proposed standard
 
 AND cg_gr()     BE cg_binary_op(cg_wrap_gr,        "gr")
@@ -251,8 +251,8 @@ AND cg_xor()    BE cg_binary_op(llvm_build_xor,    "xor")
 AND cg_abs() BE
 $(
     // FIXME: Replace with intrinsic in llvm 12
-    
-    // Generate the branch free version: 
+
+    // Generate the branch free version:
     //
     // x = 128-bit version of argument
     // y = x >> 63
@@ -285,13 +285,14 @@ $(
     datalab_itemn_count := 0
 $)
 
-AND cg_endproc() BE 
+AND cg_endproc() BE
 $(
     LET r = ?
+    ss_trace("cg_endproc entry")
 
     // If the last operation is a jump back to the top of the loop, we will
     // have created an unreachable empty basic block which should be deleted
-    IF llvm_get_first_instruction(basicblock) = 0 DO 
+    IF llvm_get_first_instruction(basicblock) = 0 DO
     $(
         LET dead_bb = basicblock
         basicblock := llvm_get_previous_basic_block(basicblock)
@@ -299,7 +300,7 @@ $(
     $)
     llvm_position_builder_at_end(builder, basicblock)
 
-    // If there is an indirect branch block, we need to add it to the 
+    // If there is an indirect branch block, we need to add it to the
     // function if its PHI node has incoming edges
     ibr_insert_and_cleanup(builder)
     dump_function_bbs("", function)
@@ -308,9 +309,11 @@ $(
     UNLESS r = 0 DO cgerror("unable to verify function*N")
 
     // This is the end of the function so we are no longer nested in it.
-    // Restore the state for the outer function
+    // Restore the state for the outer function. At this point, the current
+    // stack frame should be the one than cg_enter pushed.
     ss_popframe()
     llvm_position_builder_at_end(builder, basicblock)
+    ss_trace("cg_endproc exit")
 $)
 
 AND cg_eqv() BE
@@ -322,18 +325,38 @@ $(
     ss_push(eqv)
 $)
 
-AND cg_entry(label, name, save) BE 
+AND cg_entry(label, name, save) BE
 $(
-    // This handler combines ENTRY and SAVE so we can work out the number 
-    // of parameters from the SAVE value, which includes STACKSPACESIZE 
+    // When this function is entered, the invoking FNAP or RTAP will have
+    // created a stack frame that looks like this when we get here, for
+    // example:  ENTRY L10 6 letter SAVE 5
+    //
+    // +------+------+------+------+------+------+------+
+    // | Pold | K    | BB   | arg1 | arg2 |      |      |
+    // +--0---+--1---+--2---+--4---+--5---+--6---+--9---+
+    //    P                                  S
+    //
+    //
+    // This handler combines ENTRY and SAVE so we can work out the number
+    // of parameters from the SAVE value, which includes STACKSPACESIZE
     // words for the linkage area
     LET argc = save - savespacesize
     LET function_type = llvm_function_type(word_type, parameter_types, argc, 0)
 
+    ss_trace("cg_entry entry")
+
+    // We're now going to make the stack look like it will when we are
+    // called: we reserve the savearea and then emit code to get the
+    // values of the arguments and puch them on the stack. When we finish,
+    // S == save because of this.
+
     // Stack the current function - there will always be one because of
     // the enclosing dummy function that deals with jumps around routines
     // This records the current basic block in the linkage area.
-    ss_pushframe(save)
+    ss_pushframe(savespacesize)
+    ss_trace("cg_entry after pushframe")
+
+    ss_stack(savespacesize)
 
     // Add a function of this type to the current module and make it
     // current.
@@ -349,7 +372,8 @@ $(
 
     // Start the function off with a basic block at its entry and make
     // it current
-    basicblock := llvm_append_basic_block(function, "entry")
+    basicblock := llvm_append_basic_block_in_context(context, function, "entry")
+
     llvm_position_builder_at_end(builder, basicblock)
 
     // For all of the arguments we expect to be passed, allocate locals
@@ -362,11 +386,13 @@ $(
         ss_push(parameter)
     $)
 
-    // The temporary RES/STACK holding location is not yet in use
-    A := llvm_build_alloca(builder, word_type, "__res_a")
+    // The temporary RES/STACK holding location is not needed because
+    // the call object we build will return a result object to us.
+    // A := llvm_build_alloca(builder, word_type, "__res_a")
 
     // Set up the VEC pending allocation mechanism
     pending_vec_allocation := 0
+    ss_trace("cg_entry exit")
 $)
 
 AND cg_finish() BE
@@ -383,7 +409,7 @@ $(
     UNLESS is_unreachable
     $(
         // The variable on the top of the stack should be the result so get
-        // its value 
+        // its value
         LET result = ss_pop("fnrn.result")
         llvm_build_ret(builder, result)
     $)
@@ -405,8 +431,8 @@ $(
     // Calculate the llvm address and convert it into a pointer to char
     LET llvm_address = llvm_build_shl(builder, bcpl_address, llvm_const_int(word_type, 3, 0), "getbyte.llvmaddr")
     LET string_ptr = llvm_build_int_to_ptr(builder, llvm_address, llvm_pointer_type(char_type, 0), "getbyte.string")
- 
-    // Build a pointer to the character we want 
+
+    // Build a pointer to the character we want
     indices!0 := index
     char_ptr := llvm_build_gep2(builder, char_type, string_ptr, indices, 1, "getbyte.charptr")
 
@@ -438,7 +464,7 @@ AND cg_goto() BE $(
     LET bcplword = ss_pop("goto.bb.word")
     LET label = lab_find_bb(bcplword)
     LET bb_address = llvm_build_int_to_ptr(builder, bcplword, llvm_pointer_type(char_type, 0), "goto.bbptr")
-     
+
     // 3. Add our result and basic block as an incoming edge to the PHI node
     ibr_add_incoming(bb_address, basicblock)
 
@@ -450,7 +476,7 @@ AND cg_goto() BE $(
 
     // We ought to be followed by a LAB which will create the next basic
     // block for the next operation. However, if there is unreachable code
-    // after us, there won't be a LAB so we'll have to create the basic 
+    // after us, there won't be a LAB so we'll have to create the basic
     // block
     UNLESS cg_rdn_peek(0) = s_lab DO $(
         basicblock := llvm_create_basic_block_in_context(context, "goto.dead")
@@ -509,14 +535,14 @@ $(
     LET if_cond = llvm_build_icmp(builder, LLVM_IntEQ, bcplbool, llvm_const_int(word_type, 0, 0), "if_cond")
 
 
-    // Make sure the label table is set up with a basic block we can 
+    // Make sure the label table is set up with a basic block we can
     // jump to if the condition is true
     LET dummy = lab_declare(n, LABEL_JUMP)
     LET then_bb = lab_get_bb(n)
 
     // We need a new basic block to continue with if the condition is false
     // so add it after this one
-    LET else_bb = llvm_append_basic_block(function, "jf.else")
+    LET else_bb = llvm_append_basic_block_in_context(context, function, "jf.else")
 
     // Build the conditional branch
     llvm_build_cond_br(builder, if_cond, then_bb, else_bb)
@@ -533,14 +559,14 @@ $(
     LET bcplbool = ss_pop("truefalse")
     LET if_cond = llvm_build_icmp(builder, LLVM_IntNE, bcplbool, llvm_const_int(word_type, 0, 0), "if_cond")
 
-    // Make sure the label table is set up with a basic block we can 
+    // Make sure the label table is set up with a basic block we can
     // jump to if the condition is true
     LET dummy = lab_declare(n, LABEL_JUMP)
     LET then_bb = lab_get_bb(n)
 
     // We need a new basic block to continue with if the condition is false
     // so add it after this one
-    LET else_bb = llvm_append_basic_block(function, "jt.else")
+    LET else_bb = llvm_append_basic_block_in_context(context, function, "jt.else")
 
     // Build the conditional brancj
     llvm_build_cond_br(builder, if_cond, then_bb, else_bb)
@@ -564,7 +590,7 @@ $(
 
     // We ought to be followed by a LAB which will create the next basic
     // block for the next operation. However, if there is unreachable code
-    // after us, there won't be a LAB so we'll have to create the basic 
+    // after us, there won't be a LAB so we'll have to create the basic
     // block
     basicblock := llvm_create_basic_block_in_context(context, "dead")
     llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
@@ -575,7 +601,7 @@ AND cg_lab(label) BE
 $(
     // Make sure we have a basic block for this label. If a previous jump
     // mentioned it (because it's a branch forward), the block will have
-    // been created then. If this is the first mention, the lookup will 
+    // been created then. If this is the first mention, the lookup will
     // create it now.
     LET dummy = lab_declare(label, LABEL_LAB)
     LET bb = lab_get_bb(label)
@@ -625,13 +651,13 @@ $(
     ss_push(gv_value)
  $)
 
-AND cg_ln(n) BE 
+AND cg_ln(n) BE
 $(
     // This is a fix for an oddity in BCPLTRN which generates an LN 0 FNRN
     // at the end of a function even if we have already emitted a FNRN or
-    // RTRN. We track this case and if we are unreachable, ignore this LN 
+    // RTRN. We track this case and if we are unreachable, ignore this LN
     // (and we will igore the following FNRN)
-    UNLESS is_unreachable 
+    UNLESS is_unreachable
     $(
         // Create a constant and push its LLVMValueRef
         LET value = llvm_const_int(word_type, n, 0)
@@ -686,7 +712,7 @@ $(
     LET llvm_address, bcpl_address, lv, lv_holder = ?, ?, ?, ?
     LET S = ss_tos()
 
-    // The use of LLP in the statement 'LET x = VEC n' appears as 
+    // The use of LLP in the statement 'LET x = VEC n' appears as
     // LLP n STACK m and the use of VEC precludes the multiple
     // variable form of LET. This means we can peak ahead  and see
     // if the next ocode operation is a STACK to detect this.
@@ -705,7 +731,7 @@ $(
     $)
 $)
 
-AND cg_lp(n) BE 
+AND cg_lp(n) BE
 $(
     LET cell = ss_get(n)
     LET value = llvm_build_load2(builder, word_type, cell, "lp.value")
@@ -723,7 +749,7 @@ $(
     // Create a global of that type
     LET global_variable = llvm_add_global(module, string_array_type, "lstr.global")
 
-    // Calculate the bcpl address of this global 
+    // Calculate the bcpl address of this global
     LET llvm_address = llvm_build_ptr_to_int(builder, global_variable, word_type, "lstr.llvmaddr")
     LET bcpl_address = llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "lstr.bcpladdr")
 
@@ -752,7 +778,7 @@ $(
     // Pop the temp holding the bcpl address of the string
     LET bcpl_address = ss_pop("putbyte.bcpladdr")
 
-    // And the word holding the character we're to store, from which we 
+    // And the word holding the character we're to store, from which we
     // need to take the character
     LET charword = ss_pop("putbyte.charword")
     LET char = llvm_build_int_cast2(builder, charword, char_type, FALSE, "putbyte.char")
@@ -760,7 +786,7 @@ $(
     // Calculate the llvm address and convert it into a pointer to char
     LET llvm_address = llvm_build_shl(builder, bcpl_address, llvm_const_int(word_type, 3, 0), "putbyte.llvmaddr")
     LET string_ptr = llvm_build_int_to_ptr(builder, llvm_address, llvm_pointer_type(char_type, 0), "putbyte.string")
- 
+
     // Build a pointer to the location for the character
     indices!0 := index
     char_ptr := llvm_build_gep2(builder, char_type, string_ptr, indices, 1, "putbyte.charptr")
@@ -776,13 +802,13 @@ $)
 
 AND cg_res(n) BE $(
 
-    // RES is called to place the current result in a holding register A 
-    // while we branch to the label where an RSTACK will restore it. (We're 
-    // dealing with variable nesting of blocks in a control structure.). 
+    // RES is called to place the current result in a holding register A
+    // while we branch to the label where an RSTACK will restore it. (We're
+    // dealing with variable nesting of blocks in a control structure.).
     // According to the paper, it should implement this:
     //
     // A := P[S-2]; S := S - 1; goto Ln
-    // 
+    //
     // but that looks wrong. Instead:
     LET pending_result = ss_pop("res.result")
     llvm_build_store(builder, pending_result, A)
@@ -798,7 +824,7 @@ AND cg_rstack(n) BE $(
     ss_push(pending_result)
 $)
 
-AND cg_rtap(n, has_result) BE 
+AND cg_rtap(k, has_result) BE
 $(
     LET name, result = ?, ?
     // n tells is the stack pointer at the start of our call frame:
@@ -807,18 +833,20 @@ $(
     // | sa | sa | sa |  args.. | fn |    |
     // +----+----+----+----+----+----+----+
     //   ^                             ^
-    //   n                             S
-    //     
+    //   k                             S
+    //
     // On exit the stack should look like this:
     //
     // +----+----+
     // | R  |    |
     // +----+----+
-    //        ^                             
-    //        S                             
-    // 
+    //        ^
+    //        S
+    //
     // if it is a function returning R
-    LET num_args = ss_tos() - n - savespacesize - 1
+    LET x = ss_trace("cg_rtap")
+
+    LET num_args = ss_tos() - k - savespacesize - 1
     LET ep = ss_pop("rtap.ep")
 
     // Build a type for a pointer to a function with one argument
@@ -831,7 +859,7 @@ $(
     // Build the argument list by loading their values. We need to do this
     // in reverse as we pop the arguments of the stack
     LET arg_values = VEC 10
-    FOR i = num_args - 1 TO 0 BY -1 DO 
+    FOR i = num_args - 1 TO 0 BY -1 DO
     $(
         arg_values!i := ss_pop("arg")
     $)
@@ -841,8 +869,9 @@ $(
     result := llvm_build_call2(builder, signature, ep_p_fn, arg_values, num_args, name)
 
     // Clean up the call stack. If we're a function this is where to place
-    // the result
-    ss_stack(n)
+    // the result. For a FNAP, this os equivalent to S = k+1, P[S-1] = A
+    // where A is the OCODE location of the result.
+    ss_stack(k)
 
     IF has_result THEN
     $(
@@ -855,6 +884,8 @@ $(
 
     // This is a routine so if it is called as a function, we want something
     // recognisable
+    ss_trace("cg_rtrn")
+
     UNLESS is_unreachable DO llvm_build_ret(builder, llvm_const_int(word_type, #XBAD0BAD0BAD0BAD0, 0))
 $)
 
@@ -873,9 +904,8 @@ $)
 AND cg_section(name) BE
 $(
     LET gv_type = ?     // This will be the type of the global vector
-    LET signature = ?   // This will be the type of our outer function
 
-    // If we are currently in a module, finish it by emitting its LL code 
+    // If we are currently in a module, finish it by emitting its LL code
     // and deleting it
     UNLESS module = 0 DO emit_and_destroy_module()
 
@@ -885,7 +915,7 @@ $(
     // Create the new module and set up a function pass manager for
     // optimisation
     module := llvm_module_create_with_name_in_context(name, context)
- 
+
     // Declare the global vector as an external reference
     gv_type := llvm_array_type(word_type, GLOBALVECTORSIZE)
 
@@ -896,7 +926,7 @@ $(
     strappend(module_data_section, module_name)
     module_rodata_section := stralloc(".rodata.")
     strappend(module_rodata_section, module_name)
- 
+
     G := llvm_add_global(module, gv_type, "__bcpl_global_vector")
     llvm_set_section(G, "BCPLGVEC")
     llvm_set_visibility(G, LLVM_DEFAULT_VISIBILITY)
@@ -917,19 +947,8 @@ $(
     // Managemnt of indirect branches
     ibr_init(100)
 
-    // We create an outmost function in the module (so that the initual 
-    // JUMP around the text can be handled normally &c) which will be
-    // discarded when we reach the end of the current module.
-    signature := llvm_function_type(word_type, parameter_types, 0, 0)
-    function := llvm_add_function(module, "__bcpl_dummy_function", signature)
-    basicblock := llvm_append_basic_block(function, "__bcpl_dummy_function_entry")
-    llvm_position_builder_at_end(builder, basicblock)
-
-    // Create a dummy stack frame for the function
-    ss_pushframe(3, FALSE)
-
-    // Fake a RTRN
-    cg_rtrn()
+    function := 0
+    basicblock := 0
 $)
 
 AND cg_stind() BE
@@ -940,7 +959,7 @@ $(
     //
     //    value    := P!(S-2)    temporary holding i64 value
     //    address  := P!(S-1)    temporary holding bcpl address
-    //    !address := value      
+    //    !address := value
     //
     LET bcpl_address = ss_pop("stind.bcpladdr")
     LET source_value = ss_pop("stind.value")
@@ -978,9 +997,9 @@ $(
     llvm_build_store(builder, source_value, destination_variable)
 $)
 
-AND cg_stack(n) BE 
-$(  
-    // If we follow an LLP m then m is held in pending_vec_allocation 
+AND cg_stack(n) BE
+$(
+    // If we follow an LLP m then m is held in pending_vec_allocation
     // and it is our job to allocate the vector and place it in the
     // local m-1.
     IF pending_vec_allocation > 0 THEN $(
@@ -988,7 +1007,7 @@ $(
         //
         // | P   | ... | x  | S
         //
-        // and the first element of the vector is at P!pending_vec_allocation 
+        // and the first element of the vector is at P!pending_vec_allocation
         // and the last at n-1. So we know the number of elements in the vector
         LET vector_length = n - 1 - pending_vec_allocation
 
