@@ -797,7 +797,8 @@ $)
 
 AND cg_query() BE $(
     // This pushes a temp with an undefined value onto the stack
-    ss_push(#XBAD0BAD0BAD0BAD0)
+    LET undefined_value = llvm_const_int(word_type, #XBAD0BAD0BAD0BAD0, 0)
+    ss_push(undefined_value)
 $)
 
 AND cg_res(n) BE $(
