@@ -1,7 +1,9 @@
 GET "libhdr"
 
+
 LET child() BE $(
-    writes("in child*N")
+    wrch('C')
+    wrch('*N')
 $)
 
 LET start() BE $(
