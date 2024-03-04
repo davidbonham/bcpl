@@ -387,7 +387,7 @@ $(
     $)
 
     // The temporary RES/STACK holding location is not needed for function
-    // call and return because the call object we build will return a 
+    // call and return because the call object we build will return a
     // result object to us. However, it is needed for the RES and RSTACK
     // operations used in SWITCHON statements
     A := llvm_build_alloca(builder, word_type, "__res_a")
@@ -1006,13 +1006,18 @@ $(
     // and it is our job to allocate the vector and place it in the
     // local m-1.
     IF pending_vec_allocation > 0 THEN $(
-        // The stack looks something like this
+        // The stack looks something like this after x = VEC 3 and a
+        // STACK 10 where the values in quotes do not yet exist but
+        // represent the world we end up with.
         //
-        // | P   | ... | x  | S
+        // +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+        // | Po  | So  | Bo  | arg | "x" |"x!0"|"x!1"|"x!2"|"x!2"|     |
+        // +--0--+--1--+--2--+--3--+--4--+--5--+--6--+--7--+--9--+--n--+
+        //    P                       S     pend                   "S"
         //
         // and the first element of the vector is at P!pending_vec_allocation
         // and the last at n-1. So we know the number of elements in the vector
-        LET vector_length = n - 1 - pending_vec_allocation
+        LET vector_length = n - pending_vec_allocation + 1
 
         // Create this vector on the stack
         LET vec_type = llvm_array_type(word_type, vector_length)
@@ -1021,9 +1026,11 @@ $(
         // We need the BCPL address of element 0 of this array
         LET vector_llvmaddress = llvm_build_ptr_to_int(builder, vector, word_type, "stack.vecaddr")
         LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
+        writef("cg_stack: pending=%N S=%N n=%N vector length %N*N", pending_vec_allocation, ss_tos(), n, vector_length)
 
-        // And we store this in the stack cell preceding the vector
-        ss_set(pending_vec_allocation - 1, vector_bcpladdress)
+        // And we store this in the stack cell preceding the vector which
+        // is the top of the stack
+        ss_push(vector_bcpladdress)
 
         // Clear the pending operation we have now handled
         pending_vec_allocation := 0
