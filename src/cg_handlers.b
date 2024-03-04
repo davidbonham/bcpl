@@ -1026,7 +1026,6 @@ $(
         // We need the BCPL address of element 0 of this array
         LET vector_llvmaddress = llvm_build_ptr_to_int(builder, vector, word_type, "stack.vecaddr")
         LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
-        writef("cg_stack: pending=%N S=%N n=%N vector length %N*N", pending_vec_allocation, ss_tos(), n, vector_length)
 
         // And we store this in the stack cell preceding the vector which
         // is the top of the stack
