@@ -5,6 +5,7 @@ GET "c-api/autogen.llvmhdr"
 MANIFEST $( BYTESPERWORD     =  8  $)
 MANIFEST $( GLOBALVECTORSIZE = 256 $)
 MANIFEST $( READAHEAD = 4 $)
+MANIFEST $( MAXPENDINGLLPS = 512   $)
 
 STATIC
 $(
@@ -32,9 +33,8 @@ $(
     function                 // The current function
     basicblock               // The current basic block in this function
 
-    pending_vec_allocation   // Holds the n of LLP n when a STACK follows
-
-    //FIXME new pass manager fpm                      // The function pass manager for this module
+    pending_llps             // Vector of LLP n pnding a STORE
+    pending_llps_free        // Index of next free entry
 
     section_mark             // workspace level at start of section
     is_current_section_empty // Stops us emitting unused initial section
@@ -130,6 +130,10 @@ $(
     // Space for LLVM to return messages as BCPL strings
     llvm_result := ws_alloc(256 / 8)
     llvm_set_message_buffer(llvm_result)
+
+    // Space to record pending LLP operations per function
+    pending_llps := ws_alloc(MAXPENDINGLLPS*2)
+
 
     section_mark := ws_mark()
     is_current_section_empty := TRUE

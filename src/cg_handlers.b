@@ -314,6 +314,10 @@ $(
     ss_popframe()
     llvm_position_builder_at_end(builder, basicblock)
     ss_trace("cg_endproc exit")
+
+    // If there were some VEC declarations, we should have handled them
+    // via a STACK before we get an ENDPROC.
+    assert(pending_llps_free = 0)
 $)
 
 AND cg_eqv() BE
@@ -393,7 +397,8 @@ $(
     A := llvm_build_alloca(builder, word_type, "__res_a")
 
     // Set up the VEC pending allocation mechanism
-    pending_vec_allocation := 0
+    pending_llps_free := 0
+
     ss_trace("cg_entry exit")
 $)
 
@@ -714,14 +719,20 @@ $(
     LET llvm_address, bcpl_address, lv, lv_holder = ?, ?, ?, ?
     LET S = ss_tos()
 
-    // The use of LLP in the statement 'LET x = VEC n' appears as
-    // LLP n STACK m and the use of VEC precludes the multiple
-    // variable form of LET. This means we can peak ahead  and see
-    // if the next ocode operation is a STACK to detect this.
-    TEST cg_rdn_peek(0) = s_stack THEN $(
-        // Defer processing to the STACK hander. It will need to
-        // know n
-        pending_vec_allocation := n
+     TEST n >= S THEN $(
+        // The use of LLP in the statement 'LET x = VEC n' appears as
+        // LLP n where n is not yet set to the base of the vector.
+        // Defer the creation of this stack entry until the next STACK.
+        // We record the cell we should have pushed to (S) and the cell
+        // it should be referencing (n)
+        assert (pending_llps_free < MAXPENDINGLLPS*2)
+        pending_llps!pending_llps_free := S
+        pending_llps!(pending_llps_free+1) := n
+        pending_llps_free +:= 2
+
+        // We still need to maintain the stack pointer even though we will
+        // set up the cell later
+        ss_stack(ss_tos()+1)
     $)
     ELSE $(
         // This is a standard LLP
@@ -1002,37 +1013,40 @@ $)
 
 AND cg_stack(n) BE
 $(
-    // If we follow an LLP m then m is held in pending_vec_allocation
-    // and it is our job to allocate the vector and place it in the
-    // local m-1.
-    IF pending_vec_allocation > 0 THEN $(
-        // The stack looks something like this after x = VEC 3 and a
-        // STACK 10 where the values in quotes do not yet exist but
-        // represent the world we end up with.
-        //
-        // +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-        // | Po  | So  | Bo  | arg | "x" |"x!0"|"x!1"|"x!2"|"x!2"|     |
-        // +--0--+--1--+--2--+--3--+--4--+--5--+--6--+--7--+--9--+--n--+
-        //    P                       S     pend                   "S"
-        //
-        // and the first element of the vector is at P!pending_vec_allocation
-        // and the last at n-1. So we know the number of elements in the vector
-        LET vector_length = n - pending_vec_allocation + 1
 
-        // Create this vector on the stack
-        LET vec_type = llvm_array_type(word_type, vector_length)
-        LET vector = llvm_build_array_alloca(builder, vec_type, 0, "stack.vec")
+    // If there have been VEC declarations since the last STACK, deal with
+    // them now.
+    IF pending_llps_free > 0 THEN $(
+        // We have a sequence of S/n pairs in the pending list where
+        // S is the offset from P of the cell which is to hold the pointer to
+        // the vector and n is the cell corresponding to element 0 of the vector.
+        // The allocation process for each element will make use if the S value
+        // of the following element so to avoid the last element being a special
+        // case, we create a fake final element using the current value of S,
+        // our argument n, and a value of 0 for the base address.
+        pending_llps!pending_llps_free := n
 
-        // We need the BCPL address of element 0 of this array
-        LET vector_llvmaddress = llvm_build_ptr_to_int(builder, vector, word_type, "stack.vecaddr")
-        LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
+        FOR i = 0 TO pending_llps_free-2 BY 2 DO $(
+            LET S, N = pending_llps!i, pending_llps!(i+1)
+            LET vector_length = pending_llps!(i+2) - S
 
-        // And we store this in the stack cell preceding the vector which
-        // is the top of the stack
-        ss_push(vector_bcpladdress)
+            // Create this vector on the stack
+            LET vec_type = llvm_array_type(word_type, vector_length)
+            LET vector = llvm_build_array_alloca(builder, vec_type, 0, "stack.vec")
 
-        // Clear the pending operation we have now handled
-        pending_vec_allocation := 0
+            // We need the BCPL address of element 0 of this array
+            LET vector_llvmaddress = llvm_build_ptr_to_int(builder, vector, word_type, "stack.vecaddr")
+            LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
+
+            // Temporarily set the stack top to be S so that we can simply
+            // push the value into place. The final ss_stack below will
+            // tidy everything up
+            ss_stack(S)
+            ss_push(vector_bcpladdress)
+        $)
+
+        // Clear the pending list
+        pending_llps_free := 0
     $)
 
     ss_stack(n)
