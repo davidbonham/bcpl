@@ -17,10 +17,10 @@ $(
     llvm_set_initializer(emitted_value,  word_ref)
 
     // Alas, if we declare these with internal linkage, the linker will
-    // discard them as unreferenced when optimising. When we link multiple
-    // BCPL objects, we'll generate clashes here at link time.
-    llvm_set_linkage(emitted_global, LLVM_EXTERNAL_LINKAGE)
-    llvm_set_linkage(emitted_value,  LLVM_EXTERNAL_LINKAGE)
+    // discard them as unreferenced when optimising. WEAK_ANK seems to
+    // match our needs.
+    llvm_set_linkage(emitted_global, LLVM_WEAK_ANY_LINKAGE)
+    llvm_set_linkage(emitted_value,  LLVM_WEAK_ANY_LINKAGE)
 $)
 
 
