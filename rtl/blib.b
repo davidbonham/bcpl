@@ -8,7 +8,7 @@
 
 SECTION "blib"
 
-GET "stdlibhdr"
+GET "libhdr"
 
 LET writed(N, D) BE $(
     LET T = VEC 20
