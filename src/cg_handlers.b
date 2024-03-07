@@ -1073,6 +1073,18 @@ $(
         LET case_bb = lab_get_bb(case_label)
         llvm_add_case(switch, case_value, case_bb)
     $)
+
+    // Like GOTO, SWITCHON deals with all cases in its branches so LLVM treats
+    // the switch node we built as a terminator so we cannot emit more code
+    // into this basic block. We expect the next OCODE to be a LAB, which will
+    // start a new basic block but if it isn't, we need to create one. This is
+    // an unreachable dead block which we will eliminate later. This happens
+    // when TRN is very cautious and emits catch-all FNRN/RTRN code after us.
+    UNLESS cg_rdn_peek(0) = s_lab DO $(
+        basicblock := llvm_create_basic_block_in_context(context, "switchon.dead")
+        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
+        llvm_position_builder_at_end(builder, basicblock)
+    $)
 $)
 
 AND cg_binary_fop(build_fop, label) BE
