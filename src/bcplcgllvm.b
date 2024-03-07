@@ -1,11 +1,13 @@
 GET "libhdr"
 GET "bcplfecg"
 GET "c-api/autogen.llvmhdr"
+GET "c-api/llvmenums"
 
-MANIFEST $( BYTESPERWORD     =  8  $)
+MANIFEST $( BYTESPERWORD     =   8 $)
 MANIFEST $( GLOBALVECTORSIZE = 256 $)
-MANIFEST $( READAHEAD = 4 $)
-MANIFEST $( MAXPENDINGLLPS = 512   $)
+MANIFEST $( READAHEAD        =   4 $)
+MANIFEST $( MAXPENDINGLLPS   = 512 $)
+MANIFEST $( MAXPARAMETERS    =  32 $)
 
 STATIC
 $(
