@@ -183,16 +183,16 @@ $(
 $)
 
 AND cg_intrinsic(intrinsic, arity, result_type, type1, type2, type3) BE $(
-    LET parameter_types = VEC 10
+    LET intrinsic_parameter_types = VEC 10
     LET parameters = VEC 10
     LET signature, intrinsic_fn, result = ?, ?, ?
-    FOR i = 0 TO arity -1 DO $(
+    FOR i = 0 TO arity-1 DO $(
         LET arg = ss_pop("arg")
-        parameter_types!i := (@type1)!i
-        IF parameter_types!i = float_type DO arg := llvm_build_bit_cast(builder, arg, float_type, "farg")
+        intrinsic_parameter_types!i := (@type1)!i
+        IF intrinsic_parameter_types!i = float_type DO arg := llvm_build_bit_cast(builder, arg, float_type, "farg")
         parameters!i := arg
     $)
-    signature :=  llvm_function_type(result_type, parameter_types, arity, FALSE);
+    signature :=  llvm_function_type(result_type, intrinsic_parameter_types, arity, FALSE);
     intrinsic_fn := llvm_add_function(module, intrinsic, signature)
 
     // Build the call
@@ -365,6 +365,8 @@ $(
     // Add a function of this type to the current module and make it
     // current.
     function := llvm_add_function(module, name, function_type)
+    llvm_set_function_call_conv(function, 0)
+    writef("set calling convention for %S*N", name)
     llvm_set_section(function, module_text_section)
 
     // Like STATIC, a LET generates a static variable holding the procedure
@@ -952,8 +954,8 @@ $(
     // Since all BCPL signatures are just N BCPLWORD parameters, we can just
     // create a single vector for the maximum length we support and use the
     // first N elements in a signature.
-    parameter_types := ws_alloc(32)
-    FOR i = 0 TO 31 DO parameter_types!i := word_type
+    parameter_types := ws_alloc(MAXPARAMETERS)
+    FOR i = 0 TO MAXPARAMETERS-1 DO parameter_types!i := word_type
 
     // A new map from label to basic block
     lab_init(10000)

@@ -149,3 +149,4 @@
     [LLVM_GET_ERROR_MESSAGE] = "LLVMGetErrorMessage",
     [LLVM_DISPOSE_PASS_BUILDER_OPTIONS] = "LLVMDisposePassBuilderOptions",
     [LLVM_GET_TARGET_NAME] = "LLVMGetTargetName",
+    [LLVM_SET_FUNCTION_CALL_CONV] = "LLVMSetFunctionCallConv",

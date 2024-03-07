@@ -323,4 +323,6 @@ void LLVMDisposePassBuilderOptions(LLVMPassBuilderOptionsRef Options);
 
 void LLVMGetTargetName(LLVMTargetRef T);
 
+void LLVMSetFunctionCallConv(LLVMValueRef Fn, unsigned CC);
+
 

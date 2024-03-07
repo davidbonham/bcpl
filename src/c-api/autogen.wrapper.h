@@ -299,3 +299,5 @@ BCPLWORD llvm_dispose_pass_builder_options(BCPLWORD options);
 
 BCPLWORD llvm_get_target_name(BCPLWORD t);
 
+BCPLWORD llvm_set_function_call_conv(BCPLWORD fn, BCPLWORD cc);
+

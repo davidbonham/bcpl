@@ -149,3 +149,4 @@
     [LLVM_GET_ERROR_MESSAGE] = {1, (void*)llvm_get_error_message},
     [LLVM_DISPOSE_PASS_BUILDER_OPTIONS] = {1, (void*)llvm_dispose_pass_builder_options},
     [LLVM_GET_TARGET_NAME] = {1, (void*)llvm_get_target_name},
+    [LLVM_SET_FUNCTION_CALL_CONV] = {2, (void*)llvm_set_function_call_conv},

@@ -877,3 +877,9 @@ BCPLWORD llvm_get_target_name(BCPLWORD t)
     return 0;
 }
 
+BCPLWORD llvm_set_function_call_conv(BCPLWORD fn, BCPLWORD cc)
+{
+    LLVMSetFunctionCallConv((LLVMValueRef)(uintptr_t)fn, (unsigned)(uintptr_t)cc);
+    return 0;
+}
+
