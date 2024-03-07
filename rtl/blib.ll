@@ -20,75 +20,75 @@ source_filename = "blib"
 
 define i64 @writed(i64 %0, i64 %1) section ".text.blib" {
 entry:
-  %stack.vec = alloca [3 x i64], align 8
+  %stack.vec = alloca [21 x i64], align 8
   %stack.vecaddr = ptrtoint ptr %stack.vec to i64
   %stack.bcpladdr = ashr exact i64 %stack.vecaddr, 3
   %2 = call i64 @llvm.abs.i64(i64 %0, i1 false)
   %spec.select = sub i64 0, %2
   %.lobit = ashr i64 %0, 63
-  br label %label24
+  br label %label19
 
-label24:                                          ; preds = %label24, %entry
-  %STK4.1 = phi i64 [ %spec.select, %entry ], [ %div, %label24 ]
-  %STK138.promoted = phi i64 [ 0, %entry ], [ %add53, %label24 ]
+label19:                                          ; preds = %label19, %entry
+  %STK4.1 = phi i64 [ %spec.select, %entry ], [ %div, %label19 ]
+  %STK133.promoted = phi i64 [ 0, %entry ], [ %add48, %label19 ]
   %STK4.1.frozen = freeze i64 %STK4.1
   %div = sdiv i64 %STK4.1.frozen, 10
   %3 = mul i64 %div, 10
   %mod.decomposed = sub i64 %STK4.1.frozen, %3
-  %neg32 = sub nsw i64 0, %mod.decomposed
-  %add = add i64 %STK138.promoted, %stack.bcpladdr
+  %neg27 = sub nsw i64 0, %mod.decomposed
+  %add = add i64 %STK133.promoted, %stack.bcpladdr
   %stind.llvmaddr = shl i64 %add, 3
   %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
-  store i64 %neg32, ptr %stind.lv, align 8
-  %add53 = add i64 %STK138.promoted, 1
+  store i64 %neg27, ptr %stind.lv, align 8
+  %add48 = add i64 %STK133.promoted, 1
   %4 = add i64 %STK4.1, -10
   %eq = icmp ult i64 %4, -19
-  br i1 %eq, label %label24, label %label67
+  br i1 %eq, label %label19, label %label62
 
-label67:                                          ; preds = %label24
+label62:                                          ; preds = %label19
   %if_cond = icmp slt i64 %0, 0
-  %spec.select202 = add i64 %.lobit, %1
-  %add73 = add i64 %STK138.promoted, 2
-  %gr = icmp sgt i64 %add73, %spec.select202
-  br i1 %gr, label %label112, label %label87
+  %spec.select197 = add i64 %.lobit, %1
+  %add68 = add i64 %STK133.promoted, 2
+  %gr = icmp sgt i64 %add68, %spec.select197
+  br i1 %gr, label %label107, label %label82
 
-label87:                                          ; preds = %label67, %label87
-  %add97203 = phi i64 [ %add97, %label87 ], [ %add73, %label67 ]
+label82:                                          ; preds = %label62, %label82
+  %add92198 = phi i64 [ %add92, %label82 ], [ %add68, %label62 ]
   %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = call i64 %rtap_ep_p_fn(i64 32)
-  %add97 = add i64 %add97203, 1
-  %le.not = icmp sgt i64 %add97, %spec.select202
-  br i1 %le.not, label %label112, label %label87
+  %add92 = add i64 %add92198, 1
+  %le.not = icmp sgt i64 %add92, %spec.select197
+  br i1 %le.not, label %label107, label %label82
 
-label112:                                         ; preds = %label87, %label67
-  br i1 %if_cond, label %jf.else123, label %label131
+label107:                                         ; preds = %label82, %label62
+  br i1 %if_cond, label %jf.else118, label %label126
 
-jf.else123:                                       ; preds = %label112
-  %lg.value125 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
-  %rtap_ep_p_fn128 = inttoptr i64 %lg.value125 to ptr
-  %rtap130 = call i64 %rtap_ep_p_fn128(i64 45)
-  br label %label131
+jf.else118:                                       ; preds = %label107
+  %lg.value120 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %rtap_ep_p_fn123 = inttoptr i64 %lg.value120 to ptr
+  %rtap125 = call i64 %rtap_ep_p_fn123(i64 45)
+  br label %label126
 
-label131:                                         ; preds = %jf.else123, %label112
-  %ls144 = icmp slt i64 %STK138.promoted, 0
-  br i1 %ls144, label %label191, label %label150
+label126:                                         ; preds = %jf.else118, %label107
+  %ls139 = icmp slt i64 %STK133.promoted, 0
+  br i1 %ls139, label %label186, label %label145
 
-label150:                                         ; preds = %label131, %label150
-  %add177204 = phi i64 [ %add177, %label150 ], [ %STK138.promoted, %label131 ]
-  %add157 = add i64 %add177204, %stack.bcpladdr
-  %rv.llvmaddr = shl i64 %add157, 3
+label145:                                         ; preds = %label126, %label145
+  %add172199 = phi i64 [ %add172, %label145 ], [ %STK133.promoted, %label126 ]
+  %add152 = add i64 %add172199, %stack.bcpladdr
+  %rv.llvmaddr = shl i64 %add152, 3
   %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
   %rv.rv = load i64, ptr %rv.lv, align 8
-  %add163 = add i64 %rv.rv, 48
-  %lg.value165 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
-  %rtap_ep_p_fn168 = inttoptr i64 %lg.value165 to ptr
-  %rtap170 = call i64 %rtap_ep_p_fn168(i64 %add163)
-  %add177 = add nsw i64 %add177204, -1
-  %ge = icmp sgt i64 %add177204, 0
-  br i1 %ge, label %label150, label %label191
+  %add158 = add i64 %rv.rv, 48
+  %lg.value160 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %rtap_ep_p_fn163 = inttoptr i64 %lg.value160 to ptr
+  %rtap165 = call i64 %rtap_ep_p_fn163(i64 %add158)
+  %add172 = add nsw i64 %add172199, -1
+  %ge = icmp sgt i64 %add172199, 0
+  br i1 %ge, label %label145, label %label186
 
-label191:                                         ; preds = %label150, %label131
+label186:                                         ; preds = %label145, %label126
   ret i64 -4985279381848933680
 }
 
