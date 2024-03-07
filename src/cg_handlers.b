@@ -1017,18 +1017,19 @@ $(
     // If there have been VEC declarations since the last STACK, deal with
     // them now.
     IF pending_llps_free > 0 THEN $(
-        // We have a sequence of S/n pairs in the pending list where
+        // We have a sequence of S/N pairs in the pending list where
         // S is the offset from P of the cell which is to hold the pointer to
-        // the vector and n is the cell corresponding to element 0 of the vector.
+        // the vector and N is the cell corresponding to element 0 of the vector.
         // The allocation process for each element will make use if the S value
         // of the following element so to avoid the last element being a special
         // case, we create a fake final element using the current value of S,
         // our argument n, and a value of 0 for the base address.
-        pending_llps!pending_llps_free := n
+        pending_llps!(pending_llps_free+1) := n
 
         FOR i = 0 TO pending_llps_free-2 BY 2 DO $(
-            LET S, N = pending_llps!i, pending_llps!(i+1)
-            LET vector_length = pending_llps!(i+2) - S
+            LET ref_cell, vec_base = pending_llps!i, pending_llps!(i+1)
+            LET next_vec_base = pending_llps!(i+3)
+            LET vector_length = next_vec_base - vec_base
 
             // Create this vector on the stack
             LET vec_type = llvm_array_type(word_type, vector_length)
@@ -1038,10 +1039,10 @@ $(
             LET vector_llvmaddress = llvm_build_ptr_to_int(builder, vector, word_type, "stack.vecaddr")
             LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
 
-            // Temporarily set the stack top to be S so that we can simply
-            // push the value into place. The final ss_stack below will
-            // tidy everything up
-            ss_stack(S)
+            // Temporarily set the stack top to be the target of the original
+            // LLP so that we can simply push the value into place. The final 
+            // ss_stack below will tidy everything up
+            ss_stack(ref_cell)
             ss_push(vector_bcpladdress)
         $)
 
