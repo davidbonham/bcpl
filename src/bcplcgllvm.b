@@ -109,12 +109,27 @@ $)
 
 GET "cg_handlers.b"
 
+STATIC $( ocode_reader_active = FALSE $)
+LET ocode_reader() = VALOF $(
+    UNLESS ocode_reader_active DO $(
+        selectinput(findinput("ocode"))
+        ocode_reader_active := TRUE
+    $)
+    RESULTIS readn()
+$)
+
 LET codegenerate(workspace, workspace_size) BE
 $(
+  
     LET l_param_types = VEC 10
     IF errcount > 0 RETURN
     writef("LLVM code generator with %N words of workspace*N", workspace_size)
     llvm_tracing(debug)
+
+    // The following code replaced rdn with a version that reads from
+    // a raw ocode file in the current directory, ignoring the ocode
+    // that SYN and TRN have prepared for us
+    //rdn := ocode_reader
 
     // Set up the workspace
     ws_init(workspace, workspace_size)
