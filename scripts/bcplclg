@@ -20,7 +20,7 @@ function main()
     export PATH=${BL_ROOT}/bin:/usr/lib/llvm-17/bin:${PATH}
 
     name=$(basename --suffix .b "$1")
-    show cintsys64 -c ${BL_ROOT}/bin/mybcpl noselst ${name}.b to ${name}.ll
+    show cintsys64 -c ${BL_ROOT}/bin/mybcpl t64 noselst ${name}.b to ${name}.ll
     show clang -O2 -g3 ${RTL}/bcplinit.s ${name}.ll ${RTL}/blib.ll ${RTL}/bcplmain.c -o ${name} -Wl,-Map=${name}.map
     show ./${name}
     return $?
