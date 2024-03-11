@@ -11,7 +11,8 @@ else
 
     # Specify the release
     export DEVROOT=$(pwd)
-    export LLVMREL=llvm-project-17.0.6
+    export LLVM_VERSION=18.1.1
+    export LLVMREL=llvm-project-${LLVM_VERSION}
 
     # Prepare the source 
     if [ ! -d ${LLVMREL}.src ]
@@ -21,7 +22,7 @@ else
             echo === Using existing tar file in /tmp
         else
             echo === Downloading ${LLVMREL}
-            wget --directory-prefix=/tmp --no-verbose https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/${LLVMREL}.src.tar.xz
+            wget --directory-prefix=/tmp --no-verbose https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVMREL}.src.tar.xz
         fi
         echo === Extracting $LLVMREL
         tar --xz -x -f /tmp/${LLVMREL}.src.tar.xz

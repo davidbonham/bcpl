@@ -20,7 +20,7 @@ then
 fi
 
 export BL_ROOT=${DEVROOT}/bcpl-llvm
-PATH=/usr/lib/llvm-17/bin:${PATH}
+PATH=/usr/lib/llvm-18/bin:${PATH}
 
 export BCPLROOT=${DEVROOT}/official_bcpl_release/BCPL/cintcode
 export BCPL64ROOT=${DEVROOT}/official_bcpl_release/BCPL/cintcode
