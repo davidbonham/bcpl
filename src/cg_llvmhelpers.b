@@ -81,7 +81,9 @@ $(
     $(
         LET r = llvm_verify_module(module, LLVM_PRINT_MESSAGE_ACTION)
         IF r ~= 0 DO $(
+            LET text = llvm_print_module_to_string(module)
             writef("Failed to verify section %S*N", module_name)
+            write_llvm_string(text)
             longjump(fin_p, fin_l)
         $)
 
