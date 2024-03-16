@@ -1,6 +1,6 @@
 GET "libhdr"
 
-LET writed(N, D) BE $(
+LET mywrited(N, D) BE $(
     LET T = VEC 20
     AND I, K = 0, -N
     AND ZZ = VEC 5
@@ -13,4 +13,4 @@ LET writed(N, D) BE $(
     FOR J =I-1 TO 0 BY -1 DO wrch(T!J+'0')
 $)
 
-LET start() BE writed(123, 8)
+LET start() BE mywrited(123, 8)
