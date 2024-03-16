@@ -84,12 +84,12 @@ LET ibr_insert_and_cleanup(builder) BE $(
             // We need the indirect block/ Add all of its real destinations
             FOR i = 0 TO ibr_destination_count-1 DO $(
                 LET label = ibr_destinations!i
-                TEST lab_get_type(label) = LABEL_GOTO THEN $(
-                    LET bb = lab_get_bb(label)
-                    llvm_add_destination(ibr_indirect_br_instruction, bb)
-                $)
-                ELSE $(
-                $)
+                //TEST lab_get_type(label) = LABEL_GOTO THEN $(
+                //    LET bb = lab_get_bb(label)
+                //    llvm_add_destination(ibr_indirect_br_instruction, bb)
+                //$)
+                //ELSE $(
+                //$)
             $)
 
             // Insert it after the current basic block

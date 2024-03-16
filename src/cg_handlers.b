@@ -303,7 +303,7 @@ $(
     // If there is an indirect branch block, we need to add it to the
     // function if its PHI node has incoming edges
     ibr_insert_and_cleanup(builder)
-    dump_function_bbs("", function)
+    //dump_function_bbs("", function)
 
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
     UNLESS r = 0 DO cgerror("unable to verify function*N")
@@ -329,80 +329,6 @@ $(
     ss_push(eqv)
 $)
 
-AND cg_entry(label, name, save) BE
-$(
-    // When this function is entered, the invoking FNAP or RTAP will have
-    // created a stack frame that looks like this when we get here, for
-    // example:  ENTRY L10 6 letter SAVE 5
-    //
-    // +------+------+------+------+------+------+------+
-    // | Pold | K    | BB   | arg1 | arg2 |      |      |
-    // +--0---+--1---+--2---+--4---+--5---+--6---+--9---+
-    //    P                                  S
-    //
-    //
-    // This handler combines ENTRY and SAVE so we can work out the number
-    // of parameters from the SAVE value, which includes STACKSPACESIZE
-    // words for the linkage area
-    LET argc = save - savespacesize
-    LET function_type = llvm_function_type(word_type, parameter_types, argc, 0)
-
-    ss_trace("cg_entry entry")
-
-    // We're now going to make the stack look like it will when we are
-    // called: we reserve the savearea and then emit code to get the
-    // values of the arguments and puch them on the stack. When we finish,
-    // S == save because of this.
-
-    // Stack the current function - there will always be one because of
-    // the enclosing dummy function that deals with jumps around routines
-    // This records the current basic block in the linkage area.
-    ss_pushframe(savespacesize)
-    ss_trace("cg_entry after pushframe")
-
-    ss_stack(savespacesize)
-
-    // Add a function of this type to the current module and make it
-    // current.
-    function := llvm_add_function(module, name, function_type)
-    llvm_set_function_call_conv(function, 0)
-    writef("set calling convention for %S*N", name)
-    llvm_set_section(function, module_text_section)
-
-    // Like STATIC, a LET generates a static variable holding the procedure
-    // address. The label number allows us to record the static variable
-    // in the label table. First create the static (LLVM private global)
-    lab_declare(label, LABEL_ENTRY)
-    lab_get_static(label)
-    lab_set_static(label, llvm_const_ptr_to_int(function, word_type))
-
-    // Start the function off with a basic block at its entry and make
-    // it current
-    basicblock := llvm_append_basic_block_in_context(context, function, "entry")
-
-    llvm_position_builder_at_end(builder, basicblock)
-
-    // For all of the arguments we expect to be passed, allocate locals
-    // set to the argument values and place the locals in P so that the
-    // rest of the functions OCODE can find them
-    FOR arg = 0 TO argc-1 DO
-    $(
-        // Copy the argument into a local and place the local on the stack
-        LET parameter = llvm_get_param(function, arg)
-        ss_push(parameter)
-    $)
-
-    // The temporary RES/STACK holding location is not needed for function
-    // call and return because the call object we build will return a
-    // result object to us. However, it is needed for the RES and RSTACK
-    // operations used in SWITCHON statements
-    A := llvm_build_alloca(builder, word_type, "__res_a")
-
-    // Set up the VEC pending allocation mechanism
-    pending_llps_free := 0
-
-    ss_trace("cg_entry exit")
-$)
 
 AND cg_finish() BE
 $(
@@ -454,203 +380,6 @@ $(
     ss_push(charword)
 $)
 
-AND cg_global(global, label) BE
-$(
-    // The value of the label is the static variable we allocated to hold
-    // it. The value it contains is currently held as its initialiser
-    LET static_variable = lab_get_static(label)
-    LET static_value = llvm_get_initializer(static_variable)
-    declare_global(module, global, static_value)
-$)
-
-AND cg_goto() BE $(
-
-    // The word on the top of the stack is the address of the LLVM basic
-    // block for the label we are to branch to. We need to:
-    //
-    // 1. Pop the destination basic block and convert it from a BCPL word
-    //    to a basic block pointer
-    LET bcplword = ss_pop("goto.bb.word")
-    LET label = lab_find_bb(bcplword)
-    LET bb_address = llvm_build_int_to_ptr(builder, bcplword, llvm_pointer_type(char_type, 0), "goto.bbptr")
-
-    // 3. Add our result and basic block as an incoming edge to the PHI node
-    ibr_add_incoming(bb_address, basicblock)
-
-    // Promote the label to a GOTO
-    lab_declare(label, LABEL_GOTO)
-
-    // 4. Build a branch to the indirect branch's basic block.
-    llvm_build_br(builder, ibr_get_basic_block())
-
-    // We ought to be followed by a LAB which will create the next basic
-    // block for the next operation. However, if there is unreachable code
-    // after us, there won't be a LAB so we'll have to create the basic
-    // block
-    UNLESS cg_rdn_peek(0) = s_lab DO $(
-        basicblock := llvm_create_basic_block_in_context(context, "goto.dead")
-        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
-        llvm_position_builder_at_end(builder, basicblock)
-    $)
-$)
-
-AND cg_itemn(n, peek) BE
-$(
-    // Create a constant value and add it to those seen so far
-    datalab_itemns!datalab_itemn_count := llvm_const_int(word_type, n, 0)
-    datalab_itemn_count +:= 1
-
-    UNLESS peek = s_itemn DO
-    $(
-        // This is the end of the ITEMNs so we can tell if this is a STATIC
-        // (a single item) or a TABLE (multiple items)
-
-        LET static_global, static_type, static_data, static_section = ?, ?, ?, ?
-        TEST datalab_itemn_count > 1 THEN $(
-            // A table is an array of bcplwords
-            static_type := llvm_array_type(word_type, datalab_itemn_count)
-            static_data := llvm_const_array(word_type, datalab_itemns, datalab_itemn_count)
-            static_section := module_rodata_section
-        $)
-        ELSE $(
-            // A static is a single bcolword
-            static_type := word_type
-            static_data := datalab_itemns!0
-            static_section := module_data_section
-        $)
-
-        // The module's data holds a global initialised to the static data
-        // at compile time
-        static_global := llvm_add_global(module, static_type, "itemn.global")
-        llvm_set_linkage(static_global, LLVM_PRIVATE_LINKAGE)
-        llvm_set_initializer(static_global, static_data)
-        llvm_set_section(static_global, static_section)
-
-        // Record this label and location in our dictionary of statics
-        lab_declare(datalab_label, LABEL_STATIC)
-        lab_set_table(datalab_label, static_global)
-
-        // Clean up the workspace
-        ws_wipe(datalab_itemns)
-        datalab_itemns := 0
-    $)
-$)
-
-AND cg_jf(n) BE
-$(
-    // The variable on the top of the stack is true or false. We need to
-    // convert it to an i1 by comparing it with 0.
-    LET bcplbool = ss_pop("truefalse")
-    LET if_cond = llvm_build_icmp(builder, LLVM_IntEQ, bcplbool, llvm_const_int(word_type, 0, 0), "if_cond")
-
-
-    // Make sure the label table is set up with a basic block we can
-    // jump to if the condition is true
-    LET dummy = lab_declare(n, LABEL_JUMP)
-    LET then_bb = lab_get_bb(n)
-
-    // We need a new basic block to continue with if the condition is false
-    // so add it after this one
-    LET else_bb = llvm_append_basic_block_in_context(context, function, "jf.else")
-
-    // Build the conditional branch
-    llvm_build_cond_br(builder, if_cond, then_bb, else_bb)
-
-    // Make the false basic block current
-    basicblock := else_bb
-    llvm_position_builder_at_end(builder, basicblock)
-$)
-
-AND cg_jt(n) BE
-$(
-    // The variable on the top of the stack is true or false. We need to
-    // convert it to an i1 by comparing it with 0.
-    LET bcplbool = ss_pop("truefalse")
-    LET if_cond = llvm_build_icmp(builder, LLVM_IntNE, bcplbool, llvm_const_int(word_type, 0, 0), "if_cond")
-
-    // Make sure the label table is set up with a basic block we can
-    // jump to if the condition is true
-    LET dummy = lab_declare(n, LABEL_JUMP)
-    LET then_bb = lab_get_bb(n)
-
-    // We need a new basic block to continue with if the condition is false
-    // so add it after this one
-    LET else_bb = llvm_append_basic_block_in_context(context, function, "jt.else")
-
-    // Build the conditional brancj
-    llvm_build_cond_br(builder, if_cond, then_bb, else_bb)
-
-    // Make the false basic block current
-    basicblock := else_bb
-    llvm_position_builder_at_end(builder, basicblock)
-$)
-
-
-
-AND cg_jump(n) BE
-$(
-    // Look up the label to see if we have already allocated a basic block
-    // for it. If not, we allocate one.
-    LET dummy = lab_declare(n, LABEL_JUMP)
-    LET target_bb = lab_get_bb(n)
-
-    // Build a branch to the basic block
-    llvm_build_br(builder, target_bb)
-
-    // We ought to be followed by a LAB which will create the next basic
-    // block for the next operation. However, if there is unreachable code
-    // after us, there won't be a LAB so we'll have to create the basic
-    // block
-    basicblock := llvm_create_basic_block_in_context(context, "dead")
-    llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
-    llvm_position_builder_at_end(builder, basicblock)
-$)
-
-AND cg_lab(label) BE
-$(
-    // Make sure we have a basic block for this label. If a previous jump
-    // mentioned it (because it's a branch forward), the block will have
-    // been created then. If this is the first mention, the lookup will
-    // create it now.
-    LET dummy = lab_declare(label, LABEL_LAB)
-    LET bb = lab_get_bb(label)
-
-    // If the current basic block doesn't have a terminating instruction,
-    // connect it to the new block
-    IF llvm_get_basic_block_terminator(basicblock) = 0 DO llvm_build_br(builder, bb)
-
-    // Now we can safely add the new block
-    llvm_insert_existing_basic_block_after_insert_block(builder, bb)
-    llvm_position_builder_at_end(builder, bb)
-
-    // and make it current
-    basicblock := bb
-$)
-
-AND cg_lf(label) BE
-$(
-    LET static_contents = ?
-
-    lab_declare(label, LABEL_LF)
-
-    UNLESS lab_get_type(label) = LABEL_ENTRY DO $(
-        // Until we know it's an entry, we must assume it's a GOTO destination
-        // and push the associated basic block. At the end of the function, it
-        // will be a JUMP, GOTO or ENTRY. We'll delete the basic block for
-        // any label that have changed to an ENTRY.
-        UNLESS lab_has_static(label) DO $(
-            LET bb = lab_get_bb(label)
-            LET bb_address = llvm_block_address(function, bb)
-            LET bcplword = llvm_const_ptr_to_int(bb_address, word_type)
-            LET static_variable = lab_get_static(label)
-            lab_set_static(label, bcplword)
-            ibr_add_destination(label)
-        $)
-    $)
-
-    static_contents := llvm_build_load2(builder, word_type, lab_get_static(label), "lf.static.value")
-    ss_push(static_contents)
-$)
 
 AND cg_lg(n) BE
 $(
@@ -689,30 +418,6 @@ $(
     ss_push(bcpladdr)
 $)
 
-AND cg_ll(n) BE
-$(
-    // Get value of the static variable from our dictionary. This is the
-    // module global initialised to the static data. The compiler will ask
-    // for the right value only for statics, not tables so we know this
-    // value is a bcpl word.
-    LET dummy = lab_declare(n, LABEL_STATIC)
-    LET value = llvm_build_load2(builder, word_type, lab_get_static(n), "ll.value")
-
-    // Push it onto our simulated stack
-    ss_push(value)
-$)
-
-AND cg_lll(n) BE
-$(
-    // Get the address of the static variable and convert it to a BCPL l-value
-    // by dividing by BYTESPERWORD and pushing a variable holding this result
-    LET dummy = lab_declare(n, LABEL_STATIC)
-    LET llvm_address = llvm_build_ptr_to_int(builder, lab_get_static(n), word_type, "lll.llvmaddr")
-    LET bcpl_address = llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "lll.bcpladdr")
-
-    // Store the bcpl address of the string
-    ss_push(bcpl_address)
-$)
 
 AND cg_llp(n) BE
 $(
@@ -774,7 +479,6 @@ $(
     llvm_set_initializer(global_variable, string_ptr)
     llvm_set_linkage(global_variable, LLVM_PRIVATE_LINKAGE)
     llvm_set_section(global_variable, module_rodata_section)
-
 
     // Store the bcpl address of the string into our tempa and push it onto
     ss_push(bcpl_address)
@@ -863,7 +567,7 @@ $(
     LET x = ss_trace("cg_rtap")
 
     LET num_args = ss_tos() - k - savespacesize - 1
-    LET ep = ss_pop("rtap.ep")
+    LET ep = ss_pop("rtap.fn")
 
     // Build a type for a pointer to a function with one argument
     LET signature = llvm_function_type(word_type, parameter_types, num_args, 0)
@@ -992,19 +696,6 @@ $(
     llvm_build_store(builder, source_value, gv_address)
 $)
 
-AND cg_sl(n) BE
-$(
-    // Get the value to store from its temporary on the simulated stack
-    LET source_value = ss_pop("sl.value")
-
-    // Get the variable into which it is to be stored of the simulated stack
-    LET dummy = lab_declare(n, LABEL_STATIC)
-    LET destination_variable = lab_get_static(n)
-
-    // Store the value there
-    llvm_build_store(builder, source_value, destination_variable)
-$)
-
 AND cg_sp(n) BE
 $(
     LET source_value = ss_pop("sp.value")
@@ -1042,7 +733,7 @@ $(
             LET vector_bcpladdress = llvm_build_ashr(builder, vector_llvmaddress, llvm_const_int(word_type, 3, 0), "stack.bcpladdr")
 
             // Temporarily set the stack top to be the target of the original
-            // LLP so that we can simply push the value into place. The final 
+            // LLP so that we can simply push the value into place. The final
             // ss_stack below will tidy everything up
             ss_stack(ref_cell)
             ss_push(vector_bcpladdress)
@@ -1057,35 +748,6 @@ $)
 
 AND cg_store() BE RETURN
 
-AND cg_switchon(num_cases, default_label) BE
-$(
-    // The value upon which we switch
-    LET value = ss_pop("switchon.value")
-    LET dummy = lab_declare(default_label, LABEL_JUMP)
-    LET default_bb = lab_get_bb(default_label)
-    LET switch = llvm_build_switch(builder, value, default_bb, num_cases)
-
-    // Now add each of the cases we read
-    FOR i = 1 TO num_cases DO $(
-        LET number, case_label = cg_rdn(), cg_rdn()
-        LET case_value = llvm_const_int(word_type, number, 0)
-        LET dummy = lab_declare(case_label, LABEL_JUMP)
-        LET case_bb = lab_get_bb(case_label)
-        llvm_add_case(switch, case_value, case_bb)
-    $)
-
-    // Like GOTO, SWITCHON deals with all cases in its branches so LLVM treats
-    // the switch node we built as a terminator so we cannot emit more code
-    // into this basic block. We expect the next OCODE to be a LAB, which will
-    // start a new basic block but if it isn't, we need to create one. This is
-    // an unreachable dead block which we will eliminate later. This happens
-    // when TRN is very cautious and emits catch-all FNRN/RTRN code after us.
-    UNLESS cg_rdn_peek(0) = s_lab DO $(
-        basicblock := llvm_create_basic_block_in_context(context, "switchon.dead")
-        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
-        llvm_position_builder_at_end(builder, basicblock)
-    $)
-$)
 
 AND cg_binary_fop(build_fop, label) BE
 $(
@@ -1162,3 +824,333 @@ AND cg_fne() BE cg_ftest(LLVM_REAL_ONE, "fne")
 AND cg_fgr() BE cg_ftest(LLVM_REAL_OGT, "fgr")
 AND cg_fle() BE cg_ftest(LLVM_REAL_OLE, "fle")
 AND cg_fge() BE cg_ftest(LLVM_REAL_OGE, "fge")
+
+// ---------------------------------------------------------------------
+// LABEL-based operations
+// ---------------------------------------------------------------------
+
+
+AND cg_entry(label, name, save) BE
+$(
+    // When this function is entered, the invoking FNAP or RTAP will have
+    // created a stack frame that looks like this when we get here, for
+    // example:  ENTRY L10 6 letter SAVE 5
+    //
+    // +------+------+------+------+------+------+------+
+    // | Pold | K    | BB   | arg1 | arg2 |      |      |
+    // +--0---+--1---+--2---+--4---+--5---+--6---+--9---+
+    //    P                                  S
+    //
+    //
+    // This handler combines ENTRY and SAVE so we can work out the number
+    // of parameters from the SAVE value, which includes STACKSPACESIZE
+    // words for the linkage area
+    LET argc = save - savespacesize
+    LET function_type = llvm_function_type(word_type, parameter_types, argc, 0)
+    LET ba = ?
+
+    ss_trace("cg_entry entry")
+
+    // We're now going to make the stack look like it will when we are
+    // called: we reserve the savearea and then emit code to get the
+    // values of the arguments and puch them on the stack. When we finish,
+    // S == save because of this.
+
+    // Stack the current function - there will always be one because of
+    // the enclosing dummy function that deals with jumps around routines
+    // This records the current basic block in the linkage area.
+    ss_pushframe(savespacesize)
+    ss_trace("cg_entry after pushframe")
+
+    ss_stack(savespacesize)
+
+    // Add a function of this type to the current module and make it
+    // current.
+    function := llvm_add_function(module, name, function_type)
+    llvm_set_section(function, module_text_section)
+
+    // Start the function off with a basic block at its entry and make
+    // it current
+    basicblock := llvm_append_basic_block_in_context(context, function, "entry")
+    llvm_position_builder_at_end(builder, basicblock)
+
+   // For all of the arguments we expect to be passed, allocate locals
+    // set to the argument values and place the locals in P so that the
+    // rest of the functions OCODE can find them
+    FOR arg = 0 TO argc-1 DO
+    $(
+        // Copy the argument into a local and place the local on the stack
+        LET parameter = llvm_get_param(function, arg)
+        ss_push(parameter)
+    $)
+
+    // The temporary RES/STACK holding location is not needed for function
+    // call and return because the call object we build will return a
+    // result object to us. However, it is needed for the RES and RSTACK
+    // operations used in SWITCHON statements
+    A := llvm_build_alloca(builder, word_type, "__res_a")
+
+    // Like STATIC, a LET generates a static variable holding the procedure
+    // address. We actually store the first basic block and rely on RTAP/FNAP
+    // obtaining the parent function from it.
+    // The label number allows us to record the static variable in the label
+    // table. First create the static (LLVM private global)
+
+    lab_declare(label, LAB_ENTRY)
+    lab_add_static(label)
+    lab_set_static(label, llvm_const_ptr_to_int(function, word_type))
+
+    // Set up the VEC pending allocation mechanism
+    pending_llps_free := 0
+
+    ss_trace("cg_entry exit")
+$)
+
+AND cg_switchon(num_cases, default_label) BE
+$(
+    // The value upon which we switch. Make sure it exists.
+    LET value = ss_pop("switchon.value")
+    LET default_flags = lab_declare(default_label, LAB_JUMP)
+    LET default_bb = lab_get_basicblock(default_label)
+    LET switch = llvm_build_switch(builder, value, default_bb, num_cases)
+
+    // Now add each of the cases we read. Again, make sure the label exists
+    // in case it is declared later.
+    FOR i = 1 TO num_cases DO $(
+        LET number, case_label = cg_rdn(), cg_rdn()
+        LET case_value = llvm_const_int(word_type, number, 0)
+        LET case_flags = lab_declare(case_label, LAB_JUMP)
+        LET case_bb = lab_get_basicblock(case_label)
+        llvm_add_case(switch, case_value, case_bb)
+    $)
+
+    // Like GOTO, SWITCHON deals with all cases in its branches so LLVM treats
+    // the switch node we built as a terminator so we cannot emit more code
+    // into this basic block. We expect the next OCODE to be a LAB, which will
+    // start a new basic block but if it isn't, we need to create one. This is
+    // an unreachable dead block which we will eliminate later. This happens
+    // when TRN is very cautious and emits catch-all FNRN/RTRN code after us.
+    UNLESS cg_rdn_peek(0) = s_lab DO $(
+        basicblock := llvm_create_basic_block_in_context(context, "switchon.dead")
+        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
+        llvm_position_builder_at_end(builder, basicblock)
+    $)
+$)
+
+AND cg_global(global, label) BE
+$(
+    // The value of the label is the static variable we allocated to hold
+    // it. The value it contains is currently held as its initialiser
+    LET static_variable = lab_get_static(label)
+    LET static_value = llvm_get_initializer(static_variable)
+    declare_global(module, global, static_value)
+$)
+
+AND cg_goto() BE $(
+
+    // The word on the top of the stack is the address of the LLVM basic
+    // block for the label we are to branch to. We need to:
+    //
+    // 1. Pop the destination basic block and convert it from a BCPL word
+    //    to a basic block pointer
+    LET value = ss_pop("goto.bcplword")
+    LET destination_bb = llvm_build_int_to_ptr(builder, value, llvm_pointer_type(word_type, 0), "goto.addr")
+
+    llvm_build_br(builder, destination_bb)
+
+    // We ought to be followed by a LAB which will create the next basic
+    // block for the next operation. However, if there is unreachable code
+    // after us, there won't be a LAB so we'll have to create the basic
+    // block
+    UNLESS cg_rdn_peek(0) = s_lab DO $(
+        basicblock := llvm_create_basic_block_in_context(context, "goto.dead")
+        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
+        llvm_position_builder_at_end(builder, basicblock)
+    $)
+$)
+
+AND cg_itemn(n, peek) BE
+$(
+    // Create a constant value and add it to those seen so far
+    datalab_itemns!datalab_itemn_count := llvm_const_int(word_type, n, 0)
+    datalab_itemn_count +:= 1
+
+    UNLESS peek = s_itemn DO
+    $(
+        // This is the end of the ITEMNs so we can tell if this is a STATIC
+        // (a single item) or a TABLE (multiple items)
+
+        LET static_global, static_type, static_data, static_section = ?, ?, ?, ?
+        TEST datalab_itemn_count > 1 THEN $(
+            // A table is an array of bcplwords
+            static_type := llvm_array_type(word_type, datalab_itemn_count)
+            static_data := llvm_const_array(word_type, datalab_itemns, datalab_itemn_count)
+            static_section := module_rodata_section
+        $)
+        ELSE $(
+            // A static is a single bcolword
+            static_type := word_type
+            static_data := datalab_itemns!0
+            static_section := module_data_section
+        $)
+
+        // The module's data holds a global initialised to the static data
+        // at compile time
+        static_global := llvm_add_global(module, static_type, "itemn.global")
+        llvm_set_section(static_global, static_section)
+        llvm_set_initializer(static_global, static_data)
+        llvm_set_linkage(static_global, LLVM_INTERNAL_LINKAGE)
+
+        // Record this label and location in our dictionary of statics.
+        // We set the static flag ourselves because we have set up the
+        // global ourselves.
+        lab_declare(datalab_label, LAB_VARIABLE|LAB_STATIC)
+        lab_set_table(datalab_label, static_global)
+
+        // Clean up the workspace
+        ws_wipe(datalab_itemns)
+        datalab_itemns := 0
+    $)
+$)
+
+AND cg_jf(n) BE
+$(
+    // The variable on the top of the stack is true or false. We need to
+    // convert it to an i1 by comparing it with 0.
+    LET bcplbool = ss_pop("truefalse")
+    LET if_cond = llvm_build_icmp(builder, LLVM_IntEQ, bcplbool, llvm_const_int(word_type, 0, 0), "if_cond")
+
+
+    // Make sure the label table is set up with a basic block we can
+    // jump to if the condition is true
+    LET dummy = lab_declare(n, LAB_JUMP)
+    LET then_bb = lab_get_basicblock(n, "jf.then")
+
+    // We need a new basic block to continue with if the condition is false
+    // so add it after this one
+    LET else_bb = llvm_append_basic_block_in_context(context, function, "jf.else")
+
+    // Build the conditional branch
+    llvm_build_cond_br(builder, if_cond, then_bb, else_bb)
+
+    // Make the false basic block current
+    basicblock := else_bb
+    llvm_position_builder_at_end(builder, basicblock)
+$)
+
+AND cg_jt(n) BE
+$(
+    // The variable on the top of the stack is true or false. We need to
+    // convert it to an i1 by comparing it with 0.
+    LET bcplbool = ss_pop("truefalse")
+    LET if_cond = llvm_build_icmp(builder, LLVM_IntNE, bcplbool, llvm_const_int(word_type, 0, 0), "if_cond")
+
+    // Make sure the label table is set up with a basic block we can
+    // jump to if the condition is true
+    LET dummy = lab_declare(n, LAB_JUMP)
+    LET then_bb = lab_get_basicblock(n, "jt.then")
+
+    // We need a new basic block to continue with if the condition is false
+    // so add it after this one
+    LET else_bb = llvm_append_basic_block_in_context(context, function, "jt.else")
+
+    // Build the conditional branch
+    llvm_build_cond_br(builder, if_cond, then_bb, else_bb)
+
+    // Make the false basic block current
+    basicblock := else_bb
+    llvm_position_builder_at_end(builder, basicblock)
+$)
+
+
+
+AND cg_jump(n) BE
+$(
+    // There will be an earlier or later LAB operation that wull store the
+    // basic block in the static. Get hold of the basic block
+    LET dummy = lab_declare(n, LAB_JUMP)
+    LET target_bb = lab_get_basicblock(n, "jump.target")
+
+    // Build a branch to the basic block
+    llvm_build_br(builder, target_bb)
+
+    // We ought to be followed by a LAB which will create the next basic
+    // block for the next operation. However, if there is unreachable code
+    // after us, there won't be a LAB so we'll have to create the basic
+    // block
+    basicblock := llvm_create_basic_block_in_context(context, "dead")
+    llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
+    llvm_position_builder_at_end(builder, basicblock)
+$)
+
+AND cg_lab(label) BE
+$(
+    // Make sure we have a basic block for this label. If a previous jump
+    // mentioned it (because it's a branch forward), the block will have
+    // been created then. If this is the first mention, the lookup will
+    // create it now.
+    LET dummy = lab_declare(label, 0)
+    LET lab_bb = lab_get_basicblock(label, "lab")
+
+    // If the current basic block doesn't have a terminating instruction,
+    // connect it to the new block
+    IF llvm_get_basic_block_terminator(basicblock) = 0 DO llvm_build_br(builder, lab_bb)
+
+    // Now we can safely add the new block and make it current
+    llvm_insert_existing_basic_block_after_insert_block(builder, lab_bb)
+    llvm_position_builder_at_end(builder, lab_bb)
+    basicblock := lab_bb
+$)
+
+AND cg_lf(label) BE
+$(
+    // We are pushing the target for a following GOTO, RTAP or FNAP. These
+    // destinations (a basic block for a GOTO, a function for an  RTAP or
+    // FNAP) are stored in BCPL statics - and so LLVM globals - so we need
+    // to get that LLVM static and load its contents onto the stack.
+    LET dummy = lab_declare(label, 0)
+    LET static_variable = lab_get_static(label)
+    LET static_contents = llvm_build_load2(builder, word_type, static_variable, "lf.static.value")
+    ss_push(static_contents)
+$)
+
+AND cg_ll(n) BE
+$(
+    // Get value of the static variable from our dictionary. This is the
+    // module global initialised to the static data. The compiler will ask
+    // for the right value only for statics, not tables so we know this
+    // value is a bcpl word.
+    LET dummy = lab_declare(n, 0)
+    LET static_variable = lab_get_static(n)
+    LET value = llvm_build_load2(builder, word_type,static_variable, "ll.static.value")
+
+    // Push it onto our simulated stack
+    ss_push(value)
+$)
+
+AND cg_lll(n) BE
+$(
+    // Get the address of the static variable and convert it to a BCPL l-value
+    // by dividing by BYTESPERWORD and pushing a variable holding this result
+    LET dummy = lab_declare(n)
+    LET static_variable = lab_get_static(n)
+    LET llvm_address = llvm_build_ptr_to_int(builder, static_variable, word_type, "lll.llvmaddr")
+    LET bcpl_address = llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "lll.bcpladdr")
+
+    // Store the bcpl address of the string
+    ss_push(bcpl_address)
+$)
+
+AND cg_sl(n) BE
+$(
+    // Get the value to store from its temporary on the simulated stack
+    LET source_value = ss_pop("sl.value")
+
+    // Get the variable into which it is to be stored of the simulated stack
+    LET dummy = lab_declare(n, 0)
+    LET destination_variable = lab_get_static(n)
+
+    // Store the value there
+    llvm_build_store(builder, source_value, destination_variable)
+$)
+

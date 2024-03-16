@@ -1,119 +1,113 @@
-// #                                          
-// #         ##   #####  ###### #       ####  
-// #        #  #  #    # #      #      #      
-// #       #    # #####  #####  #       ####  
-// #       ###### #    # #      #           # 
-// #       #    # #    # #      #      #    # 
-// ####### #    # #####  ###### ######  ####                   
 
-MANIFEST $( 
-    LABEL_UNDEF = 0     // This label is not in use
-    LABEL_LAB           // Seen as LAB
-    LABEL_STATIC        // This label refers to static data
-    LABEL_JUMP          // This label is a JUMP/JT/JF destination
-    LABEL_ENTRY         // This label is ENTRY entry point
-    LABEL_LF            // This label was created by LF but type not yet known
-    LABEL_GOTO          // This label is a GOTO destinatin
-$)
+// UNDEFINED | CREATED       ......X
+// BLOCK                     .....X.
+// STATIC                    ....X..
+// ENTRY | GOTO | JUMP | VAR XXXX...
 
 STATIC $(
-    label_table_size
-    label_type
-    label_static
-    label_bb
+    label_table_size         // The number of table entries we can create
+    label_type               // The type of label i
+    label_static             // If not zero, the LLVM global variable for the static for label i
+    label_bb                 // If not zero, the LLVM basic block for label i
 $)
 
+MANIFEST $(
+    LAB_UNDEFINED =   0       // Label i is not in use
+    LAB_CREATED   =   1       // Label i has been created
+    LAB_BLOCK     =   2
+    LAB_STATIC    =   4
+    LAB_ENTRY     =   8       // One of the following...
+    LAB_GOTO      =  16
+    LAB_JUMP      =  32
+    LAB_VARIABLE  =  64
+$)
+
+LET lab_dump(title) BE $(
+    writes("Labels: ")
+    writes(title)
+    newline()
+    FOR i = 0 TO label_table_size - 1 DO $(
+        LET type = label_type!i
+        IF type = LAB_UNDEFINED LOOP
+        wrch('L')
+        writed(i,3)
+        wrch(' ')
+        IF (type & LAB_UNDEFINED) ~= 0 DO writes("UNDEFINED ")
+        IF (type & LAB_CREATED) ~= 0   DO writes("CREATED   ")
+        IF (type & LAB_BLOCK) ~= 0     DO writes("BLOCK ")
+        IF (type & LAB_STATIC) ~= 0    DO writes("STATIC ")
+        IF (type & LAB_ENTRY) ~= 0     DO writes("ENTRY ")
+        IF (type & LAB_GOTO) ~= 0      DO writes("GOTO ")
+        IF (type & LAB_JUMP) ~= 0      DO writes("JUMP ")
+        IF (type & LAB_VARIABLE) ~= 0  DO writes("VARIABLE ")
+        TEST label_bb!i ~= 0 DO writehex(label_bb!i,16) ELSE writes("no basic block  ")
+        wrch(' ')
+        TEST label_static!i ~= 0 DO writehex(label_static!i,16) ELSE writes("no static cell")
+        newline()
+    $)
+$)
 LET lab_init(max) BE $(
     label_table_size := max
     label_type   := ws_alloc(max)
     label_static := ws_alloc(max)
     label_bb := ws_alloc(max)
-    FOR i = 0 TO max - 1 DO 
-    $( 
-        label_type!i := LABEL_UNDEF
+    FOR i = 0 TO max - 1 DO
+    $(
+        label_type!i := LAB_UNDEFINED
         label_static!i := 0
         label_bb!i := 0
     $)
-
 $)
 
-LET lab_declare(n, type) BE $(
+LET lab_create(n, flag) BE $(
+    // Create a new label that does not already exist
+    IF n >= label_table_size DO cgerror("creating label L%N overflows the label table*N", n)
+    UNLESS label_type!n = LAB_UNDEFINED DO cgerror("creating label L%N that already exists*N", n)
 
-    // We do a check that any transition is an expected one
-    //
-    //      ->   UNDEF LAB   LF    GOTO  ENTRY STATIC JUMP
-    // UNDEF        E    U     U     U     U     U     U
-    // LAB          E    E     U     U     E     U     U
-    // LF           E    -     -     U     U     E     E
-    // GOTO         E    -     -     -     E     E     E
-    // ENTRY        E    E     -     E     E     E     E
-    // STATIC       E    -     E     E     E     -     E
-    // JUMP         E    -     E     E     E     E     -
-    //
-    // where E=Error, U=Update type, -=keep old type 
-    LET error(label, old_type, new_type) BE cgerror("Attempt to use L%N of type %S as %S*N", label, old_type, new_type)
+    label_type!n := LAB_CREATED | flag
+$)
 
-    IF n >= label_table_size DO cgerror("declaring label L%N overflows the label table*N", n)
+LET lab_declare(n, flag) BE $(
+    // Create the label if it does not already exist
+    IF n >= label_table_size DO cgerror("creating label L%N overflows the label table*N", n)
+    IF label_type!n = LAB_UNDEFINED DO lab_create(n, flag)
+$)
 
-    // We should never declare a label as UNDEF
-    IF type = LABEL_UNDEF THEN error(n, "any", "UNDEF")
-
-    SWITCHON label_type!n INTO $(
-
-        CASE LABEL_UNDEF:
-            label_type!n := type
-        ENDCASE
-
-        CASE LABEL_LAB:
-            IF type = LABEL_LAB | type = LABEL_ENTRY THEN error(n, "LAB", "LAB or ENTRY")
-            label_type!n := type
-        ENDCASE
-
-        CASE LABEL_LF:
-            IF type = LABEL_STATIC | type = LABEL_JUMP THEN error(n, "LF", "STATIC or JUMP")
-            IF type = LABEL_GOTO | type = LABEL_ENTRY THEN label_type!n := type
-        ENDCASE
-
-        CASE LABEL_GOTO:
-            IF type = LABEL_ENTRY | type = LABEL_STATIC | type = LABEL_JUMP THEN error(n, "GOTO", "JUMP, ENTRY or STATIC")
-        ENDCASE
-
-        CASE LABEL_ENTRY:
-            IF type ~= LABEL_LF THEN error(n, "ENTRY", "not LF")
-        ENDCASE
-
-        CASE LABEL_STATIC:
-            IF type ~= LABEL_LAB & type ~= LABEL_STATIC THEN error(n, "STATIC", "not LAB")
-        ENDCASE
-
-        CASE LABEL_JUMP:
-            IF type ~= LABEL_LAB & type ~= LABEL_JUMP THEN error(n, "JUMP", "not LAB or JUMP")
-        ENDCASE
+LET lab_add_static(n) = VALOF $(
+    IF label_type!n = LAB_UNDEFINED DO cgerror("attempt to add static to label L%N that does not exist*N", n)
+    IF (label_type!n & LAB_STATIC) = 0 DO $(
+        LET static_variable = llvm_add_global(module, word_type, "static")
+        llvm_set_linkage(static_variable, LLVM_INTERNAL_LINKAGE)
+        llvm_set_section(static_variable, module_data_section)
+        label_static!n := static_variable
+        label_type!n |:= LAB_STATIC
     $)
+    RESULTIS label_static!n
+$)
+
+LET lab_add_basicblock(n, name) = VALOF $(
+    IF label_type!n = LAB_UNDEFINED DO cgerror("attempt to add basic block to label L%N that does not exist*N", n)
+    IF (label_type!n & LAB_BLOCK) ~= 0 DO cgerror("attempt to add basic block to label L%N that already has one*N", n)
+
+    label_bb!n := llvm_create_basic_block_in_context(context, name)
+    label_type!n |:= LAB_BLOCK
+    RESULTIS label_bb!n
+$)
+
+LET lab_get_basicblock(n, name) = VALOF $(
+    IF label_type!n = LAB_UNDEFINED DO cgerror("attempt to get basic block for label L%N that does not exist*N", n)
+    RESULTIS (label_type!n & LAB_BLOCK) ~= 0 -> label_bb!n, lab_add_basicblock(n, name)
 $)
 
 
-LET lab_get_type(n) = label_type!n
-
-LET lab_get_type_name(type) = VALOF SWITCHON type INTO $(
-    CASE LABEL_UNDEF:  RESULTIS "UNDEF"
-    CASE LABEL_LAB:    RESULTIS "LAB"
-    CASE LABEL_STATIC: RESULTIS "STATIC"
-    CASE LABEL_JUMP:   RESULTIS "JUMP"
-    CASE LABEL_ENTRY:  RESULTIS "ENTRY"
-    CASE LABEL_LF:     RESULTIS "LF"
-    CASE LABEL_GOTO:   RESULTIS "GOTO"
-    DEFAULT: RESULTIS "BUG"
-$)
 
 LET lab_get_bb(n) = VALOF $(
 
-    // We don't expect this to be called for labels declared
-    // as static locations - ENTRY, RTAP, FNAP, LL, LLL, SL
-    // and GOTO for example
-    IF label_type!n = LABEL_STATIC DO cgerror("label L%N is STATIC but basic block requested.*N", n)
+    LET type = label_type!n
+    UNLESS label_static!n = 0 DO cgerror("label L%N is STATIC but basic block requested.*N", n)
+    UNLESS type = LAB_BLOCK DO cgerror("attempting to get basic bl for label L%N but it has type %N*N", n, type)
 
-    // If this label was declared ay an earlier LAB or GOTO it won't
+    // If this label was declared by an earlier LAB or GOTO it won't
     // have a basic block so we'll create one.
     IF label_bb!n = 0 THEN $(
         label_bb!n := llvm_create_basic_block_in_context(context, "label")
@@ -122,51 +116,18 @@ LET lab_get_bb(n) = VALOF $(
     RESULTIS label_bb!n
 $)
 
-LET lab_find_bb(bb) = VALOF $(
-    FOR label = 0 TO label_table_size-1 DO $(
-        IF label_bb!label = bb RESULTIS label
-    $)
-    RESULTIS -1
-$)
-
 LET lab_get_static(n) = VALOF $(
-
-    IF label_static!n = 0 THEN $(
-        LET static_variable = llvm_add_global(module, word_type, "static")
-        llvm_set_linkage(static_variable, LLVM_INTERNAL_LINKAGE)
-        llvm_set_section(static_variable, module_data_section)
-        label_static!n := static_variable
-    $)
-    RESULTIS label_static!n
+    RESULTIS lab_add_static(n)
 $)
 
 LET lab_set_static(n, value) BE $(
-    llvm_set_initializer(label_static!n, value)    
+    IF (label_type!n & LAB_STATIC) = 0 DO cgerror("attempting to set static for label L%N but static does not exist*N", n)
+    llvm_set_initializer(label_static!n, value)
 $)
 
-LET lab_set_table(n, value) BE label_static!n := value
-
-LET lab_has_bb(n) = label_bb!n ~= 0
-LET lab_has_static(n) = label_static!n ~= 0
-
-LET lab_dump() BE $(
-    FOR i = 0 TO label_table_size-1 DO $(
-        UNLESS label_type!i = LABEL_UNDEF DO $(
-            writef("Label %N type %N has_static=%N has_bb=%N*N", i, label_type!i, lab_has_static(i), lab_has_bb(i))
-        $)
-    $)
+LET lab_set_table(n, value) BE $(
+    UNLESS (label_bb!n = 0) ~= 0 DO cgerror("label L%N is a basic block but static set.*N", n)
+    UNLESS (label_type!n & LAB_VARIABLE) ~= 0 DO cgerror("attempting to set static for label L%N but it does not exist*N", n)
+    label_static!n := value
 $)
 
-LET dump_labels() BE $(
-    FOR i = 0 TO label_table_size-1 DO $(
-        UNLESS label_type!i = LABEL_UNDEF DO $(
-            TEST label_type!i = LABEL_STATIC THEN $(
-                llvm_print_value_to_string(label_static!i)
-                writef("label %N: %S*N", i, llvm_result)
-            $)
-            ELSE $(
-                writef("label %N: JUMP*N", i)
-            $)
-        $)
-    $)
-$)
