@@ -12,7 +12,7 @@
     .quad __stop           # 2 STOP is called by the FINISH O-code operator
     .quad 0                # 3
     .quad 0                # 4
-    .quad 0                # 5
+    .quad __muldiv         # 5
     .quad 0                # 6
     .quad 0                # 7
     .quad 0                # 8

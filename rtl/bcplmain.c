@@ -61,7 +61,27 @@ enum {
     G_GETBYTE       =  48,
     G_PUTBYTE       =  49,
 
+// A.8 Scaled Arithmetic
+
+    G_MULDIV        =   5,
 };
+
+bcplword_t __muldiv(bcplword_t a, bcplword_t b, bcplword_t c)
+{
+    // This function calculates (A*B)/C, holding the intermediate product
+    // (A*B) as a double length integer. If the result does not fit in a 
+    // normal integer the action of MULDIV is undefined. The remainder from 
+    // the division is left in global variable RESULT2.
+    const __int128_t la = a;
+    const __int128_t lb = b;
+    const __int128_t lc = c;
+    const __int128_t product = la * lb;
+    const __int128_t remainder = product % lc;
+    const __int128_t result = product / lc;
+    
+    __bcpl_global_vector[G_RESULT2] = remainder;
+    return result;  
+}
 
 void __stop(bcplword_t exitcode)
 {
