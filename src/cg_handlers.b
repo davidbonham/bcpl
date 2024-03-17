@@ -235,8 +235,66 @@ AND cg_sub()    BE cg_binary_op(llvm_build_sub,    "sub")
 AND cg_mod()    BE cg_binary_op(llvm_build_srem,   "mod")
 AND cg_mul()    BE cg_binary_op(llvm_build_mul,    "mul")
 AND cg_div()    BE cg_binary_op(llvm_build_sdiv,   "div")
-AND cg_lshift() BE cg_binary_op(llvm_build_shl,    "lshift")
-AND cg_rshift() BE cg_binary_op(llvm_build_lshr,   "rshift") // proposed standard
+
+// The proposed standard says "If the value of E2 is an integer larger than
+// the word length of the implementation then the result of the shift operation
+// is undefined.". It doesn't say what happens in the defined case of equality.
+//
+// In Martin richards' Cintpos manual, it says the result is always defined
+// and is zero for such shifts.
+AND cg_shift(shift_op) BE $(
+
+    LET rhs = ss_pop("rhs")
+    LET lhs = ss_pop("lhs")
+
+    LET shifted_value = ?
+    LET result_cell =  llvm_build_alloca(builder, word_type, "shift.result")
+    LET result_value = ?
+
+    // Generate code to test if the shift exceeds the LLVM limit (>=64)
+    LET shift_limit = llvm_const_int(word_type, bitsperword, 0)
+    LET is_shift_ok = llvm_build_icmp(builder, LLVM_IntSLT, rhs, shift_limit, "shift.defined")
+
+    // We'll branch to one of these cases:
+    LET valid_bb = llvm_create_basic_block_in_context(context, "shift.valid")
+    LET undefined_bb  = llvm_create_basic_block_in_context(context, "shift.undefined")
+
+    // And they'll both rejoin here:
+    LET merge_bb = llvm_create_basic_block_in_context(context, "shift.merge")
+
+    // Build the conditional branch
+    llvm_build_cond_br(builder, is_shift_ok, valid_bb, undefined_bb)
+
+    // Make the undefined case current and set the shift result to be zero,
+    // storing it in a temporary to avoid the need for a phi-node - the
+    // optimiser will sort this all out nicely.
+    llvm_append_existing_basic_block(function, undefined_bb)
+    basicblock := undefined_bb
+    llvm_position_builder_at_end(builder, basicblock)
+    shifted_value := llvm_const_int(word_type, 0, 0)
+    llvm_build_store(builder, shifted_value, result_cell)
+    llvm_build_br(builder, merge_bb)
+
+    // Now the valid case where we need to do the shift we were given
+    llvm_append_existing_basic_block(function, valid_bb)
+    basicblock := valid_bb
+    llvm_position_builder_at_end(builder, basicblock)
+    shifted_value := shift_op(builder, lhs, rhs, "shift.result")
+    llvm_build_store(builder, shifted_value, result_cell)
+    llvm_build_br(builder, merge_bb)
+
+    // Rejoin the mainline. We need to return the result on the stack so
+    // build the code to load it from our temporary
+    llvm_append_existing_basic_block(function, merge_bb)
+    basicblock := merge_bb
+    llvm_position_builder_at_end(builder, basicblock)
+    result_value := llvm_build_load2(builder, word_type, result_cell, "shift.result.value")
+
+    ss_push(result_value)
+$)
+
+AND cg_lshift() BE cg_shift(llvm_build_shl)
+AND cg_rshift() BE cg_shift(llvm_build_lshr)
 
 AND cg_gr()     BE cg_binary_op(cg_wrap_gr,        "gr")
 AND cg_le()     BE cg_binary_op(cg_wrap_le,        "le")
@@ -269,6 +327,7 @@ $(
     LET abs_value = llvm_build_int_cast2(builder, abs_value_128, word_type, TRUE, "abs.result")
     ss_push(abs_value)
 $)
+
 
 AND cg_const(k) BE
 $(
