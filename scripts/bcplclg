@@ -17,7 +17,7 @@ function main()
 {
     set -e
     export RTL=${BL_ROOT}/rtl
-    export PATH=${BL_ROOT}/bin:/usr/lib/llvm-17/bin:${PATH}
+    export PATH=${BL_ROOT}/bin:/usr/lib/llvm-18/bin:${PATH}
 
     name=$(basename --suffix .b "$1")
     show cintsys64 -c ${BL_ROOT}/bin/mybcpl t64 noselst ${name}.b to ${name}.ll
