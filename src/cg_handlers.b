@@ -219,7 +219,10 @@ $(
     ss_push(result)
 $)
 
-AND bool_to_word(bool) = llvm_build_int_cast2(builder, bool, word_type, 0, "booltoword")
+// We have a single bit boolean value but the BCPL standard requires TRUE
+// to be all bits set so we must SIGN extend it (arg4=1).
+AND bool_to_word(bool) = llvm_build_int_cast2(builder, bool, word_type, 1, "booltoword")
+
 AND cg_wrap_gr(builder, lhs, rhs, label) = bool_to_word(llvm_build_icmp(builder, LLVM_IntSGT, lhs, rhs, label))
 AND cg_wrap_le(builder, lhs, rhs, label) = bool_to_word(llvm_build_icmp(builder, LLVM_IntSLE, lhs, rhs, label))
 AND cg_wrap_eq(builder, lhs, rhs, label) = bool_to_word(llvm_build_icmp(builder, LLVM_IntEQ,  lhs, rhs, label))
@@ -578,7 +581,7 @@ $(
 
     // Build the argument list by loading their values. We need to do this
     // in reverse as we pop the arguments of the stack
-    LET arg_values = VEC 10
+    LET arg_values = VEC MAXPARAMETERS
     FOR i = num_args - 1 TO 0 BY -1 DO
     $(
         arg_values!i := ss_pop("arg")
