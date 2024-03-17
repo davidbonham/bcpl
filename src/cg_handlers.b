@@ -379,7 +379,7 @@ $(
 
     // If there were some VEC declarations, we should have handled them
     // via a STACK before we get an ENDPROC.
-    assert(pending_llps_free = 0)
+    assert(pending_llps_free = 0, "unhandled VEC")
 $)
 
 AND cg_eqv() BE
@@ -494,7 +494,7 @@ $(
         // Defer the creation of this stack entry until the next STACK.
         // We record the cell we should have pushed to (S) and the cell
         // it should be referencing (n)
-        assert (pending_llps_free < MAXPENDINGLLPS*2)
+        assert (pending_llps_free < MAXPENDINGLLPS*2, "too many VECs")
         pending_llps!pending_llps_free := S
         pending_llps!(pending_llps_free+1) := n
         pending_llps_free +:= 2

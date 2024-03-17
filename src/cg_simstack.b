@@ -76,8 +76,8 @@ $)
 LET ss_pushframe(save) BE $(
 
     LET p1 = ss_p + save
-    assert(savespacesize >= 3)
-    assert(p1 + 3 < ss_pastworkspace)
+    assert(savespacesize >= 3, "savespace tiny")
+    assert(p1 + 3 < ss_pastworkspace, "P past end of stack space")
 
     p1!0 := ss_p                         // Caller's P
     p1!1 := ss_s                         // Caller's S on exit, args &c discarded
@@ -130,7 +130,7 @@ $)
 
 LET ss_push(value) BE $(
     // Make sure there's room on the stack
-    assert (ss_p + ss_s + 1< ss_pastworkspace)
+    assert (ss_p + ss_s + 1< ss_pastworkspace, "push past end of stack space")
 
     // Create an LLVM location representing this stack cell
     ss_p!ss_s := llvm_build_alloca(builder, word_type, "STK")
@@ -162,13 +162,13 @@ LET ss_frame() = ss_p
 LET ss_get(n) = VALOF $(
     // Get the LLVM object at offset n from the base of the current
     // stack frame.
-    assert(n < ss_s)
+    assert(n < ss_s, "request for bad stack cell")
     trace("ss_get from cell %N: value=%N*N", n, ss_p!n)
     RESULTIS ss_p!n
 $)
 
 LET ss_set(n, value) BE $(
-    assert(n < ss_s)
+    assert(n < ss_s, "setting bad stack cell")
     trace("ss_set cell %N to %N*N", n, value)
     ss_p!n := value
 $)
