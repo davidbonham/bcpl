@@ -16,7 +16,7 @@ This means:
 The current target language and runtime is that specified by
 
     A PROPOSED DEFINITION OF THE LANGUAGE BCPL,
-    R. Firth, M. Richards, I. Willers,
+    M.D. Middleton, R. Firth, M. Richards, I. Willers,
     1st October 1979
 
 up to but not including the appendix (which defines extensions). Once that
@@ -35,8 +35,9 @@ I was trying to discover how to use the LLVM indirect branch support.
 
 ## The Current State of Play
 
-Also, over time, things have rotted: Martin Richards has changed things in
-the distribution and the LLVM world has moved on, rewriting the optimisation
-pipeline and making other changes which broke my code generator. The current
-state of the repository reflects the broken state of the world. Currently,
-all of the trivial small tests in regress/ compile and execute correctly.
+The codegenerator is currenty generating code that passes most of CMPLTEST
+with the following notable exceptions:
+
+- The SLCT operations are not yet implemented
+- GOTO is not yet working. The general case of 'GOTO expression' is troublesome as there is no basic block address handy.
+
