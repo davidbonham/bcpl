@@ -363,9 +363,11 @@ $(
     llvm_position_builder_at_end(builder, basicblock)
 
     // If there is an indirect branch block, we need to add it to the
-    // function if its PHI node has incoming edges
+    // function if its PHI node has incoming edges. This will also
+    // populate the indirect branch's label list with the labels for this
+    // function.
+    lab_dump("Before IBR");
     ibr_insert_and_cleanup(builder)
-    //dump_function_bbs("", function)
 
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
     UNLESS r = 0 DO cgerror("unable to verify function*N")
@@ -965,6 +967,10 @@ $(
     // Set up the VEC pending allocation mechanism
     pending_llps_free := 0
 
+    // We don't need an indirect branch yet so clear up the leftovers from
+    // the last function
+    ibr_reset()
+
     ss_trace("cg_entry exit")
 $)
 
@@ -1016,9 +1022,13 @@ AND cg_goto() BE $(
     // 1. Pop the destination basic block and convert it from a BCPL word
     //    to a basic block pointer
     LET value = ss_pop("goto.bcplword")
-    LET destination_bb = llvm_build_int_to_ptr(builder, value, llvm_pointer_type(word_type, 0), "goto.addr")
+    LET destination_ba = llvm_build_int_to_ptr(builder, value, llvm_pointer_type(word_type, 0), "goto.addr")
 
-    llvm_build_br(builder, destination_bb)
+    // Add an incoming edge to the indirect branch's phi node, specifying
+    // our destination as value for our case. Then branch unconditionally
+    // to the phi node's basic block
+    ibr_add_incoming(destination_ba, basicblock)
+    llvm_build_br(builder, ibr_get_basicblock())
 
     // We ought to be followed by a LAB which will create the next basic
     // block for the next operation. However, if there is unreachable code
@@ -1172,7 +1182,20 @@ $(
     // to get that LLVM static and load its contents onto the stack.
     LET dummy = lab_declare(label, 0)
     LET static_variable = lab_get_static(label)
-    LET static_contents = llvm_build_load2(builder, word_type, static_variable, "lf.static.value")
+    LET static_contents = ?
+
+    // This is a code address so the label must have a basic block and it
+    // must have an initial value which is the block address of that basic
+    // block. (Note: ENTRY will have already set its initialiser to the
+    // function address.)
+    IF llvm_get_initializer(static_variable) = 0 THEN $(
+        LET bb = lab_get_basicblock(label)
+        LET ba = llvm_block_address(function, bb)
+        LET value = llvm_const_ptr_to_int(ba, word_type)
+        llvm_set_initializer(static_variable, value)
+    $)
+
+    static_contents := llvm_build_load2(builder, word_type, static_variable, "lf.static.value")
     ss_push(static_contents)
 $)
 

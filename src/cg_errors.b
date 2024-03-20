@@ -5,4 +5,11 @@ $(
     writef(message, a0, a1, a2)
     longjump(fin_p, fin_l)
 $)
-LET assert(condition, reason) BE UNLESS condition DO cgerror("assertion failure: %S*N", reason)
+
+LET assert(condition, reason, a1, a2, a3, a4) BE $(
+    UNLESS condition DO $(
+        writes("assertion failure: ")
+        writef(reason, a1, a2, a3, a4)
+        longjump(fin_p, fin_l)
+    $)
+$)

@@ -9,6 +9,7 @@ STATIC $(
     label_type               // The type of label i
     label_static             // If not zero, the LLVM global variable for the static for label i
     label_bb                 // If not zero, the LLVM basic block for label i
+    label_maxseen            // The highest entry we have set so far
 $)
 
 MANIFEST $(
@@ -57,6 +58,7 @@ LET lab_init(max) BE $(
         label_static!i := 0
         label_bb!i := 0
     $)
+    label_maxseen := -1
 $)
 
 LET lab_create(n, flag) BE $(
@@ -65,12 +67,19 @@ LET lab_create(n, flag) BE $(
     UNLESS label_type!n = LAB_UNDEFINED DO cgerror("creating label L%N that already exists*N", n)
 
     label_type!n := LAB_CREATED | flag
+    IF n > label_maxseen THEN label_maxseen := n
 $)
 
 LET lab_declare(n, flag) BE $(
     // Create the label if it does not already exist
     IF n >= label_table_size DO cgerror("creating label L%N overflows the label table*N", n)
-    IF label_type!n = LAB_UNDEFINED DO lab_create(n, flag)
+    TEST label_type!n = LAB_UNDEFINED THEN $(
+       lab_create(n, flag)
+    $)
+    ELSE $(
+        // It exists - update the flags
+        label_type!n |:= flag
+    $)
 $)
 
 LET lab_add_static(n) = VALOF $(
@@ -131,3 +140,26 @@ LET lab_set_table(n, value) BE $(
     label_static!n := value
 $)
 
+// -----------------------------------------------------------------------------
+LET lab_populate_indirectbr(instruction) BE $(
+// -----------------------------------------------------------------------------
+//
+// Search for all of the labels in this function (that is, labels following
+// the last ENTRY label) and if we don't know they are JUMP labels or labels
+// of static VARIABLES, add them to the indirect branch instruction we have
+// been given as potential targets.
+
+    FOR i = label_maxseen TO 0 BY -1 DO $(
+
+        // Skip labels we know aren't usable
+        IF label_type!i = LAB_UNDEFINED       THEN LOOP
+        IF (label_type!i & LAB_JUMP)  ~= 0    THEN LOOP
+        IF (label_type!i & LAB_VARIABLE) ~= 0 THEN LOOP
+
+        // Stop when we reach the start of the current function
+        IF (label_type!i & LAB_ENTRY) ~= 0    THEN BREAK
+
+        assert(label_bb!i ~= 0, "label L%N didn't have expected basic block", i)
+        llvm_add_destination(instruction, label_bb!i)
+    $)
+$)

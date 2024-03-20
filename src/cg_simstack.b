@@ -18,6 +18,7 @@ STATIC $(
     ss_s             // S for the current frame
 $)
 
+LET ss_ps(label) BE trace("%S: P=%N S=%N P+S=%N", label, ss_p, ss_s, ss_p+ss_s)
 
 // ss_init - initialise the simulated stack ready for use
 //
@@ -73,9 +74,19 @@ $)
 // the stack will be discarded by resetting S to the k we are given (if
 // RTRN) or k+1 (if FNRN and P[k] is the result)
 
+// -----------------------------------------------------------------------------
 LET ss_pushframe(save) BE $(
+// -----------------------------------------------------------------------------
+//
+// We are declaring a new function so we need to create a new stack frame
+// above the enclosing functions frame. The value of P doesn't matter because
+// all of the code we will generate will be independend of P, all it cares
+// about is the relative positions of the expression in the frame.
 
-    LET p1 = ss_p + save
+    // The bottom of the new frame
+    LET p1 = ss_p + ss_s
+
+    // Make sure there is room in the frame to preserve our old state
     assert(savespacesize >= 3, "savespace tiny")
     assert(p1 + 3 < ss_pastworkspace, "P past end of stack space")
 
@@ -84,7 +95,8 @@ LET ss_pushframe(save) BE $(
     p1!2 := basicblock                   // So we can reset LLVM to the function and basic block
 
     ss_p := p1
-    trace("ss_pushframe P=%N S still %N*N", ss_p, ss_s)
+    ss_ps("ss_pushframe")
+    trace("*N")
 $)
 
 
@@ -137,9 +149,9 @@ LET ss_push(value) BE $(
 
     // And generate code to store the value in it
     llvm_build_store(builder, value, ss_p!ss_s)
+    ss_ps("ss_push ")
+    trace(" pushed %N S now %N*N", ss_p!ss_s, ss_s+1)
     ss_s +:= 1
-
-    trace("ss_push value %N P=%N S now %N*N", ss_p!(ss_s-1), ss_p, ss_s)
 $)
 
 // ss_pop - pop the value off the top of the simulated stack
@@ -187,3 +199,4 @@ LET ss_trace(label) BE $(
     $)
     trace("P=%N(?,?,?) END*N", top, top!0, top!1)
 $)
+
