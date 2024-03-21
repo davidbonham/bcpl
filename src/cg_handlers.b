@@ -366,7 +366,6 @@ $(
     // function if its PHI node has incoming edges. This will also
     // populate the indirect branch's label list with the labels for this
     // function.
-    lab_dump("Before IBR");
     ibr_insert_and_cleanup(builder)
 
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
@@ -1162,7 +1161,7 @@ $(
     // been created then. If this is the first mention, the lookup will
     // create it now.
     LET dummy = lab_declare(label, 0)
-    LET lab_bb = lab_get_basicblock(label, "lab")
+    LET lab_bb = lab_pending_basicblock(label, "lab")
 
     // If the current basic block doesn't have a terminating instruction,
     // connect it to the new block

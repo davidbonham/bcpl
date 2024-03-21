@@ -21,6 +21,7 @@ MANIFEST $(
     LAB_GOTO      =  16
     LAB_JUMP      =  32
     LAB_VARIABLE  =  64
+    LAB_USED      = 128
 $)
 
 LET lab_dump(title) BE $(
@@ -41,6 +42,7 @@ LET lab_dump(title) BE $(
         IF (type & LAB_GOTO) ~= 0      DO writes("GOTO ")
         IF (type & LAB_JUMP) ~= 0      DO writes("JUMP ")
         IF (type & LAB_VARIABLE) ~= 0  DO writes("VARIABLE ")
+        IF (type & LAB_USED) ~= 0      DO writes("USED ")   
         TEST label_bb!i ~= 0 DO writehex(label_bb!i,16) ELSE writes("no basic block  ")
         wrch(' ')
         TEST label_static!i ~= 0 DO writehex(label_static!i,16) ELSE writes("no static cell")
@@ -103,11 +105,22 @@ LET lab_add_basicblock(n, name) = VALOF $(
     RESULTIS label_bb!n
 $)
 
-LET lab_get_basicblock(n, name) = VALOF $(
+LET lab_common_basicblock(n, name, usage) = VALOF $(
     IF label_type!n = LAB_UNDEFINED DO cgerror("attempt to get basic block for label L%N that does not exist*N", n)
+    label_type!n |:= usage
     RESULTIS (label_type!n & LAB_BLOCK) ~= 0 -> label_bb!n, lab_add_basicblock(n, name)
 $)
 
+// ----------------------------------------------------------------------------
+LET lab_get_basicblock(n, name) = lab_common_basicblock(n, name, LAB_USED) 
+// ----------------------------------------------------------------------------
+// Get this label's basic block, creating it if necessary. We know we'll use it
+
+// ----------------------------------------------------------------------------
+LET lab_pending_basicblock(n, name) =lab_common_basicblock(n, name, 0)
+// ----------------------------------------------------------------------------
+// Get this label's basic block, creating it if necessary. We are defining it
+// not using it.
 
 
 LET lab_get_bb(n) = VALOF $(
@@ -115,6 +128,8 @@ LET lab_get_bb(n) = VALOF $(
     LET type = label_type!n
     UNLESS label_static!n = 0 DO cgerror("label L%N is STATIC but basic block requested.*N", n)
     UNLESS type = LAB_BLOCK DO cgerror("attempting to get basic bl for label L%N but it has type %N*N", n, type)
+
+    label_type!n |:= LAB_USED
 
     // If this label was declared by an earlier LAB or GOTO it won't
     // have a basic block so we'll create one.
@@ -126,17 +141,23 @@ LET lab_get_bb(n) = VALOF $(
 $)
 
 LET lab_get_static(n) = VALOF $(
+
+    label_type!n |:= LAB_USED
     RESULTIS lab_add_static(n)
 $)
 
 LET lab_set_static(n, value) BE $(
     IF (label_type!n & LAB_STATIC) = 0 DO cgerror("attempting to set static for label L%N but static does not exist*N", n)
+
+    label_type!n |:= LAB_USED
+
     llvm_set_initializer(label_static!n, value)
 $)
 
 LET lab_set_table(n, value) BE $(
     UNLESS (label_bb!n = 0) ~= 0 DO cgerror("label L%N is a basic block but static set.*N", n)
     UNLESS (label_type!n & LAB_VARIABLE) ~= 0 DO cgerror("attempting to set static for label L%N but it does not exist*N", n)
+
     label_static!n := value
 $)
 
@@ -153,6 +174,7 @@ LET lab_populate_indirectbr(instruction) BE $(
 
         // Skip labels we know aren't usable
         IF label_type!i = LAB_UNDEFINED       THEN LOOP
+        IF (label_type!i & LAB_USED) = 0      THEN LOOP
         IF (label_type!i & LAB_JUMP)  ~= 0    THEN LOOP
         IF (label_type!i & LAB_VARIABLE) ~= 0 THEN LOOP
 
