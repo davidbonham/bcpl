@@ -8,7 +8,7 @@ then
         copper)
             export DEVROOT=/home/david
             ;;
-        vanadium)
+        nickel)
             export DEVROOT=/mnt/data/fs/bcpl-development
             ;;
 
