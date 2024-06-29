@@ -45,6 +45,6 @@ gcc  -g -O0 -Xlinker -Map=/tmp/output.map -o ${BL_ROOT}/bin/cintsys64  ${OBJ}/ci
        ${BL_ROOT}/obj/extfn.o \
        ${BL_ROOT}/obj/stubzlib.o \
        ${BL_ROOT}/obj/llvm_bcpl_binding.o ${OBJ}/cintmain.o \
-       $(${LLVMBIN}/llvm-config --ldflags --libs) -pthread -ltinfo  -lm -lstdc++ 
+       $(${LLVMBIN}/llvm-config --ldflags --libs) -pthread  -lm -lstdc++ 
 
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# sudo apt install valgrind
+# sudo snap install --classic cmake
+#
 # Download the following release of LLVM and build a debug version, installing
 # it in llvm-debug-install. You should be in the development root (the parent
 # of bcpl-llvm) at this point
@@ -11,7 +14,7 @@ else
 
     # Specify the release
     export DEVROOT=$(pwd)
-    export LLVM_VERSION=18.1.1
+    export LLVM_VERSION=18.1.8
     export LLVMREL=llvm-project-${LLVM_VERSION}
 
     # Prepare the source 
@@ -35,6 +38,7 @@ else
     mkdir -p llvm-build
     cmake -B llvm-build -G "Unix Makefiles"                  \
         -DLLVM_BUILD_TOOLS=NO                                \
+        -DLLVM_ENABLE_TERMINFO=NO                            \
         -DLLVM_TARGETS_TO_BUILD=llvm                         \
         -DCMAKE_BUILD_TYPE=DEBUG                             \
         -DCMAKE_INSTALL_PREFIX=${DEVROOT}/llvm-debug-install \
