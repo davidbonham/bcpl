@@ -179,10 +179,10 @@ $)
 LET lab_populate_indirectbr(instruction) BE $(
 // -----------------------------------------------------------------------------
 //
-// Search for all of the labels in this function (that is, labels following
-// the last ENTRY label) and if we don't know they are JUMP labels or labels
-// of static VARIABLES, add them to the indirect branch instruction we have
-// been given as potential targets.
+// Search for all of the labels in this function (that is, labels that were 
+// operands to the LAB operation while the same LLVM function was the scope
+// as the current one). Add all such labels to the indirect branch instruction 
+// we have been given as potential targets.
 
     FOR i = label_maxseen TO 0 BY -1 DO $(
 
