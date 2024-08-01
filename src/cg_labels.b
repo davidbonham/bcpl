@@ -8,6 +8,7 @@ STATIC $(
     label_table_size         // The number of table entries we can create
     label_type               // The type of label i
     label_static             // If not zero, the LLVM global variable for the static for label i
+    label_function           // The LLVM function that was current when the LAB was declared
     label_bb                 // If not zero, the LLVM basic block for label i
     label_maxseen            // The highest entry we have set so far
 $)
@@ -21,7 +22,8 @@ MANIFEST $(
     LAB_GOTO      =  16
     LAB_JUMP      =  32
     LAB_VARIABLE  =  64
-    LAB_USED      = 128
+    LAB_LAB       = 128       // Operand of a LAB
+    LAB_USED      = 256
 $)
 
 LET lab_dump(title) BE $(
@@ -43,9 +45,13 @@ LET lab_dump(title) BE $(
         IF (type & LAB_JUMP) ~= 0      DO writes("JUMP ")
         IF (type & LAB_VARIABLE) ~= 0  DO writes("VARIABLE ")
         IF (type & LAB_USED) ~= 0      DO writes("USED ")   
+        IF (type & LAB_LAB) ~= 0       DO writes("LAB ")   
         TEST label_bb!i ~= 0 DO writehex(label_bb!i,16) ELSE writes("no basic block  ")
         wrch(' ')
         TEST label_static!i ~= 0 DO writehex(label_static!i,16) ELSE writes("no static cell")
+        wrch(' ')
+        TEST label_function!i ~= 0 DO writehex(label_function!i,16) ELSE writes("no enclosing function")
+        
         newline()
     $)
 $)
@@ -53,12 +59,14 @@ LET lab_init(max) BE $(
     label_table_size := max
     label_type   := ws_alloc(max)
     label_static := ws_alloc(max)
+    label_function := ws_alloc(max)
     label_bb := ws_alloc(max)
     FOR i = 0 TO max - 1 DO
     $(
         label_type!i := LAB_UNDEFINED
         label_static!i := 0
         label_bb!i := 0
+        label_function!i := 0
     $)
     label_maxseen := -1
 $)
@@ -72,7 +80,7 @@ LET lab_create(n, flag) BE $(
     IF n > label_maxseen THEN label_maxseen := n
 $)
 
-LET lab_declare(n, flag) BE $(
+LET lab_declare(n, flag, fn) BE $(
     // Create the label if it does not already exist
     IF n >= label_table_size DO cgerror("creating label L%N overflows the label table*N", n)
     TEST label_type!n = LAB_UNDEFINED THEN $(
@@ -81,6 +89,12 @@ LET lab_declare(n, flag) BE $(
     ELSE $(
         // It exists - update the flags
         label_type!n |:= flag
+    $)
+    IF (label_type!n & LAB_LAB) ~= 0 THEN $(
+       // We are defining a label via a LAB operation. Record the current
+       // function that defines the scope of the label. This helps us 
+       // to identify legal targets of indirect branches (GOTO).
+       label_function!n := fn
     $)
 $)
 
@@ -177,9 +191,9 @@ LET lab_populate_indirectbr(instruction) BE $(
         IF (label_type!i & LAB_USED) = 0      THEN LOOP
         IF (label_type!i & LAB_JUMP)  ~= 0    THEN LOOP
         IF (label_type!i & LAB_VARIABLE) ~= 0 THEN LOOP
+        IF (label_type!i & LAB_LAB) = 0       THEN LOOP
 
-        // Stop when we reach the start of the current function
-        IF (label_type!i & LAB_ENTRY) ~= 0    THEN BREAK
+        IF label_function!i ~= function THEN LOOP
 
         assert(label_bb!i ~= 0, "label L%N didn't have expected basic block", i)
         llvm_add_destination(instruction, label_bb!i)

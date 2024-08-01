@@ -959,7 +959,7 @@ $(
     // The label number allows us to record the static variable in the label
     // table. First create the static (LLVM private global)
 
-    lab_declare(label, LAB_ENTRY)
+    lab_declare(label, LAB_ENTRY, function)
     lab_add_static(label)
     lab_set_static(label, llvm_const_ptr_to_int(function, word_type))
 
@@ -977,7 +977,7 @@ AND cg_switchon(num_cases, default_label) BE
 $(
     // The value upon which we switch. Make sure it exists.
     LET value = ss_pop("switchon.value")
-    LET default_flags = lab_declare(default_label, LAB_JUMP)
+    LET default_flags = lab_declare(default_label, LAB_JUMP, function)
     LET default_bb = lab_get_basicblock(default_label)
     LET switch = llvm_build_switch(builder, value, default_bb, num_cases)
 
@@ -986,7 +986,7 @@ $(
     FOR i = 1 TO num_cases DO $(
         LET number, case_label = cg_rdn(), cg_rdn()
         LET case_value = llvm_const_int(word_type, number, 0)
-        LET case_flags = lab_declare(case_label, LAB_JUMP)
+        LET case_flags = lab_declare(case_label, LAB_JUMP, function)
         LET case_bb = lab_get_basicblock(case_label)
         llvm_add_case(switch, case_value, case_bb)
     $)
@@ -1075,7 +1075,7 @@ $(
         // Record this label and location in our dictionary of statics.
         // We set the static flag ourselves because we have set up the
         // global ourselves.
-        lab_declare(datalab_label, LAB_VARIABLE|LAB_STATIC)
+        lab_declare(datalab_label, LAB_VARIABLE|LAB_STATIC, function)
         lab_set_table(datalab_label, static_global)
 
         // Clean up the workspace
@@ -1094,7 +1094,7 @@ $(
 
     // Make sure the label table is set up with a basic block we can
     // jump to if the condition is true
-    LET dummy = lab_declare(n, LAB_JUMP)
+    LET dummy = lab_declare(n, LAB_JUMP, function)
     LET then_bb = lab_get_basicblock(n, "jf.then")
 
     // We need a new basic block to continue with if the condition is false
@@ -1118,7 +1118,7 @@ $(
 
     // Make sure the label table is set up with a basic block we can
     // jump to if the condition is true
-    LET dummy = lab_declare(n, LAB_JUMP)
+    LET dummy = lab_declare(n, LAB_JUMP, function)
     LET then_bb = lab_get_basicblock(n, "jt.then")
 
     // We need a new basic block to continue with if the condition is false
@@ -1139,7 +1139,7 @@ AND cg_jump(n) BE
 $(
     // There will be an earlier or later LAB operation that wull store the
     // basic block in the static. Get hold of the basic block
-    LET dummy = lab_declare(n, LAB_JUMP)
+    LET dummy = lab_declare(n, LAB_JUMP, function)
     LET target_bb = lab_get_basicblock(n, "jump.target")
 
     // Build a branch to the basic block
@@ -1160,7 +1160,7 @@ $(
     // mentioned it (because it's a branch forward), the block will have
     // been created then. If this is the first mention, the lookup will
     // create it now.
-    LET dummy = lab_declare(label, 0)
+    LET dummy = lab_declare(label, LAB_LAB, function)
     LET lab_bb = lab_pending_basicblock(label, "lab")
 
     // If the current basic block doesn't have a terminating instruction,
@@ -1179,7 +1179,7 @@ $(
     // destinations (a basic block for a GOTO, a function for an  RTAP or
     // FNAP) are stored in BCPL statics - and so LLVM globals - so we need
     // to get that LLVM static and load its contents onto the stack.
-    LET dummy = lab_declare(label, 0)
+    LET dummy = lab_declare(label, 0, function)
     LET static_variable = lab_get_static(label)
     LET static_contents = ?
 
@@ -1204,7 +1204,7 @@ $(
     // module global initialised to the static data. The compiler will ask
     // for the right value only for statics, not tables so we know this
     // value is a bcpl word.
-    LET dummy = lab_declare(n, 0)
+    LET dummy = lab_declare(n, 0, function)
     LET static_variable = lab_get_static(n)
     LET value = llvm_build_load2(builder, word_type,static_variable, "ll.static.value")
 
@@ -1216,7 +1216,7 @@ AND cg_lll(n) BE
 $(
     // Get the address of the static variable and convert it to a BCPL l-value
     // by dividing by BYTESPERWORD and pushing a variable holding this result
-    LET dummy = lab_declare(n)
+    LET dummy = lab_declare(n, 0, function)
     LET static_variable = lab_get_static(n)
     LET llvm_address = llvm_build_ptr_to_int(builder, static_variable, word_type, "lll.llvmaddr")
     LET bcpl_address = llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "lll.bcpladdr")
@@ -1231,7 +1231,7 @@ $(
     LET source_value = ss_pop("sl.value")
 
     // Get the variable into which it is to be stored of the simulated stack
-    LET dummy = lab_declare(n, 0)
+    LET dummy = lab_declare(n, 0, function)
     LET destination_variable = lab_get_static(n)
 
     // Store the value there
