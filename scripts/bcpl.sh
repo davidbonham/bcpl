@@ -6,7 +6,7 @@ usage()
 }
 
 
-TEMP=`getopt --name bcpl --options OScdmo:v --longoptions optimise.source,compile,dryrun,map,object,verbose -- "$@"`
+TEMP=`getopt --name bcpl --options OScdmo:v --longoptions optimise,source,compile,dryrun,map,object:,verbose -- "$@"`
 eval set -- "$TEMP"
 
 # Path to installed run-time
