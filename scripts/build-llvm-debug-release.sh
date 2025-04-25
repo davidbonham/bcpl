@@ -6,6 +6,7 @@
 # Download the following release of LLVM and build a debug version, installing
 # it in llvm-debug-install. You should be in the development root (the parent
 # of bcpl-llvm) at this point
+set -e
 
 if [ ! -d bcpl-llvm ]; 
 then
@@ -14,7 +15,7 @@ else
 
     # Specify the release
     export DEVROOT=$(pwd)
-    export LLVM_VERSION=18.1.8
+    export LLVM_VERSION=20.1.3
     export LLVMREL=llvm-project-${LLVM_VERSION}
 
     # Prepare the source 
@@ -33,9 +34,24 @@ else
         echo === Using existing ${LLVMREL}.src
     fi
 
+    # Preserve any existing llvm-build directory
+    if [ -d llvm-build ] 
+    then
+        if [ -d llvm-build.old ]
+        then
+            # We want to preseve llvm-build in llvm-build-old but it already
+            # exists. I really should clean things up
+            echo \*\*\* Unable to preserve llvm-build - do some tidying up:
+            ls -ltrd llvm-build*
+        else 
+            echo === Preserving llvm-build in llvm-build-old
+            mv llvm-build llvm-build-old
+        fi
+    fi
+
     # Build llvm
     echo === Configuring  ${LLVMREL}.src/llvm
-    mkdir -p llvm-build
+    mkdir llvm-build
     cmake -B llvm-build -G "Unix Makefiles"                  \
         -DLLVM_BUILD_TOOLS=NO                                \
         -DLLVM_ENABLE_TERMINFO=NO                            \
