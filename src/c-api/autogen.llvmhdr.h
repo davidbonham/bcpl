@@ -81,7 +81,6 @@ $(
     LLVM_BUILD_BIN_OP
     LLVM_BUILD_NEG
     LLVM_BUILD_NSWNEG
-    LLVM_BUILD_NUWNEG
     LLVM_BUILD_FNEG
     LLVM_BUILD_NOT
     LLVM_BUILD_ALLOCA
@@ -236,7 +235,6 @@ LET llvm_build_xor(b, lhs, rhs, name) = sys(Sys_ext, LLVM_BUILD_XOR, b, lhs, rhs
 LET llvm_build_bin_op(b, op, lhs, rhs, name) = sys(Sys_ext, LLVM_BUILD_BIN_OP, b, op, lhs, rhs, name)
 LET llvm_build_neg(b, v, name) = sys(Sys_ext, LLVM_BUILD_NEG, b, v, name)
 LET llvm_build_nswneg(b, v, name) = sys(Sys_ext, LLVM_BUILD_NSWNEG, b, v, name)
-LET llvm_build_nuwneg(b, v, name) = sys(Sys_ext, LLVM_BUILD_NUWNEG, b, v, name)
 LET llvm_build_fneg(b, v, name) = sys(Sys_ext, LLVM_BUILD_FNEG, b, v, name)
 LET llvm_build_not(b, v, name) = sys(Sys_ext, LLVM_BUILD_NOT, b, v, name)
 LET llvm_build_alloca(b, ty, name) = sys(Sys_ext, LLVM_BUILD_ALLOCA, b, ty, name)

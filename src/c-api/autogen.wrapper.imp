@@ -449,11 +449,6 @@ BCPLWORD llvm_build_nswneg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
     return (BCPLWORD)(uintptr_t)LLVMBuildNSWNeg((LLVMBuilderRef)(uintptr_t)b, (LLVMValueRef)(uintptr_t)v, (const char*)(uintptr_t)b2c_string1(name));
 }
 
-BCPLWORD llvm_build_nuwneg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
-{
-    return (BCPLWORD)(uintptr_t)LLVMBuildNUWNeg((LLVMBuilderRef)(uintptr_t)b, (LLVMValueRef)(uintptr_t)v, (const char*)(uintptr_t)b2c_string1(name));
-}
-
 BCPLWORD llvm_build_fneg(BCPLWORD b, BCPLWORD v, BCPLWORD name)
 {
     return (BCPLWORD)(uintptr_t)LLVMBuildFNeg((LLVMBuilderRef)(uintptr_t)b, (LLVMValueRef)(uintptr_t)v, (const char*)(uintptr_t)b2c_string1(name));

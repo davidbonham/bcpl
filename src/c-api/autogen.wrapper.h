@@ -157,8 +157,6 @@ BCPLWORD llvm_build_neg(BCPLWORD b, BCPLWORD v, BCPLWORD name);
 
 BCPLWORD llvm_build_nswneg(BCPLWORD b, BCPLWORD v, BCPLWORD name);
 
-BCPLWORD llvm_build_nuwneg(BCPLWORD b, BCPLWORD v, BCPLWORD name);
-
 BCPLWORD llvm_build_fneg(BCPLWORD b, BCPLWORD v, BCPLWORD name);
 
 BCPLWORD llvm_build_not(BCPLWORD b, BCPLWORD v, BCPLWORD name);

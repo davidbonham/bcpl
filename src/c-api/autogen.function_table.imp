@@ -78,7 +78,6 @@
     [LLVM_BUILD_BIN_OP] = {5, (void*)llvm_build_bin_op},
     [LLVM_BUILD_NEG] = {3, (void*)llvm_build_neg},
     [LLVM_BUILD_NSWNEG] = {3, (void*)llvm_build_nswneg},
-    [LLVM_BUILD_NUWNEG] = {3, (void*)llvm_build_nuwneg},
     [LLVM_BUILD_FNEG] = {3, (void*)llvm_build_fneg},
     [LLVM_BUILD_NOT] = {3, (void*)llvm_build_not},
     [LLVM_BUILD_ALLOCA] = {3, (void*)llvm_build_alloca},

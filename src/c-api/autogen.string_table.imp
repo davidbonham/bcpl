@@ -78,7 +78,6 @@
     [LLVM_BUILD_BIN_OP] = "LLVMBuildBinOp",
     [LLVM_BUILD_NEG] = "LLVMBuildNeg",
     [LLVM_BUILD_NSWNEG] = "LLVMBuildNSWNeg",
-    [LLVM_BUILD_NUWNEG] = "LLVMBuildNUWNeg",
     [LLVM_BUILD_FNEG] = "LLVMBuildFNeg",
     [LLVM_BUILD_NOT] = "LLVMBuildNot",
     [LLVM_BUILD_ALLOCA] = "LLVMBuildAlloca",
