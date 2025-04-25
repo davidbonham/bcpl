@@ -6,7 +6,7 @@ usage()
 }
 
 
-TEMP=`getopt --name bcpl --options OScdmo:v --longoptions optimise,source,compile,dryrun,map,object:,verbose -- "$@"`
+TEMP=`getopt --name bcpl --options OScdmo:vk --longoptions optimise,source,compile,dryrun,map,object:,verbose,keep -- "$@"`
 eval set -- "$TEMP"
 
 # Path to installed run-time
@@ -23,6 +23,7 @@ verbose=0
 dryrun=0
 object=""
 map=0
+keep=0
 map_name=a.out.map
 
 perform()
@@ -80,6 +81,10 @@ do
             verbose=1
             shift
             ;;
+        -k|--keep)
+            keep=1
+            shift
+            ;;
         --)
             shift
             break
@@ -135,6 +140,10 @@ do
 done
 
 perform "clang -Wl,-z,noexecstack $optimise -g3 $source $compile $clang_prefix $clang_inputs $clang_suffix $object $map"
+if [ $keep -eq 0 ]
+then
+    perform "rm --force --verbose $name.ll $name.s $name.map"
+fi
 
 
 
