@@ -1,0 +1,34 @@
+Assuming that scripts/setup.sh has been sourced and that we are in $BL_ROOT:
+
+-- UPDATE LOCAL DEBUG BUILD OF LLVM --------------------------------------------
+
+    1. Edit the script scripts/build-llvm-debug-release to change LLVM_VERSION
+    2. Clean up any llvm-build-old directory
+    3. In the bcpl-development directory, sh ./bcpl-llvm/scripts/build-llvm-debug-release.sh
+    4. Edit the PATH in setup.sh and re-source
+
+-- CHANGE THE C API ------------------------------------------------------------
+
+    1. Edit src/selected-api.h
+    2. python3 $BL_ROOT/scripts/genif.py <$BL_ROOT/src/selected_api.h $BL_ROOT/src/c-api/autogen
+    3. Rebuild cintsys and mybcpl to account for changes to the dispatch table
+
+-- REBUILD CINTSYS (including our extfn.c) -------------------------------------
+
+    1. sh scripts/build-cintsys.sh
+
+-- REBUILD MYBCPL --------------------------------------------------------------
+
+    1. build
+
+-- COMPILE BCPL TO .LL ---------------------------------------------------------
+
+    1. Normally     @ bin/mybcpl t64 noselst hello.b to hello.ll
+    2. With tracing @ bin/mybcpl t64 noselst hello.b to hello.ll D1 D2
+
+-- COMPILE BCPL TO EXECUTABLE --------------------------------------------------
+
+    Either of, for example:
+    1. sh scripts/bcpl.sh <name>.b
+    2. sh scripts/bcpl.sh --optimise --object <name> <name>.b 
+
