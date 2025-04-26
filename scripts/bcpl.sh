@@ -22,6 +22,7 @@ compile=""
 verbose=0
 dryrun=0
 object=""
+object_path=""
 map=0
 keep=0
 map_name=a.out.map
@@ -75,6 +76,7 @@ do
         -o|--object)
             object="-o $2"
             map_name="$2.map"
+            object_path=$2
             shift 2
             ;;
         -v|--verbose)
@@ -108,13 +110,39 @@ do
     suffix="${entry##*.}"
     name="${entry%.*}"
 
+    # Work out the sources, intermediates and destinations. 
+    # If the user has specified --object, the destination directory is that
+    # containing that file. If the user has not specified --keep, intermediates 
+    # will be placed in /tmp otherwise they will be placed in the destination
+    # directory
+    srcdir=$(dirname $input)
+    if [ "$object_path" = "" ]
+    then
+        # Destination is the same as the source
+        dstdir=$srcdir
+    else
+        dstdir=$(dirname $object_path)
+    fi
+
+    if [ $keep -eq 0 ]
+    then
+        # Intermediate files are temporaries
+        ll_path=$(mktemp /tmp/$name.XXXXXX.ll)
+        s_path=$(mktemp /tmp/$name.XXXXXX.s)
+    else
+        ll_path=$dstdir/$name.ll
+        s_path=$dstdir/$name.s
+    fi
+
+        # Destination
+
     case "$suffix" in
 
         b)
-            echo bcpl $entry to $name.o
-            perform "cintsys64 -c $BL_ROOT/bin/mybcpl noselst $entry to $name.ll"
-            perform "llc --relocation-model=pic $name.ll -o $name.s"
-            clang_inputs="$clang_inputs $name.s"
+            echo bcpl $input to $object_path
+            perform "cintsys64 -c $BL_ROOT/bin/mybcpl noselst $input to $ll_path"
+            perform "llc --relocation-model=pic $ll_path -o $s_path"
+            clang_inputs="$clang_inputs $s_path"
             ;;
         c)
             echo clang $entry to $name.o
@@ -142,7 +170,7 @@ done
 perform "clang -Wl,-z,noexecstack $optimise -g3 $source $compile $clang_prefix $clang_inputs $clang_suffix $object $map"
 if [ $keep -eq 0 ]
 then
-    perform "rm --force --verbose $name.ll $name.s $name.map"
+    perform "rm --force --verbose $ll_path $s_path $name.map"
 fi
 
 
