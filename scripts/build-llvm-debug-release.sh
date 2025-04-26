@@ -60,6 +60,7 @@ else
         -DCMAKE_INSTALL_PREFIX=${DEVROOT}/llvm-debug-install \
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE                \
         -DLLVM_TARGETS_TO_BUILD=host                         \
+        -DCMAKE_C_COMPILER=clang-20                          \
         ${LLVMREL}.src/llvm
 
     echo === Building 
