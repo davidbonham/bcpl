@@ -3,24 +3,53 @@ source_filename = "blib"
 
 @__bcpl_global_vector = external local_unnamed_addr global [256 x i64], section "BCPLGVEC"
 @itemn.global = internal global [16 x i64] [i64 48, i64 49, i64 50, i64 51, i64 52, i64 53, i64 54, i64 55, i64 56, i64 57, i64 65, i64 66, i64 67, i64 68, i64 69, i64 70], section ".rodata.blib"
-@lstr.global = private global [15 x i8] c"\0E##Bad format##", section ".rodata.blib", align 8
-@lstr.global.11 = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".rodata.blib", align 8
+@lstr.global = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".rodata.blib", align 8
 @__bcpl_global = weak local_unnamed_addr global i64 94, section "BCPLGVEC"
 @__bcpl_value = weak local_unnamed_addr global i64 ptrtoint (ptr @writef to i64), section "BCPLGVEC"
-@__bcpl_global.13 = weak local_unnamed_addr global i64 83, section "BCPLGVEC"
-@__bcpl_value.14 = weak local_unnamed_addr global i64 ptrtoint (ptr @readn to i64), section "BCPLGVEC"
-@__bcpl_global.15 = weak local_unnamed_addr global i64 84, section "BCPLGVEC"
-@__bcpl_value.16 = weak local_unnamed_addr global i64 ptrtoint (ptr @newline to i64), section "BCPLGVEC"
-@__bcpl_global.17 = weak local_unnamed_addr global i64 89, section "BCPLGVEC"
-@__bcpl_value.18 = weak local_unnamed_addr global i64 ptrtoint (ptr @writes to i64), section "BCPLGVEC"
-@__bcpl_global.19 = weak local_unnamed_addr global i64 87, section "BCPLGVEC"
-@__bcpl_value.20 = weak local_unnamed_addr global i64 ptrtoint (ptr @writehex to i64), section "BCPLGVEC"
-@__bcpl_global.21 = weak local_unnamed_addr global i64 88, section "BCPLGVEC"
-@__bcpl_value.22 = weak local_unnamed_addr global i64 ptrtoint (ptr @writeoct to i64), section "BCPLGVEC"
-@__bcpl_global.23 = weak local_unnamed_addr global i64 86, section "BCPLGVEC"
-@__bcpl_value.24 = weak local_unnamed_addr global i64 ptrtoint (ptr @writen to i64), section "BCPLGVEC"
-@__bcpl_global.25 = weak local_unnamed_addr global i64 85, section "BCPLGVEC"
-@__bcpl_value.26 = weak local_unnamed_addr global i64 ptrtoint (ptr @writed to i64), section "BCPLGVEC"
+@__bcpl_global.14 = weak local_unnamed_addr global i64 83, section "BCPLGVEC"
+@__bcpl_value.15 = weak local_unnamed_addr global i64 ptrtoint (ptr @readn to i64), section "BCPLGVEC"
+@__bcpl_global.16 = weak local_unnamed_addr global i64 84, section "BCPLGVEC"
+@__bcpl_value.17 = weak local_unnamed_addr global i64 ptrtoint (ptr @newline to i64), section "BCPLGVEC"
+@__bcpl_global.18 = weak local_unnamed_addr global i64 89, section "BCPLGVEC"
+@__bcpl_value.19 = weak local_unnamed_addr global i64 ptrtoint (ptr @writes to i64), section "BCPLGVEC"
+@__bcpl_global.20 = weak local_unnamed_addr global i64 87, section "BCPLGVEC"
+@__bcpl_value.21 = weak local_unnamed_addr global i64 ptrtoint (ptr @writehex to i64), section "BCPLGVEC"
+@__bcpl_global.22 = weak local_unnamed_addr global i64 88, section "BCPLGVEC"
+@__bcpl_value.23 = weak local_unnamed_addr global i64 ptrtoint (ptr @writeoct to i64), section "BCPLGVEC"
+@__bcpl_global.24 = weak local_unnamed_addr global i64 86, section "BCPLGVEC"
+@__bcpl_value.25 = weak local_unnamed_addr global i64 ptrtoint (ptr @writen to i64), section "BCPLGVEC"
+@__bcpl_global.26 = weak local_unnamed_addr global i64 85, section "BCPLGVEC"
+@__bcpl_value.27 = weak local_unnamed_addr global i64 ptrtoint (ptr @writed to i64), section "BCPLGVEC"
+@__bcpl_global.28 = weak local_unnamed_addr global i64 34, section "BCPLGVEC"
+@__bcpl_value.29 = weak local_unnamed_addr global i64 ptrtoint (ptr @randno to i64), section "BCPLGVEC"
+@__bcpl_global.30 = weak local_unnamed_addr global i64 96, section "BCPLGVEC"
+@__bcpl_value.31 = weak local_unnamed_addr global i64 ptrtoint (ptr @capitalch to i64), section "BCPLGVEC"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i64 @capitalch(i64 %0) #0 section ".text.blib" {
+entry:
+  %1 = add i64 %0, -123
+  %or.cond = icmp ult i64 %1, -26
+  %sub = add nsw i64 %0, -32
+  %common.ret.op = select i1 %or.cond, i64 %0, i64 %sub
+  ret i64 %common.ret.op
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, argmem: none, inaccessiblemem: none)
+define range(i64 -3074457345618258601, 3074457345618258604) i64 @randno(i64 %0) #1 section ".text.blib" {
+entry:
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 1016), align 4
+  %mul = mul i64 %lg.value, 2147001325
+  %add = add i64 %mul, 715136305
+  store i64 %add, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 1016), align 4
+  %div = sdiv i64 %add, 3
+  %1 = icmp slt i64 %add, -2
+  %2 = sub nsw i64 0, %div
+  %abs.result.128 = select i1 %1, i64 %2, i64 %div
+  %mod = srem i64 %abs.result.128, %0
+  %add22 = add nsw i64 %mod, 1
+  ret i64 %add22
+}
 
 define noundef i64 @writed(i64 %0, i64 %1) section ".text.blib" {
 entry:
@@ -51,14 +80,14 @@ lab:                                              ; preds = %lab, %entry
 
 lab61:                                            ; preds = %lab
   %if_cond = icmp slt i64 %0, 0
-  %spec.select195 = add i64 %.lobit, %1
+  %spec.select195 = add i64 %1, %.lobit
   %add67 = add i64 %STK131.promoted, 2
   %gr = icmp sgt i64 %add67, %spec.select195
   br i1 %gr, label %jt.then, label %lab81
 
 lab81:                                            ; preds = %lab61, %lab81
   %add91196 = phi i64 [ %add91, %lab81 ], [ %add67, %lab61 ]
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = call i64 %rtap_ep_p_fn(i64 32)
   %add91 = add i64 %add91196, 1
@@ -69,7 +98,7 @@ jt.then:                                          ; preds = %lab81, %lab61
   br i1 %if_cond, label %jf.else116, label %jf.then124
 
 jf.else116:                                       ; preds = %jt.then
-  %lg.value118 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value118 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn121 = inttoptr i64 %lg.value118 to ptr
   %rtap123 = call i64 %rtap_ep_p_fn121(i64 45)
   br label %jf.then124
@@ -85,12 +114,12 @@ lab143:                                           ; preds = %jf.then124, %lab143
   %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
   %rv.rv = load i64, ptr %rv.lv, align 8
   %add156 = add i64 %rv.rv, 48
-  %lg.value158 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value158 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn161 = inttoptr i64 %lg.value158 to ptr
   %rtap163 = call i64 %rtap_ep_p_fn161(i64 %add156)
   %add170 = add nsw i64 %add170197, -1
-  %ge = icmp sgt i64 %add170197, 0
-  br i1 %ge, label %lab143, label %jt.then184
+  %ge.not = icmp eq i64 %add170197, 0
+  br i1 %ge.not, label %jt.then184, label %lab143
 
 jt.then184:                                       ; preds = %lab143, %jf.then124
   ret i64 -4985279381848933680
@@ -98,7 +127,7 @@ jt.then184:                                       ; preds = %lab143, %jf.then124
 
 define noundef i64 @writen(i64 %0) section ".text.blib" {
 entry:
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 85), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 680), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = tail call i64 %rtap_ep_p_fn(i64 %0, i64 0)
   ret i64 -4985279381848933680
@@ -112,7 +141,7 @@ entry:
 jf.else:                                          ; preds = %entry
   %shift.result10 = lshr i64 %0, 3
   %sub = add nsw i64 %1, -1
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 88), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 704), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = tail call i64 %rtap_ep_p_fn(i64 %shift.result10, i64 %sub)
   br label %jf.then
@@ -120,7 +149,7 @@ jf.else:                                          ; preds = %entry
 jf.then:                                          ; preds = %jf.else, %entry
   %logand = and i64 %0, 7
   %add = or disjoint i64 %logand, 48
-  %lg.value30 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value30 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn33 = inttoptr i64 %lg.value30 to ptr
   %rtap35 = tail call i64 %rtap_ep_p_fn33(i64 %add)
   ret i64 -4985279381848933680
@@ -134,7 +163,7 @@ entry:
 jf.else:                                          ; preds = %entry
   %shift.result10 = lshr i64 %0, 4
   %sub = add nsw i64 %1, -1
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 87), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 696), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = tail call i64 %rtap_ep_p_fn(i64 %shift.result10, i64 %sub)
   br label %jf.then
@@ -145,7 +174,7 @@ jf.then:                                          ; preds = %jf.else, %entry
   %lll.bcpladdr40 = add i64 %add39, ptrtoint (ptr @itemn.global to i64)
   %rv.lv = inttoptr i64 %lll.bcpladdr40 to ptr
   %rv.rv = load i64, ptr %rv.lv, align 8
-  %lg.value31 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value31 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn34 = inttoptr i64 %lg.value31 to ptr
   %rtap36 = tail call i64 %rtap_ep_p_fn34(i64 %rv.rv)
   ret i64 -4985279381848933680
@@ -165,11 +194,11 @@ lab:                                              ; preds = %entry, %lab
   %getbyte.charptr18 = getelementptr i8, ptr %getbyte.string, i64 %STK1.0
   %getbyte.char19 = load i8, ptr %getbyte.charptr18, align 1
   %getbyte.charword20 = zext i8 %getbyte.char19 to i64
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = tail call i64 %rtap_ep_p_fn(i64 %getbyte.charword20)
   %add = add nuw nsw i64 %STK1.0, 1
-  %le.not.not = icmp ult i64 %STK1.0, %getbyte.charword
+  %le.not.not = icmp samesign ult i64 %STK1.0, %getbyte.charword
   br i1 %le.not.not, label %lab, label %jt.then
 
 jt.then:                                          ; preds = %lab, %entry
@@ -178,7 +207,7 @@ jt.then:                                          ; preds = %lab, %entry
 
 define noundef i64 @newline() section ".text.blib" {
 entry:
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %rtap = tail call i64 %rtap_ep_p_fn(i64 10)
   ret i64 -4985279381848933680
@@ -189,7 +218,7 @@ entry:
   br label %lab
 
 lab:                                              ; preds = %lab.backedge, %entry
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 38), align 4
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 304), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
   %fnap = tail call i64 %rtap_ep_p_fn()
   switch i64 %fnap, label %jump.target47 [
@@ -208,7 +237,7 @@ lab37.loopexit:                                   ; preds = %lab
 
 lab37:                                            ; preds = %lab, %lab37.loopexit
   %0 = phi i1 [ true, %lab37.loopexit ], [ false, %lab ]
-  %lg.value38 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 38), align 4
+  %lg.value38 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 304), align 4
   %rtap_ep_p_fn41 = inttoptr i64 %lg.value38 to ptr
   %fnap42 = tail call i64 %rtap_ep_p_fn41()
   br label %jump.target47
@@ -226,7 +255,7 @@ lab68:                                            ; preds = %jump.target47, %lab
   %mul = mul i64 %STK.0, 10
   %add = add nsw i64 %STK2.1, -48
   %sub = add i64 %add, %mul
-  %lg.value85 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 38), align 4
+  %lg.value85 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 304), align 4
   %rtap_ep_p_fn88 = inttoptr i64 %lg.value85 to ptr
   %fnap89 = tail call i64 %rtap_ep_p_fn88()
   %2 = add i64 %fnap89, -48
@@ -238,7 +267,7 @@ jf.then115:                                       ; preds = %lab68, %jump.target
   %STK2.2 = phi i64 [ %STK2.0, %jump.target47 ], [ %fnap89, %lab68 ]
   %neg = sub i64 0, %STK.1
   %spec.select = select i1 %STK1.1, i64 %STK.1, i64 %neg
-  %lg.value128 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 40), align 4
+  %lg.value128 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 320), align 4
   %rtap_ep_p_fn131 = inttoptr i64 %lg.value128 to ptr
   %rtap = tail call i64 %rtap_ep_p_fn131(i64 %STK2.2)
   ret i64 %spec.select
@@ -246,348 +275,330 @@ jf.then115:                                       ; preds = %lab68, %jump.target
 
 define noundef i64 @write_format(i64 %0, i64 %1) local_unnamed_addr section ".text.blib" {
 entry:
-  %lg.value = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 10), align 4
-  %ls = icmp slt i64 %0, 1
-  br i1 %ls, label %jf.then, label %jf.else
-
-jf.else:                                          ; preds = %entry
-  %lg.value10 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 9), align 4
-  %add = shl i64 %lg.value10, 3
-  %rv.llvmaddr = add i64 %add, 112
-  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
-  %rv.rv = load i64, ptr %rv.lv, align 8
-  %ls18 = icmp sgt i64 %rv.rv, %0
-  br i1 %ls18, label %jt.then, label %jf.then
-
-jf.then:                                          ; preds = %jf.else, %entry
-  %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global to i64), 3
-  br label %jt.then
-
-jt.then:                                          ; preds = %jf.then, %jf.else
-  %STK.0 = phi i64 [ %lstr.bcpladdr, %jf.then ], [ %0, %jf.else ]
-  %getbyte.llvmaddr = shl i64 %STK.0, 3
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 80), align 4
+  %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
   %getbyte.char = load i8, ptr %getbyte.string, align 8
   %le.not = icmp eq i8 %getbyte.char, 0
-  br i1 %le.not, label %jf.then975, label %lab.preheader
+  br i1 %le.not, label %jf.then938, label %lab.preheader
 
-lab.preheader:                                    ; preds = %jt.then
+lab.preheader:                                    ; preds = %entry
   %invariant.gep = getelementptr i8, ptr %getbyte.string, i64 1
-  %rv.llvmaddr94 = shl i64 %1, 3
-  %rv.lv95 = inttoptr i64 %rv.llvmaddr94 to ptr
-  %lstr.bcpladdr627 = ashr exact i64 ptrtoint (ptr @lstr.global.11 to i64), 3
+  %rv.llvmaddr = shl i64 %1, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global to i64), 3
   br label %lab
 
-lab:                                              ; preds = %lab.preheader, %jump.target953
-  %STK2.0 = phi i64 [ %STK2.8, %jump.target953 ], [ 1, %lab.preheader ]
-  %getbyte.charptr45 = getelementptr i8, ptr %getbyte.string, i64 %STK2.0
-  %getbyte.char46 = load i8, ptr %getbyte.charptr45, align 1
-  %add60 = add nsw i64 %STK2.0, 1
-  %eq = icmp eq i8 %getbyte.char46, 37
-  br i1 %eq, label %jt.then77, label %jt.else72
+lab:                                              ; preds = %lab.preheader, %jump.target916
+  %STK2.0 = phi i64 [ %STK2.8, %jump.target916 ], [ 1, %lab.preheader ]
+  %getbyte.charptr18 = getelementptr i8, ptr %getbyte.string, i64 %STK2.0
+  %getbyte.char19 = load i8, ptr %getbyte.charptr18, align 1
+  %add = add nsw i64 %STK2.0, 1
+  %eq = icmp eq i8 %getbyte.char19, 37
+  br i1 %eq, label %jt.then, label %jt.else
 
-jt.else72:                                        ; preds = %lab
-  %getbyte.charword47 = zext i8 %getbyte.char46 to i64
-  %lg.value75 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
-  %rtap_ep_p_fn = inttoptr i64 %lg.value75 to ptr
-  %rtap = call i64 %rtap_ep_p_fn(i64 %getbyte.charword47)
-  br label %jump.target953
+jt.else:                                          ; preds = %lab
+  %getbyte.charword20 = zext i8 %getbyte.char19 to i64
+  %lg.value45 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
+  %rtap_ep_p_fn = inttoptr i64 %lg.value45 to ptr
+  %rtap = call i64 %rtap_ep_p_fn(i64 %getbyte.charword20)
+  br label %jump.target916
 
-jt.then77:                                        ; preds = %lab
-  %getbyte.charptr86 = getelementptr i8, ptr %getbyte.string, i64 %add60
-  %getbyte.char87 = load i8, ptr %getbyte.charptr86, align 1
-  %getbyte.charword88 = zext i8 %getbyte.char87 to i64
-  %rv.rv96 = load i64, ptr %rv.lv95, align 8
-  %rv.llvmaddr99 = shl i64 %rv.rv96, 3
-  %rv.lv100 = inttoptr i64 %rv.llvmaddr99 to ptr
-  %rv.rv101 = load i64, ptr %rv.lv100, align 8
-  br label %lab104.outer
+jt.then:                                          ; preds = %lab
+  %getbyte.charptr55 = getelementptr i8, ptr %getbyte.string, i64 %add
+  %getbyte.char56 = load i8, ptr %getbyte.charptr55, align 1
+  %getbyte.charword57 = zext i8 %getbyte.char56 to i64
+  %rv.rv = load i64, ptr %rv.lv, align 8
+  %rv.llvmaddr64 = shl i64 %rv.rv, 3
+  %rv.lv65 = inttoptr i64 %rv.llvmaddr64 to ptr
+  %rv.rv66 = load i64, ptr %rv.lv65, align 8
+  br label %lab69.outer
 
-lab104.outer:                                     ; preds = %lab262, %jt.then77
-  %lp.value721.ph = phi i64 [ 0, %jt.then77 ], [ %sub279, %lab262 ]
-  %if_cond382.not.ph = phi i1 [ true, %jt.then77 ], [ false, %lab262 ]
-  %lp.value719.ph = phi i64 [ 0, %jt.then77 ], [ %sub, %lab262 ]
-  %getbyte.charword300.lcssa1077.ph = phi i64 [ %getbyte.charword88, %jt.then77 ], [ %getbyte.charword300, %lab262 ]
-  %STK2.1.ph = phi i64 [ %add60, %jt.then77 ], [ %add287, %lab262 ]
-  br label %lab104
+lab69.outer:                                      ; preds = %lab226, %jt.then
+  %lp.value684.ph = phi i64 [ 0, %jt.then ], [ %sub243, %lab226 ]
+  %if_cond346.not.ph = phi i1 [ true, %jt.then ], [ false, %lab226 ]
+  %lp.value682.ph = phi i64 [ 0, %jt.then ], [ %sub, %lab226 ]
+  %getbyte.charword264.lcssa1038.ph = phi i64 [ %getbyte.charword57, %jt.then ], [ %getbyte.charword264, %lab226 ]
+  %STK2.1.ph = phi i64 [ %add, %jt.then ], [ %add251, %lab226 ]
+  br label %lab69
 
-lab104:                                           ; preds = %lab104.backedge, %lab104.outer
-  %if_cond382.not = phi i1 [ %if_cond382.not.ph, %lab104.outer ], [ false, %lab104.backedge ]
-  %lp.value719 = phi i64 [ %lp.value719.ph, %lab104.outer ], [ %sub, %lab104.backedge ]
-  %getbyte.charword300.lcssa1077 = phi i64 [ %getbyte.charword300.lcssa1077.ph, %lab104.outer ], [ %getbyte.charword300.lcssa1077.be, %lab104.backedge ]
-  %STK2.1 = phi i64 [ %STK2.1.ph, %lab104.outer ], [ %STK2.1.be, %lab104.backedge ]
-  %lg.value107 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 96), align 4
-  %rtap_ep_p_fn110 = inttoptr i64 %lg.value107 to ptr
-  %fnap = call i64 %rtap_ep_p_fn110(i64 %getbyte.charword300.lcssa1077)
-  switch i64 %fnap, label %lab114 [
-    i64 80, label %lab754
-    i64 70, label %lab693
-    i64 69, label %lab651
-    i64 77, label %lab590
-    i64 45, label %lab562
-    i64 43, label %lab534
-    i64 36, label %lab534
-    i64 78, label %"\C0\AD\DE495.loopexit1336"
-    i64 88, label %"\C0\AD\DE.loopexit1337"
-    i64 79, label %"\C0\AD\DE.loopexit1270"
-    i64 67, label %"\C0\AD\DE495.loopexit1271"
-    i64 83, label %"\C0\AD\DE495"
+lab69:                                            ; preds = %lab69.backedge, %lab69.outer
+  %if_cond346.not = phi i1 [ %if_cond346.not.ph, %lab69.outer ], [ false, %lab69.backedge ]
+  %lp.value682 = phi i64 [ %lp.value682.ph, %lab69.outer ], [ %sub, %lab69.backedge ]
+  %getbyte.charword264.lcssa1038 = phi i64 [ %getbyte.charword264.lcssa1038.ph, %lab69.outer ], [ %getbyte.charword264.lcssa1038.be, %lab69.backedge ]
+  %STK2.1 = phi i64 [ %STK2.1.ph, %lab69.outer ], [ %STK2.1.be, %lab69.backedge ]
+  %lg.value72 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 768), align 4
+  %rtap_ep_p_fn75 = inttoptr i64 %lg.value72 to ptr
+  %fnap = call i64 %rtap_ep_p_fn75(i64 %getbyte.charword264.lcssa1038)
+  switch i64 %fnap, label %lab79 [
+    i64 80, label %lab717
+    i64 70, label %lab656
+    i64 69, label %lab614
+    i64 77, label %lab554
+    i64 45, label %lab526
+    i64 43, label %lab498
+    i64 36, label %lab498
+    i64 78, label %"\C0\AD\DE459.loopexit1297"
+    i64 88, label %"\C0\AD\DE.loopexit1298"
+    i64 79, label %"\C0\AD\DE.loopexit1231"
+    i64 67, label %"\C0\AD\DE459.loopexit1232"
+    i64 83, label %"\C0\AD\DE459"
     i64 73, label %"\C0\AD\DE"
     i64 68, label %"\C0\AD\DE"
-    i64 57, label %lab142.preheader
-    i64 56, label %lab142.preheader
-    i64 55, label %lab142.preheader
-    i64 54, label %lab142.preheader
-    i64 53, label %lab142.preheader
-    i64 52, label %lab142.preheader
-    i64 51, label %lab142.preheader
-    i64 50, label %lab142.preheader
-    i64 49, label %lab142.preheader
-    i64 48, label %lab142.preheader
+    i64 57, label %lab107.preheader
+    i64 56, label %lab107.preheader
+    i64 55, label %lab107.preheader
+    i64 54, label %lab107.preheader
+    i64 53, label %lab107.preheader
+    i64 52, label %lab107.preheader
+    i64 51, label %lab107.preheader
+    i64 50, label %lab107.preheader
+    i64 49, label %lab107.preheader
+    i64 48, label %lab107.preheader
   ]
 
-lab142.preheader:                                 ; preds = %lab104, %lab104, %lab104, %lab104, %lab104, %lab104, %lab104, %lab104, %lab104, %lab104
-  br label %lab142
+lab107.preheader:                                 ; preds = %lab69, %lab69, %lab69, %lab69, %lab69, %lab69, %lab69, %lab69, %lab69, %lab69
+  br label %lab107
 
-lab114:                                           ; preds = %lab104
-  %lg.value117 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
-  %rtap_ep_p_fn120 = inttoptr i64 %lg.value117 to ptr
-  %rtap122 = call i64 %rtap_ep_p_fn120(i64 %getbyte.charword300.lcssa1077)
-  %add128 = add i64 %STK2.1, 1
-  br label %jump.target953
+lab79:                                            ; preds = %lab69
+  %lg.value82 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
+  %rtap_ep_p_fn85 = inttoptr i64 %lg.value82 to ptr
+  %rtap87 = call i64 %rtap_ep_p_fn85(i64 %getbyte.charword264.lcssa1038)
+  %add93 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab142:                                           ; preds = %lab142.preheader, %lab142
-  %sub1095 = phi i64 [ %sub, %lab142 ], [ %lp.value719, %lab142.preheader ]
-  %getbyte.charword300.lcssa1080 = phi i64 [ %getbyte.charword178, %lab142 ], [ %getbyte.charword300.lcssa1077, %lab142.preheader ]
-  %STK2.3 = phi i64 [ %add165, %lab142 ], [ %STK2.1, %lab142.preheader ]
-  %mul = mul i64 %sub1095, 10
-  %add153 = add nsw i64 %getbyte.charword300.lcssa1080, -48
-  %sub = add i64 %add153, %mul
-  %add165 = add i64 %STK2.3, 1
-  %getbyte.charptr176 = getelementptr i8, ptr %getbyte.string, i64 %add165
-  %getbyte.char177 = load i8, ptr %getbyte.charptr176, align 1
-  %getbyte.charword178 = zext i8 %getbyte.char177 to i64
-  %2 = add i8 %getbyte.char177, -48
+lab107:                                           ; preds = %lab107.preheader, %lab107
+  %sub1056 = phi i64 [ %sub, %lab107 ], [ %lp.value682, %lab107.preheader ]
+  %getbyte.charword264.lcssa1041 = phi i64 [ %getbyte.charword143, %lab107 ], [ %getbyte.charword264.lcssa1038, %lab107.preheader ]
+  %STK2.3 = phi i64 [ %add130, %lab107 ], [ %STK2.1, %lab107.preheader ]
+  %mul = mul i64 %sub1056, 10
+  %add118 = add nsw i64 %getbyte.charword264.lcssa1041, -48
+  %sub = add i64 %add118, %mul
+  %add130 = add i64 %STK2.3, 1
+  %getbyte.charptr141 = getelementptr i8, ptr %getbyte.string, i64 %add130
+  %getbyte.char142 = load i8, ptr %getbyte.charptr141, align 1
+  %getbyte.charword143 = zext i8 %getbyte.char142 to i64
+  %2 = add i8 %getbyte.char142, -48
   %or.cond = icmp ult i8 %2, 10
-  br i1 %or.cond, label %lab142, label %lab207
+  br i1 %or.cond, label %lab107, label %lab171
 
-lab207:                                           ; preds = %lab142
-  %eq213.not = icmp eq i8 %getbyte.char177, 46
-  br i1 %eq213.not, label %jf.else218, label %lab104.backedge
+lab171:                                           ; preds = %lab107
+  %eq177.not = icmp eq i8 %getbyte.char142, 46
+  br i1 %eq177.not, label %jf.else182, label %lab69.backedge
 
-lab104.backedge:                                  ; preds = %lab207, %jf.else218
-  %getbyte.charword300.lcssa1077.be = phi i64 [ %getbyte.charword178, %lab207 ], [ %getbyte.charword237, %jf.else218 ]
-  %STK2.1.be = phi i64 [ %add165, %lab207 ], [ %add224, %jf.else218 ]
-  br label %lab104
+lab69.backedge:                                   ; preds = %lab171, %jf.else182
+  %getbyte.charword264.lcssa1038.be = phi i64 [ %getbyte.charword143, %lab171 ], [ %getbyte.charword201, %jf.else182 ]
+  %STK2.1.be = phi i64 [ %add130, %lab171 ], [ %add188, %jf.else182 ]
+  br label %lab69
 
-jf.else218:                                       ; preds = %lab207
-  %add224 = add i64 %STK2.3, 2
-  %getbyte.charptr235 = getelementptr i8, ptr %getbyte.string, i64 %add224
-  %getbyte.char236 = load i8, ptr %getbyte.charptr235, align 1
-  %getbyte.charword237 = zext i8 %getbyte.char236 to i64
-  %3 = add i8 %getbyte.char236, -58
-  %or.cond1037 = icmp ult i8 %3, -10
-  br i1 %or.cond1037, label %lab104.backedge, label %lab262
+jf.else182:                                       ; preds = %lab171
+  %add188 = add i64 %STK2.3, 2
+  %getbyte.charptr199 = getelementptr i8, ptr %getbyte.string, i64 %add188
+  %getbyte.char200 = load i8, ptr %getbyte.charptr199, align 1
+  %getbyte.charword201 = zext i8 %getbyte.char200 to i64
+  %3 = add i8 %getbyte.char200, -58
+  %or.cond998 = icmp ult i8 %3, -10
+  br i1 %or.cond998, label %lab69.backedge, label %lab226
 
-lab262:                                           ; preds = %jf.else218, %lab262
-  %getbyte.charword3001075 = phi i64 [ %getbyte.charword300, %lab262 ], [ %getbyte.charword237, %jf.else218 ]
-  %sub2791074 = phi i64 [ %sub279, %lab262 ], [ %lp.value721.ph, %jf.else218 ]
-  %STK2.4 = phi i64 [ %add287, %lab262 ], [ %add224, %jf.else218 ]
-  %mul268 = mul i64 %sub2791074, 10
-  %add274 = add nsw i64 %getbyte.charword3001075, -48
-  %sub279 = add i64 %add274, %mul268
-  %add287 = add i64 %STK2.4, 1
-  %getbyte.charptr298 = getelementptr i8, ptr %getbyte.string, i64 %add287
-  %getbyte.char299 = load i8, ptr %getbyte.charptr298, align 1
-  %getbyte.charword300 = zext i8 %getbyte.char299 to i64
-  %4 = add i8 %getbyte.char299, -48
-  %or.cond1038 = icmp ult i8 %4, 10
-  br i1 %or.cond1038, label %lab262, label %lab104.outer
+lab226:                                           ; preds = %jf.else182, %lab226
+  %getbyte.charword2641036 = phi i64 [ %getbyte.charword264, %lab226 ], [ %getbyte.charword201, %jf.else182 ]
+  %sub2431035 = phi i64 [ %sub243, %lab226 ], [ %lp.value684.ph, %jf.else182 ]
+  %STK2.4 = phi i64 [ %add251, %lab226 ], [ %add188, %jf.else182 ]
+  %mul232 = mul i64 %sub2431035, 10
+  %add238 = add nsw i64 %getbyte.charword2641036, -48
+  %sub243 = add i64 %add238, %mul232
+  %add251 = add i64 %STK2.4, 1
+  %getbyte.charptr262 = getelementptr i8, ptr %getbyte.string, i64 %add251
+  %getbyte.char263 = load i8, ptr %getbyte.charptr262, align 1
+  %getbyte.charword264 = zext i8 %getbyte.char263 to i64
+  %4 = add i8 %getbyte.char263, -48
+  %or.cond999 = icmp ult i8 %4, 10
+  br i1 %or.cond999, label %lab226, label %lab69.outer
 
-"\C0\AD\DE.loopexit1270":                         ; preds = %lab104
+"\C0\AD\DE.loopexit1231":                         ; preds = %lab69
   br label %"\C0\AD\DE"
 
-"\C0\AD\DE.loopexit1337":                         ; preds = %lab104
+"\C0\AD\DE.loopexit1298":                         ; preds = %lab69
   br label %"\C0\AD\DE"
 
-"\C0\AD\DE":                                      ; preds = %lab104, %lab104, %"\C0\AD\DE.loopexit1337", %"\C0\AD\DE.loopexit1270"
-  %lp.value465.in = phi ptr [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 88), %"\C0\AD\DE.loopexit1270" ], [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 87), %"\C0\AD\DE.loopexit1337" ], [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 85), %lab104 ], [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 85), %lab104 ]
-  %lp.value465 = load i64, ptr %lp.value465.in, align 4
-  br i1 %if_cond382.not, label %jt.else383, label %jt.then460
+"\C0\AD\DE":                                      ; preds = %lab69, %lab69, %"\C0\AD\DE.loopexit1298", %"\C0\AD\DE.loopexit1231"
+  %lp.value429.in = phi ptr [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 704), %"\C0\AD\DE.loopexit1231" ], [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 696), %"\C0\AD\DE.loopexit1298" ], [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 680), %lab69 ], [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 680), %lab69 ]
+  %lp.value429 = load i64, ptr %lp.value429.in, align 4
+  br i1 %if_cond346.not, label %jt.else347, label %jt.then424
 
-jt.else383:                                       ; preds = %"\C0\AD\DE"
-  %add389 = add i64 %STK2.1, 1
-  %getbyte.charptr400 = getelementptr i8, ptr %getbyte.string, i64 %add389
-  %getbyte.char401 = load i8, ptr %getbyte.charptr400, align 1
-  %getbyte.charword402 = zext i8 %getbyte.char401 to i64
-  %lg.value404 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 96), align 4
-  %rtap_ep_p_fn407 = inttoptr i64 %lg.value404 to ptr
-  %fnap409 = call i64 %rtap_ep_p_fn407(i64 %getbyte.charword402)
-  %5 = add i64 %fnap409, -58
-  %or.cond1039 = icmp ult i64 %5, -10
-  %__res_a.0.v = select i1 %or.cond1039, i64 -55, i64 -48
-  %__res_a.0 = add i64 %__res_a.0.v, %fnap409
-  br label %jt.then460
+jt.else347:                                       ; preds = %"\C0\AD\DE"
+  %add353 = add i64 %STK2.1, 1
+  %getbyte.charptr364 = getelementptr i8, ptr %getbyte.string, i64 %add353
+  %getbyte.char365 = load i8, ptr %getbyte.charptr364, align 1
+  %getbyte.charword366 = zext i8 %getbyte.char365 to i64
+  %lg.value368 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 768), align 4
+  %rtap_ep_p_fn371 = inttoptr i64 %lg.value368 to ptr
+  %fnap373 = call i64 %rtap_ep_p_fn371(i64 %getbyte.charword366)
+  %5 = add i64 %fnap373, -58
+  %or.cond1000 = icmp ult i64 %5, -10
+  %__res_a.0.v = select i1 %or.cond1000, i64 -55, i64 -48
+  %__res_a.0 = add i64 %__res_a.0.v, %fnap373
+  br label %jt.then424
 
-jt.then460:                                       ; preds = %jt.else383, %"\C0\AD\DE"
-  %lp.value463 = phi i64 [ %lp.value719, %"\C0\AD\DE" ], [ %__res_a.0, %jt.else383 ]
-  %STK2.6 = phi i64 [ %STK2.1, %"\C0\AD\DE" ], [ %add389, %jt.else383 ]
-  %rtap_ep_p_fn468 = inttoptr i64 %lp.value465 to ptr
-  %rtap471 = call i64 %rtap_ep_p_fn468(i64 %rv.rv101, i64 %lp.value463)
-  %rv.rv477 = load i64, ptr %rv.lv95, align 8
-  %add482 = add i64 %rv.rv477, 1
-  store i64 %add482, ptr %rv.lv95, align 8
-  %add491 = add i64 %STK2.6, 1
-  br label %jump.target953
+jt.then424:                                       ; preds = %jt.else347, %"\C0\AD\DE"
+  %lp.value427 = phi i64 [ %lp.value682, %"\C0\AD\DE" ], [ %__res_a.0, %jt.else347 ]
+  %STK2.6 = phi i64 [ %STK2.1, %"\C0\AD\DE" ], [ %add353, %jt.else347 ]
+  %rtap_ep_p_fn432 = inttoptr i64 %lp.value429 to ptr
+  %rtap435 = call i64 %rtap_ep_p_fn432(i64 %rv.rv66, i64 %lp.value427)
+  %rv.rv441 = load i64, ptr %rv.lv, align 8
+  %add446 = add i64 %rv.rv441, 1
+  store i64 %add446, ptr %rv.lv, align 8
+  %add455 = add i64 %STK2.6, 1
+  br label %jump.target916
 
-"\C0\AD\DE495.loopexit1271":                      ; preds = %lab104
-  br label %"\C0\AD\DE495"
+"\C0\AD\DE459.loopexit1232":                      ; preds = %lab69
+  br label %"\C0\AD\DE459"
 
-"\C0\AD\DE495.loopexit1336":                      ; preds = %lab104
-  br label %"\C0\AD\DE495"
+"\C0\AD\DE459.loopexit1297":                      ; preds = %lab69
+  br label %"\C0\AD\DE459"
 
-"\C0\AD\DE495":                                   ; preds = %lab104, %"\C0\AD\DE495.loopexit1336", %"\C0\AD\DE495.loopexit1271"
-  %lp.value499.in = phi ptr [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), %"\C0\AD\DE495.loopexit1271" ], [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 86), %"\C0\AD\DE495.loopexit1336" ], [ getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 89), %lab104 ]
-  %lp.value499 = load i64, ptr %lp.value499.in, align 4
-  %rtap_ep_p_fn502 = inttoptr i64 %lp.value499 to ptr
-  %rtap505 = call i64 %rtap_ep_p_fn502(i64 %rv.rv101, i64 0)
-  %rv.rv511 = load i64, ptr %rv.lv95, align 8
-  %add516 = add i64 %rv.rv511, 1
-  store i64 %add516, ptr %rv.lv95, align 8
-  %add529 = add i64 %STK2.1, 1
-  br label %jump.target953
+"\C0\AD\DE459":                                   ; preds = %lab69, %"\C0\AD\DE459.loopexit1297", %"\C0\AD\DE459.loopexit1232"
+  %lp.value463.in = phi ptr [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), %"\C0\AD\DE459.loopexit1232" ], [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 688), %"\C0\AD\DE459.loopexit1297" ], [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 712), %lab69 ]
+  %lp.value463 = load i64, ptr %lp.value463.in, align 4
+  %rtap_ep_p_fn466 = inttoptr i64 %lp.value463 to ptr
+  %rtap469 = call i64 %rtap_ep_p_fn466(i64 %rv.rv66, i64 0)
+  %rv.rv475 = load i64, ptr %rv.lv, align 8
+  %add480 = add i64 %rv.rv475, 1
+  store i64 %add480, ptr %rv.lv, align 8
+  %add493 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab534:                                           ; preds = %lab104, %lab104
-  %rv.rv540 = load i64, ptr %rv.lv95, align 8
-  %add545 = add i64 %rv.rv540, 1
-  store i64 %add545, ptr %rv.lv95, align 8
-  %add558 = add i64 %STK2.1, 1
-  br label %jump.target953
+lab498:                                           ; preds = %lab69, %lab69
+  %rv.rv504 = load i64, ptr %rv.lv, align 8
+  %add509 = add i64 %rv.rv504, 1
+  store i64 %add509, ptr %rv.lv, align 8
+  %add522 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab562:                                           ; preds = %lab104
-  %rv.rv568 = load i64, ptr %rv.lv95, align 8
-  %sub573 = add i64 %rv.rv568, -1
-  store i64 %sub573, ptr %rv.lv95, align 8
-  %add586 = add i64 %STK2.1, 1
-  br label %jump.target953
+lab526:                                           ; preds = %lab69
+  %rv.rv532 = load i64, ptr %rv.lv, align 8
+  %sub537 = add i64 %rv.rv532, -1
+  store i64 %sub537, ptr %rv.lv, align 8
+  %add550 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab590:                                           ; preds = %lab104
+lab554:                                           ; preds = %lab69
   %stack.vec = alloca [33 x i64], align 8
   %stack.vecaddr = ptrtoint ptr %stack.vec to i64
   %stack.bcpladdr = ashr exact i64 %stack.vecaddr, 3
-  %rv.rv597 = load i64, ptr %rv.lv95, align 8
-  %add602 = add i64 %rv.rv597, 1
-  store i64 %add602, ptr %rv.lv95, align 8
-  %lg.value615 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 93), align 4
-  %rtap_ep_p_fn618 = inttoptr i64 %lg.value615 to ptr
-  %fnap622 = call i64 %rtap_ep_p_fn618(i64 %rv.rv101, i64 %stack.bcpladdr, i64 32)
-  %if_cond625.not = icmp eq i64 %fnap622, 0
-  %spec.select = select i1 %if_cond625.not, i64 %lstr.bcpladdr627, i64 %stack.bcpladdr
-  %rtap641 = call i64 @write_format(i64 %spec.select, i64 %1)
-  %add647 = add i64 %STK2.1, 1
-  br label %jump.target953
+  %rv.rv561 = load i64, ptr %rv.lv, align 8
+  %add566 = add i64 %rv.rv561, 1
+  store i64 %add566, ptr %rv.lv, align 8
+  %lg.value579 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 744), align 4
+  %rtap_ep_p_fn582 = inttoptr i64 %lg.value579 to ptr
+  %fnap586 = call i64 %rtap_ep_p_fn582(i64 %rv.rv66, i64 %stack.bcpladdr, i64 32)
+  %if_cond589.not = icmp eq i64 %fnap586, 0
+  %spec.select = select i1 %if_cond589.not, i64 %lstr.bcpladdr, i64 %stack.bcpladdr
+  %rtap604 = call i64 @write_format(i64 %spec.select, i64 %1)
+  %add610 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab651:                                           ; preds = %lab104
-  %rv.rv657 = load i64, ptr %rv.lv95, align 8
-  %add662 = add i64 %rv.rv657, 1
-  store i64 %add662, ptr %rv.lv95, align 8
-  %lg.value676 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 180), align 4
-  %rtap_ep_p_fn679 = inttoptr i64 %lg.value676 to ptr
-  %rtap683 = call i64 %rtap_ep_p_fn679(i64 %rv.rv101, i64 %lp.value719, i64 %lp.value721.ph)
-  %add689 = add i64 %STK2.1, 1
-  br label %jump.target953
+lab614:                                           ; preds = %lab69
+  %rv.rv620 = load i64, ptr %rv.lv, align 8
+  %add625 = add i64 %rv.rv620, 1
+  store i64 %add625, ptr %rv.lv, align 8
+  %lg.value639 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 1440), align 4
+  %rtap_ep_p_fn642 = inttoptr i64 %lg.value639 to ptr
+  %rtap646 = call i64 %rtap_ep_p_fn642(i64 %rv.rv66, i64 %lp.value682, i64 %lp.value684.ph)
+  %add652 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab693:                                           ; preds = %lab104
-  %rv.rv699 = load i64, ptr %rv.lv95, align 8
-  %add704 = add i64 %rv.rv699, 1
-  store i64 %add704, ptr %rv.lv95, align 8
-  br i1 %if_cond382.not, label %jf.then732, label %jf.else716
+lab656:                                           ; preds = %lab69
+  %rv.rv662 = load i64, ptr %rv.lv, align 8
+  %add667 = add i64 %rv.rv662, 1
+  store i64 %add667, ptr %rv.lv, align 8
+  br i1 %if_cond346.not, label %jf.then695, label %jf.else679
 
-jf.else716:                                       ; preds = %lab693
-  %lg.value723 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 73), align 4
-  %rtap_ep_p_fn726 = inttoptr i64 %lg.value723 to ptr
-  %rtap730 = call i64 %rtap_ep_p_fn726(i64 %rv.rv101, i64 %lp.value719, i64 %lp.value721.ph)
-  br label %jump.target744
+jf.else679:                                       ; preds = %lab656
+  %lg.value686 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 584), align 4
+  %rtap_ep_p_fn689 = inttoptr i64 %lg.value686 to ptr
+  %rtap693 = call i64 %rtap_ep_p_fn689(i64 %rv.rv66, i64 %lp.value682, i64 %lp.value684.ph)
+  br label %jump.target707
 
-jf.then732:                                       ; preds = %lab693
-  %rtap743 = call i64 @write_format(i64 %rv.rv101, i64 %1)
-  br label %jump.target744
+jf.then695:                                       ; preds = %lab656
+  %rtap706 = call i64 @write_format(i64 %rv.rv66, i64 %1)
+  br label %jump.target707
 
-jump.target744:                                   ; preds = %jf.then732, %jf.else716
-  %add750 = add i64 %STK2.1, 1
-  br label %jump.target953
+jump.target707:                                   ; preds = %jf.then695, %jf.else679
+  %add713 = add i64 %STK2.1, 1
+  br label %jump.target916
 
-lab754:                                           ; preds = %lab104
-  %ne = icmp ne i64 %rv.rv101, 1
-  %booltoword760 = sext i1 %ne to i64
-  %rv.rv767 = load i64, ptr %rv.lv95, align 8
-  %add772 = add i64 %rv.rv767, 1
-  store i64 %add772, ptr %rv.lv95, align 8
+lab717:                                           ; preds = %lab69
+  %ne = icmp ne i64 %rv.rv66, 1
+  %booltoword723 = sext i1 %ne to i64
+  %rv.rv730 = load i64, ptr %rv.lv, align 8
+  %add735 = add i64 %rv.rv730, 1
+  store i64 %add735, ptr %rv.lv, align 8
   %gep = getelementptr i8, ptr %invariant.gep, i64 %STK2.1
-  %getbyte.char797 = load i8, ptr %gep, align 1
-  %getbyte.charword798 = zext i8 %getbyte.char797 to i64
-  %add806 = add i64 %STK2.1, 2
-  %eq814.not = icmp eq i8 %getbyte.char797, 92
-  br i1 %eq814.not, label %jf.else819, label %jf.then933
+  %getbyte.char760 = load i8, ptr %gep, align 1
+  %getbyte.charword761 = zext i8 %getbyte.char760 to i64
+  %add769 = add i64 %STK2.1, 2
+  %eq777.not = icmp eq i8 %getbyte.char760, 92
+  br i1 %eq777.not, label %jf.else782, label %jf.then896
 
-jf.else819:                                       ; preds = %lab754
-  %getbyte.char832 = load i8, ptr %getbyte.string, align 8
-  %getbyte.charword833 = zext i8 %getbyte.char832 to i64
-  %gr = icmp sgt i64 %add806, %getbyte.charword833
-  br i1 %gr, label %jump.target953, label %lab842
+jf.else782:                                       ; preds = %lab717
+  %getbyte.char795 = load i8, ptr %getbyte.string, align 8
+  %getbyte.charword796 = zext i8 %getbyte.char795 to i64
+  %gr = icmp sgt i64 %add769, %getbyte.charword796
+  br i1 %gr, label %jump.target916, label %lab805
 
-lab842:                                           ; preds = %jf.else819, %lab908
-  %getbyte.char9191204 = phi i8 [ %getbyte.char919, %lab908 ], [ %getbyte.char832, %jf.else819 ]
-  %lp.value8931136 = phi i64 [ %lp.value8931135, %lab908 ], [ %booltoword760, %jf.else819 ]
-  %STK2.7 = phi i64 [ %add860, %lab908 ], [ %add806, %jf.else819 ]
-  %getbyte.charptr851 = getelementptr i8, ptr %getbyte.string, i64 %STK2.7
-  %getbyte.char852 = load i8, ptr %getbyte.charptr851, align 1
-  %getbyte.charword853 = zext i8 %getbyte.char852 to i64
-  %add860 = add nsw i64 %STK2.7, 1
-  %eq868.not = icmp eq i8 %getbyte.char852, 92
-  br i1 %eq868.not, label %jf.else873, label %jf.then892
+lab805:                                           ; preds = %jf.else782, %lab871
+  %getbyte.char8821165 = phi i8 [ %getbyte.char882, %lab871 ], [ %getbyte.char795, %jf.else782 ]
+  %lp.value8561097 = phi i64 [ %lp.value8561096, %lab871 ], [ %booltoword723, %jf.else782 ]
+  %STK2.7 = phi i64 [ %add823, %lab871 ], [ %add769, %jf.else782 ]
+  %getbyte.charptr814 = getelementptr i8, ptr %getbyte.string, i64 %STK2.7
+  %getbyte.char815 = load i8, ptr %getbyte.charptr814, align 1
+  %getbyte.charword816 = zext i8 %getbyte.char815 to i64
+  %add823 = add nsw i64 %STK2.7, 1
+  %eq831.not = icmp eq i8 %getbyte.char815, 92
+  br i1 %eq831.not, label %jf.else836, label %jf.then855
 
-jf.else873:                                       ; preds = %lab842
-  %not = xor i64 %lp.value8931136, -1
-  %eq885 = icmp eq i64 %booltoword760, %not
-  br i1 %eq885, label %jump.target953, label %lab908
+jf.else836:                                       ; preds = %lab805
+  %not = xor i64 %lp.value8561097, -1
+  %eq848 = icmp eq i64 %booltoword723, %not
+  br i1 %eq848, label %jump.target916, label %lab871
 
-jf.then892:                                       ; preds = %lab842
-  %if_cond896.not = icmp eq i64 %lp.value8931136, 0
-  br i1 %if_cond896.not, label %jt.else897, label %lab908
+jf.then855:                                       ; preds = %lab805
+  %if_cond859.not = icmp eq i64 %lp.value8561097, 0
+  br i1 %if_cond859.not, label %jt.else860, label %lab871
 
-jt.else897:                                       ; preds = %jf.then892
-  %lg.value900 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
-  %rtap_ep_p_fn903 = inttoptr i64 %lg.value900 to ptr
-  %rtap905 = call i64 %rtap_ep_p_fn903(i64 %getbyte.charword853)
-  %getbyte.char919.pre = load i8, ptr %getbyte.string, align 8
-  br label %lab908
+jt.else860:                                       ; preds = %jf.then855
+  %lg.value863 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
+  %rtap_ep_p_fn866 = inttoptr i64 %lg.value863 to ptr
+  %rtap868 = call i64 %rtap_ep_p_fn866(i64 %getbyte.charword816)
+  %getbyte.char882.pre = load i8, ptr %getbyte.string, align 8
+  br label %lab871
 
-lab908:                                           ; preds = %jf.else873, %jt.else897, %jf.then892
-  %getbyte.char919 = phi i8 [ %getbyte.char9191204, %jf.else873 ], [ %getbyte.char919.pre, %jt.else897 ], [ %getbyte.char9191204, %jf.then892 ]
-  %lp.value8931135 = phi i64 [ %not, %jf.else873 ], [ 0, %jt.else897 ], [ %lp.value8931136, %jf.then892 ]
-  %getbyte.charword920 = zext i8 %getbyte.char919 to i64
-  %gr924.not.not = icmp slt i64 %STK2.7, %getbyte.charword920
-  br i1 %gr924.not.not, label %lab842, label %jump.target953
+lab871:                                           ; preds = %jf.else836, %jt.else860, %jf.then855
+  %getbyte.char882 = phi i8 [ %getbyte.char8821165, %jf.else836 ], [ %getbyte.char882.pre, %jt.else860 ], [ %getbyte.char8821165, %jf.then855 ]
+  %lp.value8561096 = phi i64 [ %not, %jf.else836 ], [ 0, %jt.else860 ], [ %lp.value8561097, %jf.then855 ]
+  %getbyte.charword883 = zext i8 %getbyte.char882 to i64
+  %gr887.not.not = icmp slt i64 %STK2.7, %getbyte.charword883
+  br i1 %gr887.not.not, label %lab805, label %jump.target916
 
-jf.then933:                                       ; preds = %lab754
-  br i1 %ne, label %jf.else938, label %jump.target953
+jf.then896:                                       ; preds = %lab717
+  br i1 %ne, label %jf.else901, label %jump.target916
 
-jf.else938:                                       ; preds = %jf.then933
-  %lg.value941 = load i64, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 41), align 4
-  %rtap_ep_p_fn944 = inttoptr i64 %lg.value941 to ptr
-  %rtap946 = call i64 %rtap_ep_p_fn944(i64 %getbyte.charword798)
-  br label %jump.target953
+jf.else901:                                       ; preds = %jf.then896
+  %lg.value904 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
+  %rtap_ep_p_fn907 = inttoptr i64 %lg.value904 to ptr
+  %rtap909 = call i64 %rtap_ep_p_fn907(i64 %getbyte.charword761)
+  br label %jump.target916
 
-jump.target953:                                   ; preds = %lab908, %jf.else873, %jf.then933, %jf.else938, %jf.else819, %jump.target744, %lab651, %lab590, %lab562, %lab534, %"\C0\AD\DE495", %jt.then460, %lab114, %jt.else72
-  %STK2.8 = phi i64 [ %add128, %lab114 ], [ %add491, %jt.then460 ], [ %add529, %"\C0\AD\DE495" ], [ %add558, %lab534 ], [ %add586, %lab562 ], [ %add647, %lab590 ], [ %add689, %lab651 ], [ %add750, %jump.target744 ], [ %add806, %jf.then933 ], [ %add806, %jf.else938 ], [ %add806, %jf.else819 ], [ %add60, %jt.else72 ], [ %add860, %jf.else873 ], [ %add860, %lab908 ]
-  %getbyte.char964 = load i8, ptr %getbyte.string, align 8
-  %getbyte.charword965 = zext i8 %getbyte.char964 to i64
-  %le969.not = icmp sgt i64 %STK2.8, %getbyte.charword965
-  br i1 %le969.not, label %jf.then975, label %lab
+jump.target916:                                   ; preds = %lab871, %jf.else836, %jf.then896, %jf.else901, %jf.else782, %jump.target707, %lab614, %lab554, %lab526, %lab498, %"\C0\AD\DE459", %jt.then424, %lab79, %jt.else
+  %STK2.8 = phi i64 [ %add93, %lab79 ], [ %add455, %jt.then424 ], [ %add493, %"\C0\AD\DE459" ], [ %add522, %lab498 ], [ %add550, %lab526 ], [ %add610, %lab554 ], [ %add652, %lab614 ], [ %add713, %jump.target707 ], [ %add769, %jf.then896 ], [ %add769, %jf.else901 ], [ %add769, %jf.else782 ], [ %add, %jt.else ], [ %add823, %jf.else836 ], [ %add823, %lab871 ]
+  %getbyte.char927 = load i8, ptr %getbyte.string, align 8
+  %getbyte.charword928 = zext i8 %getbyte.char927 to i64
+  %le932.not = icmp sgt i64 %STK2.8, %getbyte.charword928
+  br i1 %le932.not, label %jf.then938, label %lab
 
-jf.then975:                                       ; preds = %jump.target953, %jt.then
-  store i64 %lg.value, ptr getelementptr inbounds ([256 x i64], ptr @__bcpl_global_vector, i64 0, i64 10), align 4
+jf.then938:                                       ; preds = %jump.target916, %entry
+  store i64 %lg.value, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 80), align 4
   ret i64 -4985279381848933680
 }
 
@@ -633,6 +644,8 @@ entry:
 }
 
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
-declare i64 @llvm.abs.i64(i64, i1 immarg) #0
+declare i64 @llvm.abs.i64(i64, i1 immarg) #2
 
-attributes #0 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, argmem: none, inaccessiblemem: none) }
+attributes #2 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }

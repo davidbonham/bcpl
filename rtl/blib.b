@@ -10,6 +10,16 @@ SECTION "blib"
 
 GET "libhdr"
 
+LET capitalch(ch) = 'a' <= ch <= 'z' -> ch - ('a' - 'A'), ch
+
+// Return a random number in the range 1 to upb
+LET randno(upb) = VALOF $(
+   randseed := randseed*2147001325 + 715136305
+  // randseed cycles through all 2^32 possible values.
+  RESULTIS (ABS(randseed/3)) MOD upb + 1
+$)
+
+
 LET writed(N, D) BE $(
     LET T = VEC 20
     AND I, K = 0, -N
@@ -64,9 +74,6 @@ AND write_format(format, lvnextarg) BE
 { LET p = 1
   // Both writef and sawritef must preserve result2
   LET res2 = result2
-
-  UNLESS 0 < format < rootnode!rtn_memsize DO // Safety check
-    format := "##Bad format##"
 
   WHILE p <= format%0 DO
   { // When LOOP is executed p must point to the next format
