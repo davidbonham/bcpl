@@ -121,7 +121,7 @@ LET start() = VALOF
 
   try("shell", shellsort, v, upb)
   try("heap",  heapsort,  v, upb)
-//  try("tree",  treesort,  v, upb)
+  try("tree",  treesort,  v, upb)
   try("quick", quicksort, v, upb)
 
   writes("*nEnd of test*n")
