@@ -32,3 +32,11 @@ Assuming that scripts/setup.sh has been sourced and that we are in $BL_ROOT:
     1. sh scripts/bcpl.sh <name>.b
     2. sh scripts/bcpl.sh --optimise --object <name> <name>.b 
 
+-- REBUILD BLIB ----------------------------------------------------------------
+
+    @ bin/mybcpl noselst t64 rtl/blib.b to rtl/blib.ll
+
+-- REGRESSION TESTS ------------------------------------------------------------
+
+    1. Run with python3 scripts/regression.py regress results/ 
+    2. Remaster with python3 scripts/regression.py regress results/ --log debug (--select sortdemo) --remaster 
