@@ -56,8 +56,8 @@ enum {
 
 // 10.3 String Handling
 
-    G_UNPACKSTRING  =  30,
-    G_PACKSTRING    =  31,
+    G_PACKSTRING    =  30,
+    G_UNPACKSTRING  =  31,
     G_GETBYTE       =  48,
     G_PUTBYTE       =  49,
 
@@ -243,8 +243,18 @@ bcplword_t __putbyte(bcplword_t vector, bcplword_t index, bcplword_t byte)
 
 
 
+bcplword_t __undefined(void)
+{
+    fprintf(stderr, "attempt to call routine via undefined global\n");
+    exit(1);
+}
+
 int main(int argc, char* argv[])
 {
+    // Start with all of the unset elements of the global vector referencing
+    // a debugging function
+    for (int i = 0; i < 256; i += 1) if (__bcpl_global_vector[i] == 0) __bcpl_global_vector[i] = (bcplword_t) __undefined;
+
     // Setup standard input and standard output
     __bcpl_global_vector[G_CIS]             = (bcplword_t)stdin;
     __bcpl_global_vector[G_COS]             = (bcplword_t)stdout;
