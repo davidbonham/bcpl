@@ -10,7 +10,7 @@ $)
 
 LET start() BE $(
 
-    FOR i = 1 TO 100 DO $(
+    FOR i = 1 TO 16 DO $(
         writed(i,4)
         writed(fib(i), 18)
         wrch('*N')
