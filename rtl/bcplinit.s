@@ -1,3 +1,15 @@
+    .section        .text.bcplmain,"ax",@progbits
+
+__level:
+    movq    %rbp, %rax             # return the caller's frame pointer
+    retq
+
+__longjump:
+    movq    %rdi, %rbp             # restore the saved frame pointer
+    popq    %rdi                   # discard the caller's return address
+    jmpq    *%rsi                  # branch to the label
+
+
 # The standard BCPL Global Vector
 #
 # This corresponds to the values in cintcode/g/libhdr.h
@@ -5,9 +17,6 @@
     .section BCPLGVEC,"aw",@progbits
     .global __bcpl_global_vector
     .global __bcpl_elaborators
-
-
-
 
 
  __bcpl_global_vector:
@@ -26,8 +35,8 @@
     .quad 0                # 12     CIS
     .quad 0                # 13     COS
     .quad 0                # 14     (currentdir)
-    .quad 0                # 15     LEVEL
-    .quad 0                # 16     LONGJUMP
+    .quad __level          # 15     LEVEL
+    .quad __longjump       # 16     LONGJUMP
     .quad 0                # 17     (createco)
     .quad 0                # 18     (deleteco)
     .quad 0                # 19     (callco)
@@ -80,5 +89,6 @@
 
     .org __bcpl_global_vector + 512*8
 __bcpl_elaborators:
+
 
 
