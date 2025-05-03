@@ -23,21 +23,16 @@ up to but not including the appendix (which defines extensions). Once that
 target has been reached, the appendix will be included (providing floating
 point and the heap, among other things).
 
-## History
-As a proof of concept, the compiler running under CINTPOS and using LLVM 14
-had compiled all of the program examples in the BCPL kit I've attempted and
-the code generated was of the quality one would expect after passing though
-the LLVM optimisation pipeline.
-
-Alas, the one program that failed to compile is *TRN*, which makes use of
-the ability to assigne a label to a variable and later GOTO that variable.
-I was trying to discover how to use the LLVM indirect branch support.
-
 ## The Current State of Play
+The current state of play is that the compiler can now compile itself but
+the result is not yet runnable as the source makes calls to the Sys global.
 
-The codegenerator is currenty generating code that passes most of CMPLTEST
-with the following notable exceptions:
-
-- The SLCT operations are not yet implemented
-- GOTO is not yet working. The general case of 'GOTO expression' is troublesome as there is no basic block address handy.
+- It uses LLVM 20.1.2
+- The compiled using the cintpos BCPL compiler
+- The resulting compiler runs under cintpos but generates standalone code
+- The BCPL run time library is simply layered on top of the native C RTL for the time being
+- Not all of the BCPL RTL is implemented
+- The OCODE operations supporting SLCT are not implemented - specify noselst on the command line to compile BCPL programs using field selectors
+- The BCPL standard requires arguments to routines to have adjacent addresses so that it is possible to take the address of the first argument and treat the argument as a vector. The code generator does not implement this.
+- Much of CMPLTEST currently passes 
 
