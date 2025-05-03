@@ -249,12 +249,12 @@ AND tester(x, y, z, v1, v2) BE
   t(x, 16)                  // 97
   x := 15
 
-//db  { LET w = VEC 20
-//db    a := l1
-//db    GOTO a
-//dbl2: wrs("GOTO ERROR*N")
-//db    failcount := failcount+1
-//db  }
+  { LET w = VEC 20
+    a := l1
+    GOTO a
+l2: wrs("GOTO ERROR*N")
+    failcount := failcount+1
+  }
 
 l1:
   a := VALOF RESULTIS 11
@@ -589,30 +589,30 @@ l1:
 
   // Test Unicode character and string escapes
   // assuming the compiler has UTF8 as the default encoding.
-  //DBt('*#1234', #x1234)
-  //DBt("*#1234"%0, 3)                // 0001 0010 0011 0100
-  //DBt("*#1234"%1, #b1110_0001)      // 0001
-  //DBt("*#1234"%2, #b10_001000)      //      0010 00
-  //DBt("*#1234"%3, #b10_110100)      //             11 0100
+  t('*#1234', #x1234)
+  t("*#1234"%0, 3)                // 0001 0010 0011 0100
+  t("*#1234"%1, #b1110_0001)      // 0001
+  t("*#1234"%2, #b10_001000)      //      0010 00
+  t("*#1234"%3, #b10_110100)      //             11 0100
 
-  //DBt('*##1234_5678', #x1234_5678)
-  //DBt("*##1234_5678"%0, 6)          // 0001 0010 0011 0100 0101 0110 0111 1000
-  //DBt("*##1234_5678"%1, #b1111110_0)//  0
-  //DBt("*##1234_5678"%2, #b10_010010)//   01 0010
-  //DBt("*##1234_5678"%3, #b10_001101)//           0011 01
-  //DBt("*##1234_5678"%4, #b10_000101)//                  00 0101
-  //DBt("*##1234_5678"%5, #b10_011001)//                          0110 01
-  //DBt("*##1234_5678"%6, #b10_111000)//                                 11 1000
+  t('*##1234_5678', #x1234_5678)
+  t("*##1234_5678"%0, 6)          // 0001 0010 0011 0100 0101 0110 0111 1000
+  t("*##1234_5678"%1, #b1111110_0)//  0
+  t("*##1234_5678"%2, #b10_010010)//   01 0010
+  t("*##1234_5678"%3, #b10_001101)//           0011 01
+  t("*##1234_5678"%4, #b10_000101)//                  00 0101
+  t("*##1234_5678"%5, #b10_011001)//                          0110 01
+  t("*##1234_5678"%6, #b10_111000)//                                 11 1000
 
   // Test GB2312 character and string escapes
   // assuming the compiler has UTF8 as the default encoding.
-  //DBt('*#g*#4566', 4566)
-  //DBt("*#g*#4566"%0, 2)     // row 45  col 66  = character 'foreign'
-  //DBt("*#g*#4566"%1, #xE2)  // #xE2 = 66 + 160
-  //DBt("*#g*#4566"%2, #xCD)  // #xCD = 45 + 160
+  t('*#g*#4566', 4566)
+  t("*#g*#4566"%0, 2)     // row 45  col 66  = character 'foreign'
+  t("*#g*#4566"%1, #xE2)  // #xE2 = 66 + 160
+  t("*#g*#4566"%2, #xCD)  // #xCD = 45 + 160
 
   testno := 1000
-  //DBtestslct()
+  testslct()
 
   testno := 2000
   testswitches()
@@ -639,36 +639,47 @@ l1:
   wrs(" FAILURE(S)*N")
 }
 
-//DBAND testslct() BE
-//DB{ MANIFEST {
-//DB    S0_0_0 = SLCT 0      // Full word offset 0
-//DB    S0_0_1 = SLCT 1      // Full word offset 1
-//DB    S0_4_0 = SLCT 4:0    // 28-bit field, shift of 4, offset 0
-//DB    S8_4_1 = SLCT 8:4:1  //  8-bit field, shift of 4, offset 1
-//DB    S8_0_0 = SLCT 8:0:0  // ls 8 bits, offset 0
-//DB  }
-//DB
-//DB  LET a, b = #x12345678, #xFEDCBA98  // Two bit patterns
-//DB  LET x, y = a, b  // A two word test record
-//DB  LET r = @x       // Pointer to the record
-//DB
-//DB  t(S0_0_0::r, #x12345678)  // 1000
-//DB  t(S0_0_1::r, #xFEDCBA98)  // 1001
-//DB t(S0_4_0::r, #x01234567)  // 1002
-//DB  t(S8_4_1::r, #x000000A9)  // 1003
-//DB  t(S8_0_0::r, #x00000078)  // 1004
+AND testslct() BE
+{ MANIFEST {
+    S0_0_0 = SLCT 0      // Full word offset 0
+    S0_0_1 = SLCT 1      // Full word offset 1
+    S0_4_0 = SLCT 4:0    // 28-bit field, shift of 4, offset 0
+    S8_4_1 = SLCT 8:4:1  //  8-bit field, shift of 4, offset 1
+    S8_0_0 = SLCT 8:0:0  // ls 8 bits, offset 0
+  }
 
-//DB  x, y := a, b
-//DB  S0_0_0::r := #x21436587;   t(x, #x21436587)  // 1005
-//DB  x, y := a, b
-//DB  S0_0_1::r := #xEFCDAB89;   t(y, #xEFCDAB89)  // 1006
-//DB  x, y := a, b
-//DB  S0_4_0::r := #xEFCDAB89;   t(x, #xEFCDAB898)  // 1007 ?????????
-//DB  x, y := a, b
-//DB  S8_4_1::r := #xA9876543;   t(y, #xFEDCB438)  // 1008
-//DB  x, y := a, b
-//DB  S8_0_0::r := #xCBA98765;   t(x, #x12345665)  // 1009
-//DB}
+  LET a, b = #x12345678, #xFEDCBA98  // Two bit patterns
+  LET x, y = a, b  // A two word test record
+
+  //DB Test modified to remove the need for locals to be allocated
+  //   consecitive elements on the stack (a late addtion to the
+  //   language)
+  //DB LET r = @x       // Pointer to the record
+  LET r = VEC 1     //DB
+  r!0, r!1 := x, y  //DB
+
+  t(S0_0_0::r, #x12345678)  // 1000
+  t(S0_0_1::r, #xFEDCBA98)  // 1001
+  t(S0_4_0::r, #x01234567)  // 1002
+  t(S8_4_1::r, #x000000A9)  // 1003
+  t(S8_0_0::r, #x00000078)  // 1004
+
+  //DB x, y := a, b
+  r!0, r!1 := a, b  //DB
+  S0_0_0::r := #x21436587;   t(r!0, #x21436587)  // 1005
+  //DB x, y := a, b
+  r!0, r!1 := a, b  //DB
+  S0_0_1::r := #xEFCDAB89;   t(r!1, #xEFCDAB89)  // 1006
+  //DB x, y := a, b
+  r!0, r!1 := a, b  //DB
+  S0_4_0::r := #xEFCDAB89;   t(r!0, #xEFCDAB898)  // 1007 ?????????
+  //DB x, y := a, b
+  r!0, r!1 := a, b  //DB
+  S8_4_1::r := #xA9876543;   t(r!1, #xFEDCB438)  // 1008
+  //DB x, y := a, b
+  r!0, r!1 := a, b  //DB
+  S8_0_0::r := #xCBA98765;   t(r!0, #x12345665)  // 1009
+}
 
 AND locals(p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17) BE
 { t(p3, 103)
