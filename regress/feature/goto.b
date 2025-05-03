@@ -18,13 +18,21 @@ end:
 $)
 
 LET vialocal(n, testno) BE $(
-    LET targets = TABLE ?, one, two
+    LET targets = VEC 3
+    GOTO past
     GOTO targets!n
-    expect(FALSE, testno)
 one:
     expect(n = 1, testno)
+    RETURN
 two:
     expect(n = 2, testno)
+    RETURN
+
+past:
+    targets!1 := one
+    targets!2 := two
+    GOTO targets!n
+    expect(FALSE, testno)
 end:
 $)
 

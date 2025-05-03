@@ -4,16 +4,24 @@
 GET "libhdr"
 
 GLOBAL $(
-   myglobal: 100
+
+   myglobal: 100;
+   nextglobal
 $)
 
 LET myglobal() BE $(
     wrch('M')
+    nextglobal +:= 1
+    wrch(nextglobal)
+    
 $)
 
 LET start() BE $(
+    LET delta = @nextglobal - @myglobal
+    nextglobal := 'A'
     wrch('S')
     myglobal()
+    wrch('a' + delta)
 $)
 
 
