@@ -33,6 +33,7 @@ the result is not yet runnable as the source makes calls to the Sys global.
 - The BCPL run time library is simply layered on top of the native C RTL for the time being
 - Not all of the BCPL RTL is implemented
 - The OCODE operations supporting SLCT are not implemented - specify noselst on the command line to compile BCPL programs using field selectors
-- The BCPL standard requires arguments to routines to have adjacent addresses so that it is possible to take the address of the first argument and treat the argument as a vector. The code generator does not implement this.
+- The BCPL standard requires arguments to routines to have adjacent addresses so that it is possible to take the address of the first argument and treat the argument as a vector. The code generator does not honour this.
 - Much of CMPLTEST currently passes 
+- According to section 2.4.5 of the BCPL Cintsys and Cintpos User Guide, local variables are allocated consecutive locations in the stack frame of the current function. The "Proposed Definition" does not mention this and the code generator does not honour it at the moment.
 
