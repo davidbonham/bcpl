@@ -299,3 +299,7 @@ BCPLWORD llvm_get_target_name(BCPLWORD t);
 
 BCPLWORD llvm_set_function_call_conv(BCPLWORD fn, BCPLWORD cc);
 
+BCPLWORD llvm_add_alias2(BCPLWORD m, BCPLWORD value_ty, BCPLWORD addr_space, BCPLWORD aliasee, BCPLWORD name);
+
+BCPLWORD llvm_print_type_to_string(BCPLWORD ty);
+

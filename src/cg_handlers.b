@@ -959,7 +959,7 @@ $(
     // The label number allows us to record the static variable in the label
     // table. First create the static (LLVM private global)
 
-    lab_declare(label, LAB_ENTRY, function)
+    lab_declare(label, LAB_ENTRY, function)    
     lab_add_static(label)
     lab_set_static(label, llvm_const_ptr_to_int(function, word_type))
 
@@ -1006,11 +1006,25 @@ $)
 
 AND cg_global(global, label) BE
 $(
-    // The value of the label is the static variable we allocated to hold
-    // it. The value it contains is currently held as its initialiser
-    LET static_variable = lab_get_static(label)
-    LET static_value = llvm_get_initializer(static_variable)
-    declare_global(module, global, static_value)
+    LET append_dec(string, number) BE $(
+        LET final_digit = '0' + (number MOD 10)
+        IF number > 9 DO append_dec(string, number / 10)
+        string%0 +:= 1
+        string%(string%0) := final_digit
+    $)
+
+    // We need to create the external weak symbol __bcpl_gvN as an alias of
+    // the function name. Our initial string provides plenty of space
+    // to append the global number. The alias is externally declared as a weak
+    // symbol and once we associate it with our function, the linker will see
+    // it gets resolved.
+    LET global_name = "__bcpl_gv       "
+    LET fn = lab_get_function(label)
+    LET alias = ?
+    global_name%0 := 9
+    append_dec(global_name, global)
+    alias := llvm_add_alias2(module, llvm_type_of(fn), 0, fn, global_name)
+    llvm_set_linkage(alias, LLVM_EXTERNAL_LINKAGE)
 $)
 
 AND cg_goto() BE $(

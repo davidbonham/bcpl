@@ -878,3 +878,16 @@ BCPLWORD llvm_set_function_call_conv(BCPLWORD fn, BCPLWORD cc)
     return 0;
 }
 
+BCPLWORD llvm_add_alias2(BCPLWORD m, BCPLWORD value_ty, BCPLWORD addr_space, BCPLWORD aliasee, BCPLWORD name)
+{
+    return (BCPLWORD)(uintptr_t)LLVMAddAlias2((LLVMModuleRef)(uintptr_t)m, (LLVMTypeRef)(uintptr_t)value_ty, (unsigned)(uintptr_t)addr_space, (LLVMValueRef)(uintptr_t)aliasee, (const char*)(uintptr_t)b2c_string1(name));
+}
+
+
+
+BCPLWORD llvm_print_type_to_string(BCPLWORD value)
+{
+    char* const message = LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)value);
+    return build_message("llvm_print_type_to_string", message);
+}
+

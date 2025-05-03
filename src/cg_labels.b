@@ -96,6 +96,12 @@ LET lab_declare(n, flag, fn) BE $(
        // to identify legal targets of indirect branches (GOTO).
        label_function!n := fn
     $)
+    IF (label_type!n & LAB_ENTRY) ~= 0 THEN $(
+       // We are defining a label via an ENTRY operation. Record the current
+       // function that it names. This won't be processed as an indirect
+       // branch target because it isn't marked as a LAB
+       label_function!n := fn
+    $)
 $)
 
 LET lab_add_static(n) = VALOF $(
@@ -174,6 +180,8 @@ LET lab_set_table(n, value) BE $(
 
     label_static!n := value
 $)
+
+LET lab_get_function(n) = label_function!n
 
 // -----------------------------------------------------------------------------
 LET lab_populate_indirectbr(instruction) BE $(

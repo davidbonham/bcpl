@@ -323,4 +323,10 @@ void LLVMGetTargetName(LLVMTargetRef T);
 
 void LLVMSetFunctionCallConv(LLVMValueRef Fn, unsigned CC);
 
+LLVMValueRef LLVMAddAlias2(LLVMModuleRef M, LLVMTypeRef ValueTy, unsigned AddrSpace, LLVMValueRef Aliasee, const char *Name);
+
+LLVMStr LLVMPrintTypeToString (LLVMTypeRef Ty);
+
+
+
 

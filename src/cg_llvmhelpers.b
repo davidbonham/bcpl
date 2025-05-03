@@ -32,11 +32,6 @@ $(
     RESULTIS llvm_build_gep2(builder, array_type_ref, array_ref, indices, 2, "gv")
 $)
 
-LET declare_global_function(module, number, function) BE
-$(
-    LET function_as_word_ref  = llvm_const_ptr_to_int(function, word_type)
-    declare_global(module, number, function_as_word_ref)
-$)
 
 LET optimise_module(module) = VALOF $(
 

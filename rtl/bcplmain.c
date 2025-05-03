@@ -7,11 +7,7 @@
 
 typedef int64_t bcplword_t;
 
-extern bcplword_t __bcpl_global_vector[256];
-extern bcplword_t __bcpl_elaborators;
-
-static bcplword_t __attribute__((section("BCPLGVEC"))) __bcpl_elaborators_end;
-
+extern bcplword_t __bcpl_global_vector[512];
 
 // 9.1 Standard Stream Organisation Procedures
 enum {
@@ -65,6 +61,8 @@ enum {
 
     G_MULDIV        =   5,
 };
+
+// -- Our initial RTL is layered on top of the C RTL ---------------------------
 
 bcplword_t __muldiv(bcplword_t a, bcplword_t b, bcplword_t c)
 {
@@ -256,16 +254,21 @@ bcplword_t __freevec(bcplword_t vec)
     return 0;
 }
 
-
-
 bcplword_t __undefined(void)
 {
     fprintf(stderr, "attempt to call routine via undefined global\n");
     exit(1);
 }
 
+// -- The main entry point -----------------------------------------------------
+
 int main(int argc, char* argv[])
 {
+    //for (int i = 0; i < 256; i += 1)
+    //{
+    //    if (__bcpl_global_vector[i] != 0) printf("[%d] = 0x%016lx\n", i, __bcpl_global_vector[i]);
+    //}
+
     // Start with all of the unset elements of the global vector referencing
     // a debugging function
     for (int i = 0; i < 256; i += 1) if (__bcpl_global_vector[i] == 0) __bcpl_global_vector[i] = (bcplword_t) __undefined;
@@ -274,39 +277,17 @@ int main(int argc, char* argv[])
     __bcpl_global_vector[G_CIS]             = (bcplword_t)stdin;
     __bcpl_global_vector[G_COS]             = (bcplword_t)stdout;
 
-    // Elaborate BCPL sections
-    if (&__bcpl_elaborators == &__bcpl_elaborators_end)
+    // Get START
+    bcplword_t (*start)(bcplword_t) = (bcplword_t (*)(bcplword_t))__bcpl_global_vector[G_START];
+    if (start == 0)
     {
-        fprintf(stderr, "fatal: no module elaborators present - start is not present.\n");
+        fprintf(stderr, "fatal: start is not defined.\n");
     }
     else
     {
-        bcplword_t* v;
-        for (v = &__bcpl_elaborators; v < &__bcpl_elaborators_end; v += 2)
-        {
-            // This entry tells us to set the value of an element of the 
-            // global vector
-            __bcpl_global_vector[v[0]] = v[1];
-        }
-
-        // Get START
-        bcplword_t (*start)(bcplword_t) = (bcplword_t (*)(bcplword_t))__bcpl_global_vector[G_START];
-        if (start == 0)
-        {
-            fprintf(stderr, "fatal: start is not defined.\n");
-        }
-        else
-        {
-            //for (int i = 0; i < 256; i += 1)
-            //{
-            //    if (__bcpl_global_vector[i] != 0) printf("[%d] = 0x%016lx\n", i, __bcpl_global_vector[i]);
-            //}
-
-            bcplword_t result = start(0);
-            putchar('\n');
-            return result;
-        }
-
+        bcplword_t result = start(0);
+        putchar('\n');
+        return result;
     }
 }
 

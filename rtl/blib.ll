@@ -4,26 +4,17 @@ source_filename = "blib"
 @__bcpl_global_vector = external local_unnamed_addr global [256 x i64], section "BCPLGVEC"
 @itemn.global = internal global [16 x i64] [i64 48, i64 49, i64 50, i64 51, i64 52, i64 53, i64 54, i64 55, i64 56, i64 57, i64 65, i64 66, i64 67, i64 68, i64 69, i64 70], section ".rodata.blib"
 @lstr.global = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".rodata.blib", align 8
-@__bcpl_global = weak local_unnamed_addr global i64 94, section "BCPLGVEC"
-@__bcpl_value = weak local_unnamed_addr global i64 ptrtoint (ptr @writef to i64), section "BCPLGVEC"
-@__bcpl_global.14 = weak local_unnamed_addr global i64 83, section "BCPLGVEC"
-@__bcpl_value.15 = weak local_unnamed_addr global i64 ptrtoint (ptr @readn to i64), section "BCPLGVEC"
-@__bcpl_global.16 = weak local_unnamed_addr global i64 84, section "BCPLGVEC"
-@__bcpl_value.17 = weak local_unnamed_addr global i64 ptrtoint (ptr @newline to i64), section "BCPLGVEC"
-@__bcpl_global.18 = weak local_unnamed_addr global i64 89, section "BCPLGVEC"
-@__bcpl_value.19 = weak local_unnamed_addr global i64 ptrtoint (ptr @writes to i64), section "BCPLGVEC"
-@__bcpl_global.20 = weak local_unnamed_addr global i64 87, section "BCPLGVEC"
-@__bcpl_value.21 = weak local_unnamed_addr global i64 ptrtoint (ptr @writehex to i64), section "BCPLGVEC"
-@__bcpl_global.22 = weak local_unnamed_addr global i64 88, section "BCPLGVEC"
-@__bcpl_value.23 = weak local_unnamed_addr global i64 ptrtoint (ptr @writeoct to i64), section "BCPLGVEC"
-@__bcpl_global.24 = weak local_unnamed_addr global i64 86, section "BCPLGVEC"
-@__bcpl_value.25 = weak local_unnamed_addr global i64 ptrtoint (ptr @writen to i64), section "BCPLGVEC"
-@__bcpl_global.26 = weak local_unnamed_addr global i64 85, section "BCPLGVEC"
-@__bcpl_value.27 = weak local_unnamed_addr global i64 ptrtoint (ptr @writed to i64), section "BCPLGVEC"
-@__bcpl_global.28 = weak local_unnamed_addr global i64 34, section "BCPLGVEC"
-@__bcpl_value.29 = weak local_unnamed_addr global i64 ptrtoint (ptr @randno to i64), section "BCPLGVEC"
-@__bcpl_global.30 = weak local_unnamed_addr global i64 96, section "BCPLGVEC"
-@__bcpl_value.31 = weak local_unnamed_addr global i64 ptrtoint (ptr @capitalch to i64), section "BCPLGVEC"
+
+@__bcpl_gv94 = alias ptr, ptr @writef
+@__bcpl_gv83 = alias ptr, ptr @readn
+@__bcpl_gv84 = alias ptr, ptr @newline
+@__bcpl_gv89 = alias ptr, ptr @writes
+@__bcpl_gv87 = alias ptr, ptr @writehex
+@__bcpl_gv88 = alias ptr, ptr @writeoct
+@__bcpl_gv86 = alias ptr, ptr @writen
+@__bcpl_gv85 = alias ptr, ptr @writed
+@__bcpl_gv34 = alias ptr, ptr @randno
+@__bcpl_gv96 = alias ptr, ptr @capitalch
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
 define i64 @capitalch(i64 %0) #0 section ".text.blib" {

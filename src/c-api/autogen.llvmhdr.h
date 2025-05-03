@@ -152,6 +152,8 @@ $(
     LLVM_DISPOSE_PASS_BUILDER_OPTIONS
     LLVM_GET_TARGET_NAME
     LLVM_SET_FUNCTION_CALL_CONV
+    LLVM_ADD_ALIAS2
+    LLVM_PRINT_TYPE_TO_STRING
     LLVM_END_MARKER
 $)
 
@@ -306,3 +308,5 @@ LET llvm_get_error_message(err) = sys(Sys_ext, LLVM_GET_ERROR_MESSAGE, err)
 LET llvm_dispose_pass_builder_options(options) = sys(Sys_ext, LLVM_DISPOSE_PASS_BUILDER_OPTIONS, options)
 LET llvm_get_target_name(t) = sys(Sys_ext, LLVM_GET_TARGET_NAME, t)
 LET llvm_set_function_call_conv(fn, cc) = sys(Sys_ext, LLVM_SET_FUNCTION_CALL_CONV, fn, cc)
+LET llvm_add_alias2(m, value_ty, addr_space, aliasee, name) = sys(Sys_ext, LLVM_ADD_ALIAS2, m, value_ty, addr_space, aliasee, name)
+LET llvm_print_type_to_string(ty) = sys(Sys_ext, LLVM_PRINT_TYPE_TO_STRING, ty)

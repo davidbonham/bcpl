@@ -180,6 +180,15 @@ BCPLWORD llvm_print_value_to_string(BCPLWORD value)
 }
 
 ''',
+    'LLVMPrintTypeToString': '''
+
+BCPLWORD llvm_print_type_to_string(BCPLWORD value)
+{
+    char* const message = LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)value);
+    return build_message("llvm_print_type_to_string", message);
+}
+
+''',
 
     'LLVMAddIncoming': '''
 BCPLWORD llvm_add_incoming(BCPLWORD phi_node, BCPLWORD incoming_values, BCPLWORD incoming_blocks, BCPLWORD count)
