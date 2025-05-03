@@ -27,8 +27,8 @@ point and the heap, among other things).
 The current state of play is that the compiler can now compile itself but
 the result is not yet runnable as the source makes calls to the Sys global.
 
-- It uses LLVM 20.1.2
-- The compiled using the cintpos BCPL compiler
+- It uses LLVM 20.1.3
+- It is compiled using the cintpos BCPL compiler
 - The resulting compiler runs under cintpos but generates standalone code
 - The BCPL run time library is simply layered on top of the native C RTL for the time being
 - Not all of the BCPL RTL is implemented
