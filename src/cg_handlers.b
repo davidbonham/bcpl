@@ -28,7 +28,7 @@ $(
     is_unreachable := FALSE
     UNTIL op = 0 DO
     $(
-        wf("S=%N: %S ", ss_tos(), opname(op))
+        wf("%CS=%N: %S", is_unreachable -> '-', '+', ss_tos(), opname(op))
         SWITCHON op INTO
         $(
             // OCODE instructions that take no arguments
@@ -367,7 +367,6 @@ $(
     // populate the indirect branch's label list with the labels for this
     // function.
     ibr_insert_and_cleanup(builder)
-
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
     UNLESS r = 0 DO cgerror("unable to verify function*N")
 
@@ -404,8 +403,10 @@ $)
 AND cg_fnrn() BE
 $(
     // See cg_ln for the fix for unreachable code we've added here
-    UNLESS is_unreachable
-    $(
+    TEST is_unreachable THEN $(
+        ss_drop("fnrn.result")
+    $)
+    ELSE $(
         // The variable on the top of the stack should be the result so get
         // its value
         LET result = ss_pop("fnrn.result")
@@ -1156,16 +1157,21 @@ $(
     LET dummy = lab_declare(n, LAB_JUMP, function)
     LET target_bb = lab_get_basicblock(n, "jump.target")
 
-    // Build a branch to the basic block
-    llvm_build_br(builder, target_bb)
+    // If we are unreachable, we don't want to emit any code. Note that we
+    // have defined the label and basic block ready to be used.
+    UNLESS is_unreachable DO $(
 
-    // We ought to be followed by a LAB which will create the next basic
-    // block for the next operation. However, if there is unreachable code
-    // after us, there won't be a LAB so we'll have to create the basic
-    // block
-    basicblock := llvm_create_basic_block_in_context(context, "dead")
-    llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
-    llvm_position_builder_at_end(builder, basicblock)
+        // Build a branch to the basic block
+        llvm_build_br(builder, target_bb)
+
+        // We ought to be followed by a LAB which will create the next basic
+        // block for the next operation. However, if there is unreachable code
+        // after us, there won't be a LAB so we'll have to create the basic
+        // block
+        basicblock := llvm_create_basic_block_in_context(context, "dead")
+        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
+        llvm_position_builder_at_end(builder, basicblock)
+    $)
 $)
 
 AND cg_lab(label) BE
