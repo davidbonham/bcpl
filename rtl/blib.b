@@ -264,3 +264,45 @@ LET writef(format, a, b, c, d, e, f, g, h, i, j) BE $(
     argvec!9 := j
     write_format(format, @argvec)
 $)
+
+// To provide simple cintpos support, we implement sys in BCPL as part
+// of BLIB
+
+LET sys_flt(operation, a, b, c, d) = VALOF $(
+    LET result = ?
+    SWITCHON operation INTO $(
+
+        CASE fl_avail: result := TRUE;                                  ENDCASE
+
+        CASE fl_mk: $(
+            // a=mantissa, b=exponent
+            result := FLOAT a
+            WHILE b > 0 DO $( result #*:= 10.0; b -:= 1 $)
+            WHILE b < 0 DO $( result #/:= 10.0; b +:= 1 $)
+        $)
+        ENDCASE
+
+        CASE fl_float: result := FLOAT a;                               ENDCASE
+
+        CASE fl_sub: result := (FLOAT a) #- (FLOAT b);                  ENDCASE
+
+        DEFAULT:
+            writef("ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x*n", operation, a, b, c, d)
+            stop(1)
+    $)
+    RESULTIS result
+
+$)
+
+LET sys(package, operation, a, b, c, d) = VALOF $(
+    LET result = ?
+    SWITCHON package INTO $(
+        CASE Sys_sardch: result := rdch();                              ENDCASE
+        CASE Sys_sawrch: result := wrch(operation);                     ENDCASE
+        CASE Sys_flt:    result := sys_flt(operation, a, b, c, d);      ENDCASE
+        DEFAULT:
+            writef("ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x*n", package, operation, a, b, c, d)
+            stop(1)
+    $)
+    RESULTIS result
+$)
