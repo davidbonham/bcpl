@@ -867,7 +867,7 @@ AND cg_float()  BE  $(
     LET flhs = llvm_build_sito_fp(builder, lhs, float_type, "float.itof")
 
     // We must push the value as a BCPL word
-    LET result = llvm_build_bit_cast(builder, lhs, word_type, "float")
+    LET result = llvm_build_bit_cast(builder, flhs, word_type, "float")
     ss_push(result)
 $)
 
