@@ -1,8 +1,6 @@
 #ifndef LLVM_BCPL_BINDING_H
 #define LLVM_BCPL_BINDING_H
 
-#include "cintmain.h"
-
 /*
 BCPLWORD LLVM_init(void);
 

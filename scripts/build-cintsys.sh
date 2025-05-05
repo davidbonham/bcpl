@@ -26,6 +26,10 @@ mkdir -p ${BL_ROOT}/obj
 mkdir -p ${BL_ROOT}/bin
 
 # Create the LLVM C binding
+echo "** compiling the C API binding utilities"
+gcc -g -O0  -I ${BL_ROOT}/src/inc  -I $(${LLVMBIN}/llvm-config --includedir) \
+    -o ${BL_ROOT}/obj/llvm_bcpl_binding_utilities.o -c ${BL_ROOT}/src/llvm_bcpl_binding_utilities.c
+
 echo "** compiling the C API binding"
 gcc -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I $(${LLVMBIN}/llvm-config --includedir) \
     -o ${BL_ROOT}/obj/llvm_bcpl_binding.o -c ${BL_ROOT}/src/llvm_bcpl_binding.c
@@ -44,7 +48,9 @@ gcc  -g -O0 -Xlinker -Map=/tmp/output.map -o ${BL_ROOT}/bin/cintsys64  ${OBJ}/ci
        ${OBJ}/joyfn.o ${OBJ}/sdlfn.o ${OBJ}/glfn.o ${OBJ}/alsafn.o \
        ${BL_ROOT}/obj/extfn.o \
        ${BL_ROOT}/obj/stubzlib.o \
-       ${BL_ROOT}/obj/llvm_bcpl_binding.o ${OBJ}/cintmain.o \
+       ${BL_ROOT}/obj/llvm_bcpl_binding.o \
+       ${BL_ROOT}/obj/llvm_bcpl_binding_utilities.o \
+       ${OBJ}/cintmain.o \
        $(${LLVMBIN}/llvm-config --ldflags --libs) -pthread  -lm -lstdc++ 
 
 

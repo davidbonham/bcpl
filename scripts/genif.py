@@ -12,7 +12,7 @@ hand_written_wrappers = {
 BCPLWORD llvm_build_gep2(BCPLWORD builder, BCPLWORD type_ref, BCPLWORD pointer, BCPLWORD indices, BCPLWORD num_indices, BCPLWORD name)
 {
     char c_name[256];
-    char const* r = b2c_str(name, c_name);
+    char const* r = b2c_string(name, c_name);
 
     BCPLWORD* ptr = (BCPLWORD*)b2c_address(indices);
     LLVMValueRef* const indices_copy = (LLVMValueRef*) malloc(sizeof(LLVMValueRef)*num_indices);
@@ -51,7 +51,7 @@ BCPLWORD llvm_build_call2(BCPLWORD builder, BCPLWORD signature, BCPLWORD functio
 {
     extern bool extfn_tracing;
     char c_name[256];
-    char const* r = b2c_str(name, c_name);
+    char const* r = b2c_string(name, c_name);
 
     // We can't assume that the arguments are the same size so we must copy
     // the vector
@@ -62,9 +62,9 @@ BCPLWORD llvm_build_call2(BCPLWORD builder, BCPLWORD signature, BCPLWORD functio
 
     if (extfn_tracing)
     {
-        print_message("signature", LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)signature));
+        bcpl_print_message("signature", LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)signature));
         printf("num_args=%ld\\n", num_args);
-        for (i = 0; i < num_args; i += 1) print_message("arg", LLVMPrintValueToString((LLVMValueRef)args_copy[i]));
+        for (i = 0; i < num_args; i += 1) bcpl_print_message("arg", LLVMPrintValueToString((LLVMValueRef)args_copy[i]));
     }
 
     LLVMValueRef result = LLVMBuildCall2((LLVMBuilderRef)(uintptr_t)builder, (LLVMTypeRef)(uintptr_t)signature, (LLVMValueRef)(uintptr_t)function, args_copy, (unsigned)num_args, c_name);
@@ -92,7 +92,7 @@ BCPLWORD llvm_print_module_to_file(BCPLWORD llvm_module_ref, BCPLWORD filename, 
         // heap for it, return that copy and free our own
         BCPLWORD words_needed = strlen(c_error) / sizeof(BCPLWORD);
         BCPLWORD space = getvec(words_needed);
-        c2b_str(c_error, space);
+        c2b_string(c_error, space);
 
         *(BCPLWORD*)b2c_address(error_ref) = space;
         LLVMDisposeMessage(c_error);
@@ -176,7 +176,7 @@ BCPLWORD llvm_const_array(BCPLWORD element_ty, BCPLWORD constant_vals, BCPLWORD 
 BCPLWORD llvm_print_value_to_string(BCPLWORD value)
 {
     char* const message = LLVMPrintValueToString((LLVMValueRef)(uintptr_t)value);
-    return build_message("llvm_print_value_to_string", message);
+    return bcpl_build_message("llvm_print_value_to_string", message);
 }
 
 ''',
@@ -185,7 +185,7 @@ BCPLWORD llvm_print_value_to_string(BCPLWORD value)
 BCPLWORD llvm_print_type_to_string(BCPLWORD value)
 {
     char* const message = LLVMPrintTypeToString((LLVMTypeRef)(uintptr_t)value);
-    return build_message("llvm_print_type_to_string", message);
+    return bcpl_build_message("llvm_print_type_to_string", message);
 }
 
 ''',
@@ -206,7 +206,7 @@ BCPLWORD llvm_add_incoming(BCPLWORD phi_node, BCPLWORD incoming_values, BCPLWORD
 BCPLWORD llvm_get_default_target_triple()
 {
     char* const message = LLVMGetDefaultTargetTriple();
-    return build_message("llvm_get_default_target_triple", message);
+    return bcpl_build_message("llvm_get_default_target_triple", message);
 }
 ''',
     'LLVMGetTargetFromTriple': '''
@@ -216,7 +216,7 @@ BCPLWORD llvm_get_target_from_triple(BCPLWORD target_triple, BCPLWORD unused_tar
     char* error_message;
     LLVMTargetRef target;
     LLVMBool failed = LLVMGetTargetFromTriple(b2c_string1(target_triple), &target, &error_message);
-    return failed ? build_message("llvm_get_target_from_triple", error_message) : (BCPLWORD)(uintptr_t)target;
+    return failed ? bcpl_build_message("llvm_get_target_from_triple", error_message) : (BCPLWORD)(uintptr_t)target;
 }    
 ''',
 }
