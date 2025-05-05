@@ -165,6 +165,13 @@ LET ss_pop(name) = VALOF $(
     RESULTIS llvm_build_load2(builder, word_type, ss_p!ss_s, name)
 $)
 
+LET ss_drop(name) BE $(
+    // We're not emitting IR but we chave consumed the TOS. This is typically
+    // the result of being in unreachable code
+    ss_s -:= 1
+    trace("ss_pop %S value %N P=%N S now %N*N", name, ss_p!(ss_s+1), ss_p, ss_s)
+$)
+
 // ss_tos - return the current value of S, leaving S unchanged
 
 LET ss_tos() = ss_s
