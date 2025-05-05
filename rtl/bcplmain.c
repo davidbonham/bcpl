@@ -37,6 +37,7 @@ enum {
     G_WRITEF        =  94, // BLIB
     G_NEWLINE       =  84, // BLIB
     G_NEWPAGE       = 120, // BLIB
+    G_WRITEFLT      =  74,
 
 // 10.1 Start and Stop
 
@@ -251,6 +252,16 @@ bcplword_t __freevec(bcplword_t vec)
 {
     void* c_vec = (void*)(vec << 3);
     free(c_vec);
+    return 0;
+}
+
+bcplword_t __writeflt(bcplword_t value)
+{
+    // Direct casting will perform an integer->>double conversion, which
+    // we don't want.
+    const union { double d; bcplword_t b; } data = {.b=value};
+    FILE* const standard_output = (FILE*)__bcpl_global_vector[G_COS];
+    fprintf(standard_output, "%f", data.d);
     return 0;
 }
 

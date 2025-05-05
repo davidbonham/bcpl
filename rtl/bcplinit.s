@@ -132,6 +132,7 @@ __longjump:
 #   .quad 0                # 70
 #   .quad 0                # 71
 #   .quad 0                # 72
+    GLOBAL  73, __writeflt
 #   .quad 0                # 73
 #   .quad 0                # 74
 #   .quad 0                # 75
