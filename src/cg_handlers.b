@@ -367,6 +367,10 @@ $(
     // populate the indirect branch's label list with the labels for this
     // function.
     ibr_insert_and_cleanup(builder)
+    IF debug DO $(
+        LET error_ref = ?
+        llvm_print_module_to_file(module, "testing.ll", error_ref)
+    $)
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
     UNLESS r = 0 DO cgerror("unable to verify function*N")
 
@@ -517,9 +521,23 @@ $)
 
 AND cg_lp(n) BE
 $(
-    LET cell = ss_get(n)
-    LET value = llvm_build_load2(builder, word_type, cell, "lp.value")
-    ss_push(value)
+    TEST n < ss_tos() THEN $(
+        LET cell = ss_get(n)
+        LET value = llvm_build_load2(builder, word_type, cell, "lp.value")
+        ss_push(value)
+    $)
+    ELSE $(
+        // It looks like it is legal to request the value of a local not yet
+        // defined. For example
+        //
+        //    LET a = VALOF $( RESULTIS a $)
+        //
+        // compiles into OCODE but the reference to a is to a cell not yet
+        // pushed on the simulated stack. Since the cell doesn't exist yet
+        // we can't know its value so the best we can do is to treat this
+        // as a QUERY operation.
+        cg_query()
+    $)
 $)
 
 AND cg_lstr(string) BE
@@ -846,7 +864,8 @@ $(
     LET frhs = llvm_build_bit_cast(builder, rhs, float_type, "frhs")
     LET flhs = llvm_build_bit_cast(builder, lhs, float_type, "flhs")
     LET bool = llvm_build_fcmp(builder, comparison, flhs, frhs, "comparison")
-    LET result = llvm_build_int_cast2(builder, bool, word_type, 0, label)
+    LET result = llvm_build_int_cast2(builder, bool, word_type, 1, label)
+
     ss_push(result)
 $)
 
@@ -979,7 +998,7 @@ $(
     // The value upon which we switch. Make sure it exists.
     LET value = ss_pop("switchon.value")
     LET default_flags = lab_declare(default_label, LAB_JUMP, function)
-    LET default_bb = lab_get_basicblock(default_label)
+    LET default_bb = lab_get_basicblock(default_label, "default")
     LET switch = llvm_build_switch(builder, value, default_bb, num_cases)
 
     // Now add each of the cases we read. Again, make sure the label exists
@@ -988,7 +1007,7 @@ $(
         LET number, case_label = cg_rdn(), cg_rdn()
         LET case_value = llvm_const_int(word_type, number, 0)
         LET case_flags = lab_declare(case_label, LAB_JUMP, function)
-        LET case_bb = lab_get_basicblock(case_label)
+        LET case_bb = lab_get_basicblock(case_label, "case")
         llvm_add_case(switch, case_value, case_bb)
     $)
 
@@ -1208,7 +1227,7 @@ $(
     // block. (Note: ENTRY will have already set its initialiser to the
     // function address.)
     IF llvm_get_initializer(static_variable) = 0 THEN $(
-        LET bb = lab_get_basicblock(label)
+        LET bb = lab_get_basicblock(label, "lf")
         LET ba = llvm_block_address(function, bb)
         LET value = llvm_const_ptr_to_int(ba, word_type)
         llvm_set_initializer(static_variable, value)
