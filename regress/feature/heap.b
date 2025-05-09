@@ -8,10 +8,7 @@ LET start() BE $(
    FOR i = 0 TO 10 DO vec1!i := 'a' + i
    FOR i = 0 TO 5 DO vec2!i := 'A' + i
    writes("0x")
-   writehex(vec1, 16)
-   wrch(' ')
-   writes("0x")
-   writehex(vec2, 16)   
+   writehex(vec2 - vec1, 16)
    wrch(' ')
    writed(delta, 8)
    wrch(' ')
