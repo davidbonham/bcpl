@@ -117,10 +117,20 @@ LET lab_add_static(n) = VALOF $(
 $)
 
 LET lab_add_basicblock(n, name) = VALOF $(
+    LET label_ptr = "xxxxxxxxxxxxxxxxxxxx_l999"
+    LET length = name%0
+    FOR i = 1 TO length DO label_ptr%i := name%i
+    label_ptr%(length+1) := '_'
+    label_ptr%(length+2) := 'L'
+    label_ptr%(length+3) := '0' + (n / 100) MOD 10
+    label_ptr%(length+4) := '0' + (n / 10) MOD 10
+    label_ptr%(length+5) := '0' + n MOD 10
+    label_ptr%0 := length+5
+
     IF label_type!n = LAB_UNDEFINED DO cgerror("attempt to add basic block to label L%N that does not exist*N", n)
     IF (label_type!n & LAB_BLOCK) ~= 0 DO cgerror("attempt to add basic block to label L%N that already has one*N", n)
 
-    label_bb!n := llvm_create_basic_block_in_context(context, name)
+    label_bb!n := llvm_create_basic_block_in_context(context, label_ptr)
     label_type!n |:= LAB_BLOCK
     RESULTIS label_bb!n
 $)
