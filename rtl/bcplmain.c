@@ -100,23 +100,49 @@ static char* c_string(bcplword_t bcplstring)
     return buffer;
 }
 
+
+static char cmdline_buffer[32];
+static const char* cmdline_next = &cmdline_buffer[0];
+static char rdch_ch;
+static bool more_cmdline;
+
+static void __rditem_add(const char* string)
+{
+    size_t buffer_len = strlen(cmdline_buffer);
+    size_t free_space = sizeof(cmdline_buffer) - buffer_len - 1/*nul*/;
+    strncat(cmdline_buffer, string, free_space);
+    more_cmdline = 1;
+}
+
 bcplword_t __rdch(void)
 {
     if (is_pending_character)
     {
         is_pending_character = false;
-        return (bcplword_t)pending_character;
+        rdch_ch = pending_character;
+    }
+    else if (more_cmdline)
+    {
+        // There are still some command line arguments to read
+        rdch_ch = *cmdline_next++;
+        if (rdch_ch == 0)
+        {
+            more_cmdline = 0;
+            return (bcplword_t)-1;
+        }
     }
     else
     {
         FILE* const CIS = (FILE*)__bcpl_global_vector[G_CIS];
-        return (bcplword_t)fgetc(CIS);
-    }    
+        rdch_ch = fgetc(CIS);
+    }
+
+    return (bcplword_t)rdch_ch;
 }
 
 bcplword_t __unrdch(bcplword_t ch)
 {
-    pending_character = (char)ch;
+    pending_character = rdch_ch;
     is_pending_character = true;
     return 0;
 }
@@ -275,6 +301,15 @@ bcplword_t __undefined(void)
 
 int main(int argc, char* argv[])
 {
+    // Make the command line arguments appear as the initial data on standard
+    // input (which is how the rdarg/rditem mechanism expects them)
+    for (int i = 1; i < argc; i += 1)
+    {
+        __rditem_add(" ");         // Treat args fred and jane as 'fred jane' not 'fredjane'
+        __rditem_add(argv[i]);
+    }
+    __rditem_add("\n");            // Terminate the line
+
     //for (int i = 0; i < 256; i += 1)
     //{
     //    if (__bcpl_global_vector[i] != 0) printf("[%d] = 0x%016lx\n", i, __bcpl_global_vector[i]);
