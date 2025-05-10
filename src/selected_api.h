@@ -88,7 +88,6 @@ void LLVMDisposeBuilder(LLVMBuilderRef Builder);
 
 LLVMValueRef LLVMBuildRetVoid(LLVMBuilderRef Builder);
 LLVMValueRef LLVMBuildRet(LLVMBuilderRef Builder, LLVMValueRef V);
-                                   unsigned N);
 LLVMValueRef LLVMBuildBr(LLVMBuilderRef Builder, LLVMBasicBlockRef Dest);
 LLVMValueRef LLVMBuildCondBr(LLVMBuilderRef Builder, LLVMValueRef If,
                              LLVMBasicBlockRef Then, LLVMBasicBlockRef Else);
