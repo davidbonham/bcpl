@@ -1,8 +1,6 @@
 GET "libhdr"
 
-GLOBAL $(
-  left_shift: 101
-$)
+GLOBAL $( left_shift: ug $)
 
 LET left_shift(value, shift) = value << shift
 

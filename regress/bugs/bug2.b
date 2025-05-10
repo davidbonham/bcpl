@@ -1,6 +1,6 @@
 GET "libhdr"
 
-LET rdargslen() = VALOF $(
+LET example() = VALOF $(
     SWITCHON 3 INTO $(
          CASE 1:
              GOTO err

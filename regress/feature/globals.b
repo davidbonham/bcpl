@@ -5,7 +5,7 @@ GET "libhdr"
 
 GLOBAL $(
 
-   myglobal: 100;
+   myglobal: ug;
    nextglobal
 $)
 
