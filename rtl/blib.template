@@ -1,0 +1,324 @@
+// Standard BCPL Run-time library
+// ------------------------------
+//
+// This is the part of the run-time library that is written in BCPL rather
+// than the assembler components that live in bcplmain.
+//
+// The content is source from the bcpl book
+
+SECTION "blib"
+
+GET "libhdr"
+
+LET readn() = VALOF $(
+    LET sum = 0
+    LET neg = FALSE
+    AND ch = 0
+
+    ch := rdch() REPEATWHILE ch='*S' | ch='*T' | ch='*N'
+
+    SWITCHON ch INTO $(
+        CASE '-': neg := TRUE
+        CASE '+': ch := rdch()
+    $)
+
+    WHILE '0' <= ch <= '9' DO $(
+        sum := 10*sum + ch - '0'
+        ch := rdch()
+    $)
+
+    IF neg THEN sum := -sum
+    unrdch(ch)
+
+    RESULTIS sum
+$)
+
+AND write_format(format, lvnextarg) BE
+{ LET p = 1
+  // Both writef and sawritef must preserve result2
+  LET res2 = result2
+
+  WHILE p <= format%0 DO
+  { // When LOOP is executed p must point to the next format
+    // character to process.
+    LET k, type, f = format%p, ?, ?
+    LET n, m, arg  = 0, 0, 0
+    LET widthgiven = FALSE  // Set to RTUE ifthe item starts
+                            // with %n or %n.m
+    p := p + 1
+    UNLESS k='%' DO { wrch(k); LOOP }
+
+    // Deal with a substitution item
+    type, arg := format%p, !!lvnextarg
+    // arg holds the next writef argument in case it is needed.
+
+sw: // type is the character following %, %n or %n.m
+    // and p still points to this character.
+    // If widthgiven is TRUE, type will not be a digit.
+
+    SWITCHON capitalch(type) INTO
+    { DEFAULT:    wrch(type) // %c where c in not expected
+                  p := p+1   // output c and advance p.
+                  LOOP
+
+      CASE '0':CASE '1':CASE '2':CASE '3':CASE '4':
+      CASE '5':CASE '6':CASE '7':CASE '8':CASE '9':
+                  // A substituion item starting with %n or %n.m
+		  // It sets widthgiven to TRUE and n and m from %n.m
+		  // leaving p pointing to the character just after %n.m
+		  // If .m is not present m is left set to zero.
+                  { n := 10*n + type - '0'
+                    p := p+1
+                    type := format%p
+                    widthgiven := TRUE
+                  } REPEATWHILE '0'<=type<='9'
+		  // p points to the charcter just after the digits.
+                  IF type='.' DO
+                  { p := p+1
+                    type := format%p
+                    WHILE '0'<=type<='9' DO
+                    { m := 10*m + type - '0'
+                      p := p+1
+                      type := format%p
+                    }
+                  }
+		  // type is the character just after %n.m
+		  // and p points to it.
+                  GOTO sw
+
+		  // Deal with %Dn (equivalent to %In).
+      CASE 'D':
+      CASE 'I':   f := writed;    GOTO getn
+      CASE 'S':   f := writes;    GOTO nowidth
+      //CASE 'T':   f := writet;    GOTO getn
+      CASE 'C':   f := wrch;      GOTO nowidth
+      //CASE '#':   f := codewrch;  GOTO nowidth
+      CASE 'O':   f := writeoct;  GOTO getn
+      CASE 'X':   f := writehex;  GOTO getn
+      CASE 'N':   f := writen;    GOTO nowidth
+      //CASE 'U':   f := writeu;    GOTO getn
+      //CASE 'Z':   f := writez;    GOTO getn
+      //CASE 'B':   f := writebin;  GOTO getn
+
+    getn:         // This is used by substitution items needing
+                  // a width such ad %6.3D or %I5 and using the
+		  // next writef argument.
+                  UNLESS widthgiven DO
+                  { p := p+1
+		    // p points to the first caharacter after
+		    // %D, %O, %X, %I, %U, %Z or %B.
+                    n := capitalch(format%p)
+                    n := '0' <= n <= '9' -> n - '0', 10 + n - 'A'
+                  }
+		  f(arg, n)
+                  !lvnextarg := !lvnextarg + 1
+		  // Advance p to point to the character after
+		  // eg %6.2D or %I5
+		  p :=p+1
+                  LOOP
+
+    nowidth:      // This for substitution items not needing
+                  // a width shch as %n or %s but using the
+		  // next writef argument.
+		  f(arg, 0)
+                  !lvnextarg := !lvnextarg + 1
+		  p :=p+1
+		  // p points to the character after
+		  // %S, %C, %# or %N.
+                  LOOP
+
+      CASE '$':
+      CASE '+':   !lvnextarg := !lvnextarg + 1
+		  p :=p+1
+                  LOOP
+
+      CASE '-':   !lvnextarg := !lvnextarg - 1
+		  p :=p+1
+                  LOOP
+
+      CASE 'M': { LET buf = VEC 256/bytesperword
+                  !lvnextarg := !lvnextarg + 1
+                  UNLESS get_text(arg, buf, 256/bytesperword) DO
+                    buf := "<<mess:%-%n>>"  // No message text
+                  write_format(buf, lvnextarg)
+		  p :=p+1
+                  LOOP
+                }
+
+      CASE 'E':   !lvnextarg := !lvnextarg + 1
+                  writee(arg, n, m)          // Deal with eg %13.3e
+		  p :=p+1
+                  LOOP
+
+      CASE 'F':   !lvnextarg := !lvnextarg + 1
+                  TEST widthgiven
+                  THEN writeflt(arg, n, m)          // Deal with eg %8.3f
+                  ELSE write_format(arg, lvnextarg) // Deal with %f
+		  p :=p+1
+                  LOOP
+
+      CASE 'P': { LET plural = arg ~= 1 // =TRUE unless arg=1
+                  !lvnextarg := !lvnextarg + 1
+                  p := p+1 // p points to the first ch after %P
+                  type := format%p
+
+		  // type is the charcter just after %P
+		  p := p+1 // p point to the character just after
+		           // %P\ or %Pc
+
+                  IF type = '\' DO
+                  { // Deal with %P\singular\plural\ item
+                    LET skipping = plural
+		    // skipping is TRUE when when skipping the singular
+		    // or plural text.
+                    // p points to the start of the singular text
+		    // and skipping is TRUE if this is to be skipped.
+                    UNTIL p > format%0 DO
+                    { LET ch = format%p
+		      // ch is a '\' or a character of the singular
+		      // or plural text.
+		      //writef("|*nwritef: format=%s*n", format); newline()
+		      //writef("*nwritef: p=%n ch=%c skipping=%n*n",
+		      //       p, ch, skipping)
+		      //abort(7456)
+		      p := p+1
+		      // p points to the character after ch.
+                      TEST ch = '\'
+		      THEN { skipping := ~skipping
+			     // p points to the character just after
+			     // the second or third \.
+		             // skipping = ~plural after the second \
+			     // skipping =  plural after the third \
+                             //IF skipping = plural GOTO break
+                             IF skipping = plural BREAK
+                           }
+                      ELSE { UNLESS skipping DO wrch(ch)
+		             // p points to just after ch.
+			   }
+                    }
+		    break:
+                    LOOP
+                  }
+
+                  // Deal with %Pc.
+		  // type = c not equal to '\'
+		  // and p points to the character just after %Pc
+                  IF plural DO wrch(type)
+                  LOOP
+                }
+    } // End of SWITCHON ...
+  } // End of FOR p = ...
+
+  result2 := res2
+}
+
+LET writef(format, a, b, c, d, e, f, g, h, i, j) BE $(
+
+    LET argvec = VEC 9
+    argvec!0 := a
+    argvec!1 := b
+    argvec!2 := c
+    argvec!3 := d
+    argvec!4 := e
+    argvec!5 := f
+    argvec!6 := g
+    argvec!7 := h
+    argvec!8 := i
+    argvec!9 := j
+    write_format(format, @argvec)
+$)
+
+// To provide simple cintpos support, we implement sys in BCPL as part
+// of BLIB
+
+LET sys_flt(operation, a, b, c, d) = VALOF $(
+    LET result = ?
+    SWITCHON operation INTO $(
+
+        CASE fl_avail: result := TRUE;                                  ENDCASE
+
+        CASE fl_mk:
+            // a=mantissa, b=exponent
+            result := FLOAT a
+            WHILE b > 0 DO $( result #*:= 10.0; b -:= 1 $)
+            WHILE b < 0 DO $( result #/:= 10.0; b +:= 1 $)
+        ENDCASE
+
+        CASE fl_unmk: $(
+            LET m, e, s = a, 0, m #>= 0.0 -> 1, -1
+            IF s = -1 DO m :=  #- m
+            WHILE m #>= 10.0 DO $( m #/:= 10.0; e +:= 1 ; writef("%10.5f %n*n", m, e) $)
+            WHILE m # <= 1.0 DO $( m #*:= 10.0; e -:= 1 ; writef("%10.5f %n*n", m, e) $)
+            result2 := e
+            result := s = 1 -> m, #-m
+        $)
+        ENDCASE
+
+        CASE fl_float: result := FLOAT a;                               ENDCASE
+        CASE fl_fix:   result := FIX a;                                 ENDCASE
+        CASE fl_abs:   result := a #>= 0.0 -> a, #- a;                  ENDCASE
+        CASE fl_mul:   result := a #* b;                                ENDCASE
+        CASE fl_div:   result := a #/ b;                                ENDCASE
+        CASE fl_add:   result := a #+ b;                                ENDCASE
+        CASE fl_sub:   result := a #- b;                                ENDCASE
+        CASE fl_pos:   result := a;                                     ENDCASE
+        CASE fl_neg:   result := #- a;                                  ENDCASE
+        CASE fl_eq:    result := a #= b;                                ENDCASE
+        CASE fl_ne:    result := a #~= b;                               ENDCASE
+        CASE fl_gr:    result := a #> b;                                ENDCASE
+        CASE fl_ge:    result := a #>= b;                               ENDCASE
+        CASE fl_ls:    result := a #< b;                                ENDCASE
+        CASE fl_le:    result := a #<= b;                               ENDCASE
+
+        DEFAULT:
+            writef("ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x*n", operation, a, b, c, d)
+            stop(1)
+    $)
+    RESULTIS result
+
+$)
+
+LET sys(package, operation, a, b, c, d) = VALOF $(
+    LET result = ?
+    SWITCHON package INTO $(
+        CASE Sys_sardch: result := rdch();                              ENDCASE
+        CASE Sys_sawrch: result := wrch(operation);                     ENDCASE
+        CASE Sys_flt:    result := sys_flt(operation, a, b, c, d);      ENDCASE
+        DEFAULT:
+            writef("ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x*n", package, operation, a, b, c, d)
+            stop(1)
+    $)
+    RESULTIS result
+$)
+
+AND writes(s) BE FOR i = 1 TO s%0 DO wrch(s%i)
+
+// A stub to support rditem below
+LET deplete(stream) BE stop(1)
+
+// -----------------------------------------------------------------------------
+// OFFICIAL BLIB
+// -----------------------------------------------------------------------------
+
+%insert capitalch
+%insert randno
+%insert writedz
+%insert writed
+%insert writen
+%insert writeoct
+%insert writehex
+%insert newline
+%insert compch
+%insert compstring
+%insert getkeylen
+%insert rdargs
+%insert rdargs2
+%insert rdargslen
+%insert rditem
+%insert findarg
+%insert findarglen
+%insert string_to_number
+%insert copystring
+%insert copy_words
+%insert clear_words
+%insert copy_bytes
