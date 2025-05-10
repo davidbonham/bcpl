@@ -34,6 +34,7 @@ Assuming that scripts/setup.sh has been sourced and that we are in $BL_ROOT:
 
 -- REBUILD BLIB ----------------------------------------------------------------
 
+    scripts/tailor_blib rtl/blib.template $BCPL64ROOT/sysb/blib.b >rtl/blib.b
     @ bin/mybcpl noselst t64 rtl/blib.b to rtl/blib.ll
 
 -- REGRESSION TESTS ------------------------------------------------------------
