@@ -25,7 +25,7 @@ if __name__ == '__main__':
     with open(args.release, 'r') as source:
         official_blib = source.readlines()
 
-    # Build an index of startline line numbers
+    # Build an index mapping the routine name to starting and ending lines
     blib_map = {}
     start_line = None
     routine_re = re.compile(r'(AND|LET)\s+([A-Za-z0-9_]+)\s*\(')
@@ -38,10 +38,12 @@ if __name__ == '__main__':
             name = match.group(2)
             start_line = line
 
+    # Don't forget the last one
     if start_line:
         blib_map[name] = (start_line, line)
         if args.verbose:
             print(f'lines {start_line:4d}-{line-1:4d} {name}', file=sys.stderr)
+
 
     with open(args.template, 'r') as template:
         for line in template.readlines():
