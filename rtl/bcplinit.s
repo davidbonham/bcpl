@@ -107,11 +107,11 @@ __longjump:
     GLOBAL  45, __aptovec
 #   .quad 0                # 46
 #   .quad 0                # 47
-    GLOBAL  48, __findinput
-    GLOBAL  49, __findoutput
+#   .quad 0                # 48     findinput
+#   .quad 0                # 49     findoutput
 #   .quad 0                # 50
 #   .quad 0                # 51
-#   .quad 0                # 52
+    GLOBAL  52, __findstream
 #   .quad 0                # 53
 #   .quad 0                # 54
 #   .quad 0                # 55
@@ -119,9 +119,9 @@ __longjump:
     GLOBAL  57, __selectoutput
     GLOBAL  58, __input
     GLOBAL  59, __output
-    GLOBAL  60, __endread
-    GLOBAL  61, __endwrite
-#   .quad 0                # 62
+#   .quad 0                # 60     endread
+#   .quad 0                # 61     endwrite
+    GLOBAL  62, __endstream
 #   .quad 0                # 63
 #   .quad 0                # 64
     GLOBAL  65, __rewind

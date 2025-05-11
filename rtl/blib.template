@@ -39,6 +39,16 @@ GET "libhdr"
 %insert clear_words
 %insert copy_bytes
 %insert readn
+%insert findinput
+%insert pathfindinput
+%insert findoutput
+%insert findinoutput
+%insert findupdate
+%insert findappend
+%insert endread
+%insert endwrite
+
+
 
 // -----------------------------------------------------------------------------
 // Local implementations

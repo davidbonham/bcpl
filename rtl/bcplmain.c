@@ -125,11 +125,7 @@ bcplword_t __rdch(void)
     {
         // There are still some command line arguments to read
         rdch_ch = *cmdline_next++;
-        if (rdch_ch == 0)
-        {
-            more_cmdline = 0;
-            return (bcplword_t)-1;
-        }
+        more_cmdline = *cmdline_next != 0;
     }
     else
     {
@@ -154,28 +150,6 @@ bcplword_t __wrch(bcplword_t ch)
     return 0;
 }
 
-bcplword_t findstream(bcplword_t path, const char* mode)
-{
-    const char* const c_path = c_string(path);
-    FILE* is = fopen(c_path, mode);
-    if (is == NULL)
-    {
-        // Return the value of errno in result2
-        __bcpl_global_vector[G_RESULT2] = errno;
-    }
-    return (bcplword_t)is;
-}
-
-bcplword_t __findinput(bcplword_t path)
-{
-    return findstream(path, "r");
-}
-
-bcplword_t __findoutput(bcplword_t path)
-{
-    return findstream(path, "w");
-}
-
 bcplword_t __selectinput(bcplword_t is)
 {
     __bcpl_global_vector[G_CIS] = is;
@@ -185,6 +159,12 @@ bcplword_t __selectinput(bcplword_t is)
 bcplword_t __selectoutput(bcplword_t is)
 {
     __bcpl_global_vector[G_COS] = is;
+    return 0;
+}
+
+bcplword_t __endstream(bcplword_t stream)
+{
+    fclose((FILE*)stream);
     return 0;
 }
 
@@ -297,27 +277,88 @@ bcplword_t __undefined(void)
     exit(1);
 }
 
+static bcplword_t openpath(const char* path, const char* mode)
+{
+    const bcplword_t f = (bcplword_t)fopen(path, mode);
+    // Return the value of errno in result2
+    __bcpl_global_vector[G_RESULT2] = errno;
+    return f;
+}
+
+bcplword_t __findstream(bcplword_t path, bcplword_t mode, bcplword_t searchvar)
+{
+    const bcplword_t id_inscb        = 0x81;
+    const bcplword_t id_outscb       = 0x82;
+    const bcplword_t id_inoutscb     = 0x83;
+    const bcplword_t id_appendscb    = 0x84;
+
+    // Check for invalid mode
+    if (mode < id_inscb || mode > id_appendscb) return 0;
+
+    const char* mode_strings[] = {"r", "w", "rw", "w+"};
+    const char* selected_mode = mode_strings[mode - id_inscb];
+
+    // Convert the bcpl path to a c string
+    char c_path[256];
+    strncpy(c_path, c_string(path), 255);
+
+    // If there is no search path or the path is absolute, do the open immediately
+    if (searchvar == 0 || c_path[0] == '/') return openpath(c_path, selected_mode);
+
+    // Get the name of the environment variable
+    const char* const variable_name = c_string(searchvar);
+
+    // Get its value. We must not modify the value returned so we need to
+    // copy it for strtok to modify. We'll restrict ourselves to the first
+    // 4K of text.
+    const char* const variable_text = getenv(variable_name);
+    if (variable_text == NULL) return openpath(c_path, selected_mode);
+    if (strlen(variable_text) >= 4096) return 0;
+    char search_string[4096];
+    strcpy(search_string, variable_text);
+
+    printf("mode 0x%2lx %s in %s\n", mode, c_path, search_string);
+    for (const char* directory = strtok(search_string, ":;"); directory != NULL; directory = strtok(NULL, ":;"))
+    {
+        char full_path[256+256];
+        strcpy(full_path, directory);
+        strcat(full_path, "/");
+        strcat(full_path, c_path);
+        FILE* file = fopen(full_path, selected_mode);
+        if (file != NULL) return (bcplword_t)file;
+    }
+
+    // Return the value of errno in result2
+    __bcpl_global_vector[G_RESULT2] = errno;
+    return 0;
+}
+
+
+
 // -- The main entry point -----------------------------------------------------
 
 int main(int argc, char* argv[])
 {
     // Make the command line arguments appear as the initial data on standard
     // input (which is how the rdarg/rditem mechanism expects them)
-    for (int i = 1; i < argc; i += 1)
+    if (argc > 1)
     {
-        __rditem_add(" ");         // Treat args fred and jane as 'fred jane' not 'fredjane'
-        __rditem_add(argv[i]);
+        for (int i = 1; i < argc; i += 1)
+        {
+            __rditem_add(" ");         // Treat args fred and jane as 'fred jane' not 'fredjane'
+            __rditem_add(argv[i]);
+        }
+        __rditem_add("\n");            // Terminate the line
     }
-    __rditem_add("\n");            // Terminate the line
 
-    //for (int i = 0; i < 256; i += 1)
+    //for (int i = 0; i < 512; i += 1)
     //{
     //    if (__bcpl_global_vector[i] != 0) printf("[%d] = 0x%016lx\n", i, __bcpl_global_vector[i]);
     //}
 
     // Start with all of the unset elements of the global vector referencing
     // a debugging function
-    for (int i = 0; i < 256; i += 1) if (__bcpl_global_vector[i] == 0) __bcpl_global_vector[i] = (bcplword_t) __undefined;
+    for (int i = 0; i < 512; i += 1) if (__bcpl_global_vector[i] == 0) __bcpl_global_vector[i] = (bcplword_t) __undefined;
 
     // Setup standard input and standard output
     __bcpl_global_vector[G_CIS]             = (bcplword_t)stdin;
