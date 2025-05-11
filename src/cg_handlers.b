@@ -16,6 +16,19 @@ $(
     RESULTIS work_string
 $)
 
+LET bb_after_terminator(label) BE $(
+    // A basic block has a single entry and a single exit so once we emit a
+    // terminator (in a GOTO, FNRN or JUMP for example) we must start a new
+    // basic block. It may be that there if a LAB immediately following is
+    // in which case its handler will create one but otherwise make sure
+    // we start a new (unreachable) basic block.
+    UNLESS cg_rdn_peek(0) = s_lab DO $(
+        basicblock := llvm_create_basic_block_in_context(context, label)
+        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
+        llvm_position_builder_at_end(builder, basicblock)
+    $)
+$)
+
 LET cg_ocode() BE
 $(
     LET nl() BE IF debug > 0 THEN newline()
@@ -25,10 +38,8 @@ $(
     LET op = cg_rdn()
     LET n, label, save, num_globals, global_number = ?, ?, ?, ?, ?
 
-    is_unreachable := FALSE
     UNTIL op = 0 DO
     $(
-        wf("%CS=%N: %S", is_unreachable -> '-', '+', ss_tos(), opname(op))
         SWITCHON op INTO
         $(
             // OCODE instructions that take no arguments
@@ -39,11 +50,11 @@ $(
             CASE s_eq:          nl(); cg_eq();          ENDCASE
             CASE s_eqv:         nl(); cg_eqv();         ENDCASE
             CASE s_false:       nl(); cg_const(FALSE);  ENDCASE
-            CASE s_finish:      nl(); cg_finish();  is_unreachable := TRUE;    ENDCASE
-            CASE s_fnrn:        nl(); cg_fnrn(); is_unreachable := TRUE; ENDCASE
+            CASE s_finish:      nl(); cg_finish();      ENDCASE
+            CASE s_fnrn:        nl(); cg_fnrn();        ENDCASE
             CASE s_ge:          nl(); cg_ge();          ENDCASE
             CASE s_getbyte:     nl(); cg_getbyte();     ENDCASE
-            CASE s_goto:        nl(); cg_goto(); is_unreachable := TRUE;       ENDCASE
+            CASE s_goto:        nl(); cg_goto();        ENDCASE
             CASE s_gr:          nl(); cg_gr();          ENDCASE
             CASE s_le:          nl(); cg_le();          ENDCASE
             CASE s_logand:      nl(); cg_logand();      ENDCASE
@@ -58,7 +69,7 @@ $(
             CASE s_putbyte:     nl(); cg_putbyte();     ENDCASE
             CASE s_query:       nl(); cg_query();       ENDCASE
             CASE s_rshift:      nl(); cg_rshift();      ENDCASE
-            CASE s_rtrn:        nl(); cg_rtrn(); is_unreachable := TRUE; ENDCASE
+            CASE s_rtrn:        nl(); cg_rtrn();        ENDCASE
             CASE s_rv:          nl(); cg_rv();          ENDCASE
             CASE s_stind:       nl(); cg_stind();       ENDCASE
             CASE s_store:       nl(); cg_store();       ENDCASE
@@ -70,8 +81,8 @@ $(
             CASE s_fnap:        n := cg_rdn(); wf(" %N*N", n); cg_rtap(n,TRUE);  ENDCASE
             CASE s_jf:          n := cg_rdn(); wf(" %N*N", n); cg_jf(n);         ENDCASE
             CASE s_jt:          n := cg_rdn(); wf(" %N*N", n); cg_jt(n);         ENDCASE
-            CASE s_jump:        n := cg_rdn(); wf(" %N*N", n); cg_jump(n);       is_unreachable := TRUE; ENDCASE
-            CASE s_lab:         n := cg_rdn(); wf(" %N*N", n); cg_lab(n);        is_unreachable := FALSE; ENDCASE
+            CASE s_jump:        n := cg_rdn(); wf(" %N*N", n); cg_jump(n);       ENDCASE
+            CASE s_lab:         n := cg_rdn(); wf(" %N*N", n); cg_lab(n);        ENDCASE
             CASE s_lf:          n := cg_rdn(); wf(" %N*N", n); cg_lf(n);         ENDCASE
             CASE s_lg:          n := cg_rdn(); wf(" %N*N", n); cg_lg(n);         ENDCASE
             CASE s_ll:          n := cg_rdn(); wf(" %N*N", n); cg_ll(n);         ENDCASE
@@ -118,7 +129,6 @@ $(
                 wf(" %s*N", name)
                 cg_section(name)
                 is_current_section_empty := TRUE
-                is_unreachable := FALSE
             ENDCASE
 
             CASE s_entry:
@@ -128,7 +138,6 @@ $(
                 cg_rdn() // skip SAVE
                 save := cg_rdn()
                 wf(" %N %S SAVE %N*N", label, name, save)
-                is_unreachable := FALSE
                 cg_entry(label, name, save)
             ENDCASE
 
@@ -374,6 +383,7 @@ $(
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
     UNLESS r = 0 DO cgerror("unable to verify function*N")
 
+
     // This is the end of the function so we are no longer nested in it.
     // Restore the state for the outer function. At this point, the current
     // stack frame should be the one than cg_enter pushed.
@@ -402,20 +412,16 @@ $(
     cg_ln(0)
     cg_lg(2)
     cg_rtap(4, FALSE)
+    bb_after_terminator("postfinish")
 $)
 
 AND cg_fnrn() BE
 $(
-    // See cg_ln for the fix for unreachable code we've added here
-    TEST is_unreachable THEN $(
-        ss_drop("fnrn.result")
-    $)
-    ELSE $(
-        // The variable on the top of the stack should be the result so get
-        // its value
-        LET result = ss_pop("fnrn.result")
-        llvm_build_ret(builder, result)
-    $)
+    // The variable on the top of the stack should be the result so get
+    // its value
+    LET result = ss_pop("fnrn.result")
+    llvm_build_ret(builder, result)
+    bb_after_terminator("postfnrn")
 $)
 
 AND cg_getbyte() BE
@@ -459,16 +465,9 @@ $(
 
 AND cg_ln(n) BE
 $(
-    // This is a fix for an oddity in BCPLTRN which generates an LN 0 FNRN
-    // at the end of a function even if we have already emitted a FNRN or
-    // RTRN. We track this case and if we are unreachable, ignore this LN
-    // (and we will igore the following FNRN)
-    UNLESS is_unreachable
-    $(
-        // Create a constant and push its LLVMValueRef
-        LET value = llvm_const_int(word_type, n, 0)
-        ss_push(value)
-    $)
+    // Create a constant and push its LLVMValueRef
+    LET value = llvm_const_int(word_type, n, 0)
+    ss_push(value)
 $)
 
 AND cg_llg(n) BE
@@ -688,7 +687,8 @@ $(
     // recognisable
     ss_trace("cg_rtrn")
 
-    UNLESS is_unreachable DO llvm_build_ret(builder, llvm_const_int(word_type, #XBAD0BAD0BAD0BAD0, 0))
+    llvm_build_ret(builder, llvm_const_int(word_type, #XBAD0BAD0BAD0BAD0, 0))
+    bb_after_terminator("postrtrn")
 $)
 
 AND cg_rv() BE
@@ -932,7 +932,7 @@ $(
     LET function_type = llvm_function_type(word_type, parameter_types, argc, 0)
     LET ba = ?
 
-    ss_trace("cg_entry entry")
+    trace("cg_entry entry L%n %s*n", label, name)
 
     // We're now going to make the stack look like it will when we are
     // called: we reserve the savearea and then emit code to get the
@@ -1068,9 +1068,7 @@ AND cg_goto() BE $(
     // after us, there won't be a LAB so we'll have to create the basic
     // block
     UNLESS cg_rdn_peek(0) = s_lab DO $(
-        basicblock := llvm_create_basic_block_in_context(context, "goto.dead")
-        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
-        llvm_position_builder_at_end(builder, basicblock)
+        bb_after_terminator("postgoto")
     $)
 $)
 
@@ -1176,21 +1174,15 @@ $(
     LET dummy = lab_declare(n, LAB_JUMP, function)
     LET target_bb = lab_get_basicblock(n, "jump.target")
 
-    // If we are unreachable, we don't want to emit any code. Note that we
-    // have defined the label and basic block ready to be used.
-    UNLESS is_unreachable DO $(
 
-        // Build a branch to the basic block
-        llvm_build_br(builder, target_bb)
+    // Build a branch to the basic block
+    llvm_build_br(builder, target_bb)
 
-        // We ought to be followed by a LAB which will create the next basic
-        // block for the next operation. However, if there is unreachable code
-        // after us, there won't be a LAB so we'll have to create the basic
-        // block
-        basicblock := llvm_create_basic_block_in_context(context, "dead")
-        llvm_insert_existing_basic_block_after_insert_block(builder, basicblock)
-        llvm_position_builder_at_end(builder, basicblock)
-    $)
+    // We ought to be followed by a LAB which will create the next basic
+    // block for the next operation. However, if there is unreachable code
+    // after us, there won't be a LAB so we'll have to create the basic
+    // block
+    bb_after_terminator("postjump")
 $)
 
 AND cg_lab(label) BE
