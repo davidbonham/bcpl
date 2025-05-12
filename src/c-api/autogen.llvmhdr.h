@@ -154,6 +154,9 @@ $(
     LLVM_SET_FUNCTION_CALL_CONV
     LLVM_ADD_ALIAS2
     LLVM_PRINT_TYPE_TO_STRING
+    LLVM_GET_HOST_CPUNAME
+    LLVM_GET_HOST_CPUFEATURES
+    LLVM_SET_TARGET
     LLVM_END_MARKER
 $)
 
@@ -310,3 +313,6 @@ LET llvm_get_target_name(t) = sys(Sys_ext, LLVM_GET_TARGET_NAME, t)
 LET llvm_set_function_call_conv(fn, cc) = sys(Sys_ext, LLVM_SET_FUNCTION_CALL_CONV, fn, cc)
 LET llvm_add_alias2(m, value_ty, addr_space, aliasee, name) = sys(Sys_ext, LLVM_ADD_ALIAS2, m, value_ty, addr_space, aliasee, name)
 LET llvm_print_type_to_string(ty) = sys(Sys_ext, LLVM_PRINT_TYPE_TO_STRING, ty)
+LET llvm_get_host_cpuname() = sys(Sys_ext, LLVM_GET_HOST_CPUNAME)
+LET llvm_get_host_cpufeatures() = sys(Sys_ext, LLVM_GET_HOST_CPUFEATURES)
+LET llvm_set_target(m, triple) = sys(Sys_ext, LLVM_SET_TARGET, m, triple)

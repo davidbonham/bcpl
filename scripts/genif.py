@@ -219,6 +219,19 @@ BCPLWORD llvm_get_target_from_triple(BCPLWORD target_triple, BCPLWORD unused_tar
     return failed ? bcpl_build_message("llvm_get_target_from_triple", error_message) : (BCPLWORD)(uintptr_t)target;
 }    
 ''',
+    'LLVMGetHostCPUName': '''
+BCPLWORD llvm_get_host_cpuname(void)
+{
+    return bcpl_build_message("llvm_get_host_cpuname", LLVMGetHostCPUName());
+}
+''',
+    'LLVMGetHostCPUFeatures': '''
+BCPLWORD llvm_get_host_cpufeatures(void)
+{
+    return bcpl_build_message("llvm_get_host_features", LLVMGetHostCPUFeatures());
+}
+''',
+
 }
 
 def convert(camel):

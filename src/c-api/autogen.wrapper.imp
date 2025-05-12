@@ -891,3 +891,19 @@ BCPLWORD llvm_print_type_to_string(BCPLWORD value)
     return bcpl_build_message("llvm_print_type_to_string", message);
 }
 
+
+BCPLWORD llvm_get_host_cpuname(void)
+{
+    return bcpl_build_message("llvm_get_host_cpuname", LLVMGetHostCPUName());
+}
+
+BCPLWORD llvm_get_host_cpufeatures(void)
+{
+    return bcpl_build_message("llvm_get_host_features", LLVMGetHostCPUFeatures());
+}
+BCPLWORD llvm_set_target(BCPLWORD m, BCPLWORD triple)
+{
+    LLVMSetTarget((LLVMModuleRef)(uintptr_t)m, (const char*)(uintptr_t)b2c_string1(triple));
+    return 0;
+}
+

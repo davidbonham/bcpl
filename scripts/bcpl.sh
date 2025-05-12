@@ -167,7 +167,7 @@ do
     esac
 done
 
-perform "clang -Wl,-z,noexecstack $optimise -g3 $source $compile $clang_prefix $clang_inputs $clang_suffix $object $map"
+perform "clang -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack $optimise -g3 $source $compile $clang_prefix $clang_inputs $clang_suffix $object $map"
 if [ $keep -eq 0 ]
 then
     perform "rm --force --verbose $ll_path $s_path $name.map"

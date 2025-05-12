@@ -151,3 +151,6 @@
     [LLVM_SET_FUNCTION_CALL_CONV] = {2, (void*)llvm_set_function_call_conv},
     [LLVM_ADD_ALIAS2] = {5, (void*)llvm_add_alias2},
     [LLVM_PRINT_TYPE_TO_STRING] = {1, (void*)llvm_print_type_to_string},
+    [LLVM_GET_HOST_CPUNAME] = {1, (void*)llvm_get_host_cpuname},
+    [LLVM_GET_HOST_CPUFEATURES] = {1, (void*)llvm_get_host_cpufeatures},
+    [LLVM_SET_TARGET] = {2, (void*)llvm_set_target},

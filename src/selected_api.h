@@ -326,6 +326,8 @@ LLVMValueRef LLVMAddAlias2(LLVMModuleRef M, LLVMTypeRef ValueTy, unsigned AddrSp
 
 LLVMStr LLVMPrintTypeToString (LLVMTypeRef Ty);
 
+LLVMStr LLVMGetHostCPUName(void);
 
+LLVMStr LLVMGetHostCPUFeatures(void);
 
-
+void LLVMSetTarget(LLVMModuleRef M, const char *Triple);

@@ -49,10 +49,10 @@ LET optimise_module(module) = VALOF $(
     // call will already have deleted by the time it returns
     llvm_get_default_target_triple()
     target_triple := llvm_result
-
+    llvm_set_target(module, target_triple)
     llvm_initialize_all_target_infos()
     target := llvm_get_target_from_triple(target_triple)
-    target_machine := llvm_create_target_machine(target, target_triple, "generic", "", LLVM_CODEGENLEVEL_DEFAULT, LLVM_RELOC_DEFAULT, LLVM_CODEMODEL_DEFAULT)
+    target_machine := llvm_create_target_machine(target, target_triple, "pc", "", LLVM_CODEGENLEVEL_DEFAULT, LLVM_RELOC_DEFAULT, LLVM_CODEMODEL_DEFAULT)
     pass_builder_options := llvm_create_pass_builder_options()
 
     error_ref := llvm_run_passes(module, "default<O2>", target_machine, pass_builder_options)

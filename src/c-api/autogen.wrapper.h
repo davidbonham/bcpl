@@ -303,3 +303,9 @@ BCPLWORD llvm_add_alias2(BCPLWORD m, BCPLWORD value_ty, BCPLWORD addr_space, BCP
 
 BCPLWORD llvm_print_type_to_string(BCPLWORD ty);
 
+BCPLWORD llvm_get_host_cpuname(void);
+
+BCPLWORD llvm_get_host_cpufeatures(void);
+
+BCPLWORD llvm_set_target(BCPLWORD m, BCPLWORD triple);
+
