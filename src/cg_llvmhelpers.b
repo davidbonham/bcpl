@@ -1,3 +1,35 @@
+LET allocate_temporary(builder, basicblock, name) = VALOF $(
+    // We need to position the builder at the start of the function and restore
+    // it later
+    // So that all of our stack allocations are at the function entry. This
+    // avoids problems when GOTO causes us to add phi nodes that can create
+    // edges never used but mean that a local doesn't dominate all of its
+    // apparant uses.
+    LET temporary = ?
+    LET current_block = llvm_get_insert_block(builder)
+
+    // Move the builder to the start of the function
+    LET parent_function = llvm_get_basic_block_parent(basicblock)
+    LET function_entry_block = llvm_get_entry_basic_block(parent_function)
+    LET terminator = llvm_get_basic_block_terminator(function_entry_block)
+    TEST terminator = 0 THEN $(
+        // First block in the function doesn't yet have a terminator so we
+        // can add stuff to the end of the block
+        llvm_position_builder_at_end(builder, function_entry_block)
+    $)
+    ELSE $(
+        // The block is terminated so add stuff before it
+        llvm_position_builder_before(builder, terminator)
+    $)
+
+    // Allocate our stack cell
+    temporary := llvm_build_alloca(builder, word_type, name)
+
+    // Restore the builder's current location
+    llvm_position_builder_at_end(builder, current_block)
+    RESULTIS temporary
+$)
+
 LET write_llvm_string(string) BE $(
    LET i = 0
     UNTIL string%i = 0 DO $(

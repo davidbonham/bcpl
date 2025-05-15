@@ -142,35 +142,39 @@ $)
 
 LET ss_push(value) BE $(
 
-    // Create an LLVM location representing this stack cell. We need to
-    // position the build at the start of the function and restore it later
-    // So that all of our stack allocations are at the function entry. This
-    // avoids problems when GOTO causes us to add phi nodes that can create
-    // edges never used but mean that a local doesn't dominate all of its
-    // apparant uses.
-    LET current_block = llvm_get_insert_block(builder)
+//    // Create an LLVM location representing this stack cell. We need to
+//    // position the build at the start of the function and restore it later
+//    // So that all of our stack allocations are at the function entry. This
+//    // avoids problems when GOTO causes us to add phi nodes that can create
+//    // edges never used but mean that a local doesn't dominate all of its
+//    // apparant uses.
+//    LET current_block = llvm_get_insert_block(builder)
+//
+//    // Move the builder to the start of the function
+//    LET parent_function = llvm_get_basic_block_parent(basicblock)
+//    LET function_entry_block = llvm_get_entry_basic_block(parent_function)
+//    LET terminator = llvm_get_basic_block_terminator(function_entry_block)
+//    TEST terminator = 0 THEN $(
+//        // First block in the function doesn't yet have a terminator so we
+//        // can add stuff to the end of the block
+//        llvm_position_builder_at_end(builder, function_entry_block)
+//    $)
+//    ELSE $(
+//        // The block is terminated so add stuff before it
+//        llvm_position_builder_before(builder, terminator)
+//    $)
+//    // Make sure there's room on the stack
+//    assert (ss_p + ss_s + 1< ss_pastworkspace, "push past end of stack space")
+//
+//    // Allocate our stack cell
+//    ss_p!ss_s := llvm_build_alloca(builder, word_type, "STK")
+//
+//    // Restore the builder's current location
+//    llvm_position_builder_at_end(builder, current_block)
 
-    // Move the builder to the start of the function
-    LET parent_function = llvm_get_basic_block_parent(basicblock)
-    LET function_entry_block = llvm_get_entry_basic_block(parent_function)
-    LET terminator = llvm_get_basic_block_terminator(function_entry_block)
-    TEST terminator = 0 THEN $(
-        // First block in the function doesn't yet have a terminator so we
-        // can add stuff to the end of the block
-        llvm_position_builder_at_end(builder, function_entry_block)
-    $)
-    ELSE $(
-        // The block is terminated so add stuff before it
-        llvm_position_builder_before(builder, terminator)
-    $)
     // Make sure there's room on the stack
     assert (ss_p + ss_s + 1< ss_pastworkspace, "push past end of stack space")
-
-    // Allocate our stack cell
-    ss_p!ss_s := llvm_build_alloca(builder, word_type, "STK")
-
-    // Restore the builder's current location
-    llvm_position_builder_at_end(builder, current_block)
+    ss_p!ss_s := allocate_temporary(builder, basicblock, "STK")
 
     // And generate code to store the value in it
     llvm_build_store(builder, value, ss_p!ss_s)

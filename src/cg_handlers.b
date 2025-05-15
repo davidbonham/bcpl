@@ -394,6 +394,10 @@ $(
     // If there were some VEC declarations, we should have handled them
     // via a STACK before we get an ENDPROC.
     assert(pending_llps_free = 0, "unhandled VEC")
+
+    // Any __res_a stack temporary RES or RSTACK may have allocated is now
+    // out of scope
+    A := 0
 $)
 
 AND cg_eqv() BE
@@ -612,6 +616,7 @@ AND cg_res(n) BE $(
     //
     // but that looks wrong. Instead:
     LET pending_result = ss_pop("res.result")
+    IF A = 0 DO A := allocate_temporary(builder, basicblock, "__res_a")
     llvm_build_store(builder, pending_result, A)
     cg_jump(n)
 $)
@@ -620,7 +625,9 @@ AND cg_rstack(n) BE $(
 
     // Restore the pending result held in A to the top of the stack once
     // we have adjusted the stack top
-    LET pending_result = llvm_build_load2(builder, word_type, A, "rstack.pending")
+    LET pending_result = ?
+    IF A = 0 DO A := allocate_temporary(builder, basicblock, "__res_a")
+    pending_result := llvm_build_load2(builder, word_type, A, "rstack.pending")
     ss_stack(n)
     ss_push(pending_result)
 $)
@@ -717,6 +724,7 @@ $(
     // Create the new module and set up a function pass manager for
     // optimisation
     module := llvm_module_create_with_name_in_context(name, context)
+
 
     // Declare the global vector as an external reference
     gv_type := llvm_array_type(word_type, GLOBALVECTORSIZE)
@@ -970,8 +978,9 @@ $(
     // The temporary RES/STACK holding location is not needed for function
     // call and return because the call object we build will return a
     // result object to us. However, it is needed for the RES and RSTACK
-    // operations used in SWITCHON statements
-    A := llvm_build_alloca(builder, word_type, "__res_a")
+    // operations used in SWITCHON statements. Defer creation until the
+    // first OCODE operation that needs it.
+    A := 0
 
     // Like STATIC, a LET generates a static variable holding the procedure
     // address. We actually store the first basic block and rely on RTAP/FNAP
