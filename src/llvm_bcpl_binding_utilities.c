@@ -156,7 +156,7 @@ bcpl_print_message(char* label, char*message)
 BCPLWORD
 llvm_set_message_buffer(BCPLWORD buffer)
 {
-    bcpl_string = b2c_address(buffer);
+    bcpl_string = (char*)b2c_address(buffer);
     return 0;
 }
 

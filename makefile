@@ -13,32 +13,34 @@ export HDRPATH = src:${BCPL64HDRS}
 LLVMBIN=${DEVROOT}/llvm-debug-install/bin
 LLVMHDRS=$(shell ${LLVMBIN}/llvm-config --includedir)
 LLVMLIBS=$(shell ${LLVMBIN}/llvm-config --ldflags --libs)
+CC=clang
+# Object files from the official BCPL release of cintsys64
 OBJ=${BCPLROOT}/obj64
 CINTSYSOBJS=${OBJ}/cinterp.o ${OBJ}/fasterp.o ${OBJ}/kblib.o ${OBJ}/cfuncs.o ${OBJ}/joyfn.o ${OBJ}/sdlfn.o ${OBJ}/glfn.o ${OBJ}/alsafn.o
 
 
 build/llvm_bcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMHDRS}/llvm-c/Core.h
 !	@echo "** compiling the C API binding utilities"
-!	@gcc -g -O0  -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
+!	@${CC} -g -O0  -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
 
 build/llvm_bcpl_binding.o: src/c-api/llvm_bcpl_binding.c
 !	@echo "** compiling the C API binding"
-!	@gcc -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMHDRS} -o $@ -c $<
+!	@${CC} -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMHDRS} -o $@ -c $<
 
 # Create our bespoke cintsys dispatcher for external functions
 build/extfn.o: src/extfn.c src/c-api/llvm_bcpl_binding.h src/c-api/autogen.enums.h src/c-api/autogen.function_table.imp src/c-api/autogen.string_table.imp
 !	@echo "** compiling our version of extfn"
-!	@gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+!	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 build/stubzlib.o : src/stubzlib.c
 !	@echo "** compiling our zlib stub for LLVM"
-!	@gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+!	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 
 # Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
 bin/cintsys64 : ${CINTSYSOBJS} build/extfn.o build/stubzlib.o build/llvm_bcpl_binding.o build/llvm_bcpl_binding_utilities.o ${OBJ}/cintmain.o
 !	@echo "** building our cintpos64 system"
-!	@gcc  -g -O0 -Xlinker -Map=/tmp/output.map -o $@ $^  ${LLVMLIBS} -pthread  -lm -lstdc++
+!	@${CC}  -g -O0 -Xlinker -Map=/tmp/output.map -o $@ $^  ${LLVMLIBS} -pthread  -lm -lstdc++
 
 # ----------------------------------------------------------------------
 # Build our BCPL compiler
@@ -73,7 +75,7 @@ build/bcpltrn.ll    : src/bcpltrn.b ${CMPLHDRS}
 build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/c-api/autogen.llvmhdr.h src/c-api/llvmenums.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
 
 mybcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c
-!    ${CLANG} $^ -o $@
+!    ${CC} $^ -o $@
 
 clean :
 !    rm build/*.ll

@@ -115,7 +115,7 @@ BCPLWORD llvm_get_basic_block_name(BCPLWORD bb, BCPLWORD vector)
 {
     const char* const name = LLVMGetBasicBlockName((LLVMBasicBlockRef)(uintptr_t)bb);
     size_t const length = strlen(name);
-    char* const vector_p = b2c_address(vector);
+    char* const vector_p = (char*)b2c_address(vector);
     vector_p[0] = length;
     memcpy(vector_p+1, name, length);
     return 0;
@@ -135,7 +135,8 @@ BCPLWORD llvm_print_module_to_string(BCPLWORD module_ref)
     'LLVMDisposeMessage': '''
 BCPLWORD llvm_dispose_message(BCPLWORD message)
 {
-    LLVMDisposeMessage(b2c_address(message));
+    LLVMDisposeMessage((char*)b2c_address(message));
+    return 0;
 }
 
 ''',
@@ -156,7 +157,7 @@ BCPLWORD llvm_const_string_in_context(BCPLWORD c, BCPLWORD str, BCPLWORD length,
 {
     // Because we want to initialise memory with a BCPL string, don't
     // convert it into a c string, just pass its real address
-    const char* address = b2c_address(str);
+    const char* address = (char*)b2c_address(str);
     return (BCPLWORD)(uintptr_t) LLVMConstStringInContext((LLVMContextRef)(uintptr_t)c, address, (unsigned)length, (LLVMBool)dont_null_terminate);
 } 
 
