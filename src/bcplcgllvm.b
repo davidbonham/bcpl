@@ -40,7 +40,6 @@ $(
 
     section_mark             // workspace level at start of section
     is_current_section_empty // Stops us emitting unused initial section
-    is_unreachable           // Last OCODE op was a FNRN or RTRN
 
     ocode_buffer             // Read ahead of incoming O-code
     ocode_buffer_next = READAHEAD
@@ -53,12 +52,12 @@ $)
 
 LET trace(f,a,b,c,d) BE IF debug > 0 THEN writef(f,a,b,c,d)
 
+GET "cg_llvmhelpers.b"
 GET "cg_errors.b"
 GET "cg_workspace.b"
 GET "cg_simstack.b"
 GET "cg_labels.b"
 GET "cg_indirect.b"
-GET "cg_llvmhelpers.b"
 
 // -----------------------------------------------------------------------------
 
@@ -154,7 +153,6 @@ $(
 
     section_mark := ws_mark()
     is_current_section_empty := TRUE
-    is_unreachable := FALSE
 
     // A default section
     cg_section("bcplmain")
