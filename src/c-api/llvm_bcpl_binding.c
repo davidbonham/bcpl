@@ -1,3 +1,19 @@
+
+
+// These are the C wrappers converting members of the LLVM C-API into versions
+// callable from BCPL via the global vector
+
+#include "llvm_bcpl_binding_utilities.h"
+#include "llvm_bcpl_binding.h"
+
+#include "llvm-c/Core.h"
+#include "llvm-c/Analysis.h"
+#include "llvm-c/Transforms/PassBuilder.h"
+
+#include <stdint.h>
+
+extern BCPLWORD getvec(BCPLWORD upb);
+
 BCPLWORD llvm_shutdown(void)
 {
     LLVMShutdown();

@@ -389,20 +389,37 @@ b_enums = ''.join(['    ' + e + '\n' for e in enums])
 llvmhdr = 'MANIFEST\n$(\n' + b_enums + '$)\n\n'
 llvmhdr += lets
 
-with open(sys.argv[1] + '.wrapper.imp', 'w') as w:
+with open(sys.argv[1] + '/llvm_bcpl_binding.c', 'w') as w:
+    w.write('''
+
+// These are the C wrappers converting members of the LLVM C-API into versions
+// callable from BCPL via the global vector
+
+#include "llvm_bcpl_binding_utilities.h"
+#include "llvm_bcpl_binding.h"
+
+#include "llvm-c/Core.h"
+#include "llvm-c/Analysis.h"
+#include "llvm-c/Transforms/PassBuilder.h"
+
+#include <stdint.h>
+
+extern BCPLWORD getvec(BCPLWORD upb);
+
+''')
     w.write(wrappers)
-with open(sys.argv[1] + '.wrapper.h', 'w') as w:
+with open(sys.argv[1] + '/llvm_bcpl_binding.h', 'w') as w:
     w.write(headers)
 #with open(sys.argv[1] + '.enums.b', 'w') as w:
 #    w.write(b_enums)
-with open(sys.argv[1] + '.enums.h', 'w') as w:
+with open(sys.argv[1] + '/autogen.enums.h', 'w') as w:
     w.write(c_enums)
-with open(sys.argv[1] + '.function_table.imp', 'w') as w:
+with open(sys.argv[1] + '/autogen.function_table.imp', 'w') as w:
     w.write(function_table)
-with open(sys.argv[1] + '.string_table.imp', 'w') as w:
+with open(sys.argv[1] + '/autogen.string_table.imp', 'w') as w:
     w.write(string_table)
 
-with open(sys.argv[1] + '.llvmhdr.h', 'w') as w:
+with open(sys.argv[1] + '/autogen.llvmhdr.h', 'w') as w:
     w.write(llvmhdr)
 
 print(f'{api_count} routines generated')

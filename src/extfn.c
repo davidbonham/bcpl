@@ -45,7 +45,7 @@ BCPLWORD extfn(BCPLWORD *args, BCPLWORD *g, BCPLWORD *W) {
 #define EXT_Testfn              2
 #define EXT_Hello               3
 
-#include "autogen.wrapper.h"
+#include "llvm_bcpl_binding.h"
 
 typedef enum {
 #include "autogen.enums.h"    
