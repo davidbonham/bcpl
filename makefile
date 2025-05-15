@@ -1,0 +1,82 @@
+.RECIPEPREFIX = !
+
+# The GET directive will prefer our local versions of file to those in the
+# official BCPL release
+export HDRPATH = src:${BCPL64HDRS}
+
+# ----------------------------------------------------------------------
+# Our version of the CINTSYS system providing access to our LLVM binding
+# via the Sys() mechanism
+# ----------------------------------------------------------------------
+
+# We need to use our debug build because we need the C API header files
+LLVMBIN=${DEVROOT}/llvm-debug-install/bin
+LLVMHDRS=$(shell ${LLVMBIN}/llvm-config --includedir)
+LLVMLIBS=$(shell ${LLVMBIN}/llvm-config --ldflags --libs)
+OBJ=${BCPLROOT}/obj64
+CINTSYSOBJS=${OBJ}/cinterp.o ${OBJ}/fasterp.o ${OBJ}/kblib.o ${OBJ}/cfuncs.o ${OBJ}/joyfn.o ${OBJ}/sdlfn.o ${OBJ}/glfn.o ${OBJ}/alsafn.o
+
+
+build/llvm_bcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMHDRS}/llvm-c/Core.h
+!	@echo "** compiling the C API binding utilities"
+!	@gcc -g -O0  -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
+
+build/llvm_bcpl_binding.o: src/c-api/llvm_bcpl_binding.c
+!	@echo "** compiling the C API binding"
+!	@gcc -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMHDRS} -o $@ -c $<
+
+# Create our bespoke cintsys dispatcher for external functions
+build/extfn.o: src/extfn.c src/c-api/llvm_bcpl_binding.h src/c-api/autogen.enums.h src/c-api/autogen.function_table.imp src/c-api/autogen.string_table.imp
+!	@echo "** compiling our version of extfn"
+!	@gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+
+build/stubzlib.o : src/stubzlib.c
+!	@echo "** compiling our zlib stub for LLVM"
+!	@gcc -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+
+
+# Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
+bin/cintsys64 : ${CINTSYSOBJS} build/extfn.o build/stubzlib.o build/llvm_bcpl_binding.o build/llvm_bcpl_binding_utilities.o ${OBJ}/cintmain.o
+!	@echo "** building our cintpos64 system"
+!	@gcc  -g -O0 -Xlinker -Map=/tmp/output.map -o $@ $^  ${LLVMLIBS} -pthread  -lm -lstdc++
+
+# ----------------------------------------------------------------------
+# Build our BCPL compiler
+# ----------------------------------------------------------------------
+
+# We use the 64-bit CINTSYS interpreter's BCPL to run our compiler
+CINTSYS = ${BL_ROOT}/bin/cintsys64
+
+# And we build everything witthout position independence
+CLANG = clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -O2 -g3
+
+# Tailor the standard BCPL BLIB with our own code. We now consider blib.b
+# to be a derived object.
+build/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b
+!   scripts/tailor-blib.py $^ >$@
+
+build/blib.ll : build/blib.b
+!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATH
+
+
+build/%.ll : src/%.b
+!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATH
+
+build/%.s : build/%.ll
+!	llc $< -o $@
+
+# Standard header files used as-is from the officual distribution
+CMPLHDRS = ${BCPL64HDRS}/libhdr.h ${BCPL64HDRS}/bcplfecg.h
+
+build/bcplsyn.ll    : src/bcplsyn.b ${CMPLHDRS}
+build/bcpltrn.ll    : src/bcpltrn.b ${CMPLHDRS}
+build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/c-api/autogen.llvmhdr.h src/c-api/llvmenums.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
+
+mybcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c
+!    ${CLANG} $^ -o $@
+
+clean :
+!    rm build/*.ll
+
+reallyclean:
+!    rm build/*
