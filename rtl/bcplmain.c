@@ -6,8 +6,8 @@
 #include <string.h>
 
 typedef int64_t bcplword_t;
-
-extern bcplword_t __bcpl_global_vector[512];
+#define NUMGLOBALS 1024
+extern bcplword_t __bcpl_global_vector[NUMGLOBALS];
 
 // 9.1 Standard Stream Organisation Procedures
 enum {
@@ -351,14 +351,14 @@ int main(int argc, char* argv[])
         __rditem_add("\n");            // Terminate the line
     }
 
-    //for (int i = 0; i < 512; i += 1)
+    //for (int i = 0; i < NUMGLOBALS; i += 1)
     //{
     //    if (__bcpl_global_vector[i] != 0) printf("[%d] = 0x%016lx\n", i, __bcpl_global_vector[i]);
     //}
 
     // Start with all of the unset elements of the global vector referencing
     // a debugging function
-    for (int i = 0; i < 512; i += 1) if (__bcpl_global_vector[i] == 0) __bcpl_global_vector[i] = (bcplword_t) __undefined;
+    for (int i = 0; i < NUMGLOBALS; i += 1) if (__bcpl_global_vector[i] == 0) __bcpl_global_vector[i] = (bcplword_t) __undefined;
 
     // Setup standard input and standard output
     __bcpl_global_vector[G_CIS]             = (bcplword_t)stdin;

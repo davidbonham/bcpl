@@ -46,7 +46,7 @@ __longjump:
         .data
         .align     8
  __bcpl_global_vector:
-        .rept 512
+        .rept 1024
         GLOBAL_INIT
         .endr
         .type __bcpl_global_vector, @object
