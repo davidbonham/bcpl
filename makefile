@@ -2,8 +2,8 @@
 
 # The GET directive will prefer our local versions of file to those in the
 # official BCPL release
-export CHDRPATH = src:src/inc:src/cinc:${BCPL64HDRS}
-export NHDRPATH = src:src/inc:src/ninc:${BCPL64HDRS}
+export CHDRPATH = src:src/inc:src/cinc:build:${BCPL64HDRS}
+export NHDRPATH = src:src/inc:src/ninc:build:${BCPL64HDRS}
 
 # ----------------------------------------------------------------------
 # Our version of the CINTSYS system providing access to our LLVM binding
@@ -20,7 +20,7 @@ OBJ=${BCPLROOT}/obj64
 CINTSYSOBJS=${OBJ}/cinterp.o ${OBJ}/fasterp.o ${OBJ}/kblib.o ${OBJ}/cfuncs.o ${OBJ}/joyfn.o ${OBJ}/sdlfn.o ${OBJ}/glfn.o ${OBJ}/alsafn.o
 
 
-build/llvm_bcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMHDRS}/llvm-c/Core.h
+build/llvm_cbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMHDRS}/llvm-c/Core.h
 !	@echo "** compiling the C API binding utilities"
 !	@${CC} -g -O0  -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
 
@@ -39,7 +39,7 @@ build/stubzlib.o : src/stubzlib.c
 
 
 # Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
-bin/cintsys64 : ${CINTSYSOBJS} build/extfn.o build/stubzlib.o build/llvm_bcpl_binding.o build/llvm_bcpl_binding_utilities.o ${OBJ}/cintmain.o
+bin/cintsys64 : ${CINTSYSOBJS} build/extfn.o build/stubzlib.o build/llvm_bcpl_binding.o build/llvm_cbcpl_binding_utilities.o ${OBJ}/cintmain.o
 !	@echo "** building our cintpos64 system"
 !	@${CC}  -g -O0 -Xlinker -Map=/tmp/output.map -o $@ $^  ${LLVMLIBS} -pthread  -lm -lstdc++
 
@@ -55,6 +55,10 @@ CLANG = clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -O2 -g
 
 # Standard header files used as-is from the officual distribution
 CMPLHDRS = ${BCPL64HDRS}/libhdr.h ${BCPL64HDRS}/bcplfecg.h
+
+build/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMHDRS}/llvm-c/Core.h
+!	@echo "** compiling the C API binding utilities"
+!	@${CC} -g -O0  -DNATIVE -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
@@ -106,9 +110,9 @@ build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/l
 build/llvmcintsysapi.ll	 : src/llvmcintsysapi.b src/inc/llvmhdr.h src/inc/llvmenums.h
 
 #
-nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c build/llvm_bcpl_binding.o build/llvm_bcpl_binding_utilities.o
+nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c build/llvm_bcpl_binding.o build/llvm_nbcpl_binding_utilities.o
 !    @echo LINK $^
-!    ${CLANG} $^ -Wl,-defsym,W=0  ${LLVMLIBS} build/stubzlib.o -pthread  -lm -lstdc++ -o $@
+!    @${CLANG} $^ ${LLVMLIBS} build/stubzlib.o -pthread  -lm -lstdc++ -o $@
 
 clean :
 !    rm build/*.ll

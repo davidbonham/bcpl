@@ -23,6 +23,19 @@ static char* bcpl_string;
  * @param b     BCPL cell address of a cell
  * @return      True address of first byte in cell
 */
+#if defined(NATIVE)
+uint8_t*
+b2c_address(BCPLWORD b)
+{
+    return (uint8_t*)(b << 3);
+}
+
+BCPLWORD
+c2b_address(char* ptr)
+{
+    return ((BCPLWORD)ptr >> 3);
+}
+#else
 uint8_t*
 b2c_address(BCPLWORD b)
 {
@@ -39,6 +52,7 @@ c2b_address(char* ptr)
     extern BCPLWORD* const W; 
     return (BCPLWORD)((BCPLWORD*)ptr - W);
 }
+#endif
 
 /** Convert a BCPL string into a C string
  *
