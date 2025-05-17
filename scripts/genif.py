@@ -309,6 +309,8 @@ headers = 'BCPLWORD llvm_set_message_buffer(BCPLWORD s);\n'
 function_table = '    [LLVM_SET_MESSAGE_BUFFER] = {1, (void*)llvm_set_message_buffer},\n'
 string_table = '    [LLVM_SET_MESSAGE_BUFFER] = "llvm_set_message_buffer",\n'
 lets = 'LET llvm_set_message_buffer(s) = sys(Sys_ext, LLVM_SET_MESSAGE_BUFFER, s)\n'
+globals = ['llvm_set_message_buffer: cgg']
+
 api_count = 0
 
 collected = ''
@@ -370,6 +372,7 @@ for n, line in enumerate(sys.stdin.readlines()):
             sys_args = this_enum
 
         lets += f'LET {convert(function)}({bcpl_args}) = sys(Sys_ext, {sys_args})\n'
+        globals.append(convert(function))
 
         api_count += 1
 
@@ -390,6 +393,7 @@ b_enums = ''.join(['    ' + e + '\n' for e in enums])
 llvmhdr = 'MANIFEST\n$(\n' + b_enums + '$)\n\n'
 llvmhdr += lets
 
+
 with open(sys.argv[1] + '/llvm_bcpl_binding.c', 'w') as w:
     w.write('''
 
@@ -409,18 +413,34 @@ extern BCPLWORD getvec(BCPLWORD upb);
 
 ''')
     w.write(wrappers)
-with open(sys.argv[1] + '/llvm_bcpl_binding.h', 'w') as w:
+with open(sys.argv[1] + '/c-api/llvm_bcpl_binding.h', 'w') as w:
     w.write(headers)
-#with open(sys.argv[1] + '.enums.b', 'w') as w:
-#    w.write(b_enums)
-with open(sys.argv[1] + '/autogen.enums.h', 'w') as w:
+with open(sys.argv[1] + '/c-api/extfn.enums.h', 'w') as w:
     w.write(c_enums)
-with open(sys.argv[1] + '/autogen.function_table.imp', 'w') as w:
+with open(sys.argv[1] + '/c-api/extfn.function_table.imp', 'w') as w:
     w.write(function_table)
-with open(sys.argv[1] + '/autogen.string_table.imp', 'w') as w:
+with open(sys.argv[1] + '/c-api/extfn.string_table.imp', 'w') as w:
     w.write(string_table)
 
-with open(sys.argv[1] + '/autogen.llvmhdr.h', 'w') as w:
+# The MANIFEST for the LLVM API sys() calls and the LET routines that use them
+# This will be included when building the cintsys version of the compiler.
+with open(sys.argv[1] + '/cinc/llvmapi.h', 'w') as w:
     w.write(llvmhdr)
+
+with open(sys.argv[1] + '/llvmcintsysapi.b', 'w') as w:
+    print('GET "libhdr"',  file=w)
+    print('GET "bcplfecg"', file=w)
+    print('GET "llvmhdr"', file=w)
+    print('\nMANIFEST $(', file=w)
+    w.write(b_enums)
+    print('$)\n', file=w)
+    w.write(lets)
+
+# The global vector defineing the LLVM API calls
+with open(sys.argv[1] + '/inc/llvmgvec.h', 'w') as w:
+    print('GLOBAL $(', file=w)
+    for name in globals:
+       print('   ', name, file=w)
+    print('$)', file=w)
 
 print(f'{api_count} routines generated')

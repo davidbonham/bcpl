@@ -48,18 +48,18 @@ BCPLWORD extfn(BCPLWORD *args, BCPLWORD *g, BCPLWORD *W) {
 #include "llvm_bcpl_binding.h"
 
 typedef enum {
-#include "autogen.enums.h"    
+#include "extfn.enums.h"
 } EXT_LLVM_Function;
 
 typedef struct { int args; void* function; } EXT_LLVM_table_entry_t;
 static EXT_LLVM_table_entry_t EXT_LLVM_table[] = 
 {
-#include "autogen.function_table.imp"    
+#include "extfn.function_table.imp"
 };
 
 const char* llvm_name[] =
 {
-#include "autogen.string_table.imp"        
+#include "extfn.string_table.imp"
 };
 
 bool extfn_tracing;

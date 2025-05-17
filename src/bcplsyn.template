@@ -1,0 +1,15 @@
+// SYN
+// ---
+//
+// This is the SYN phase from the official BCPL release but with
+
+
+%copyto default_hdrs
+// Substitute implementation thad deosn't require cintsys support
+LET default_hdrs() = "BCPL64HDRS"
+
+%skipto 339
+%copyto 599
+%skipto 601
+%copyto %%EOF%%
+

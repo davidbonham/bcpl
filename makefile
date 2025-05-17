@@ -2,7 +2,8 @@
 
 # The GET directive will prefer our local versions of file to those in the
 # official BCPL release
-export HDRPATH = src:${BCPL64HDRS}
+export CHDRPATH = src:src/inc:src/cinc:${BCPL64HDRS}
+export NHDRPATH = src:src/inc:src/ninc:${BCPL64HDRS}
 
 # ----------------------------------------------------------------------
 # Our version of the CINTSYS system providing access to our LLVM binding
@@ -28,7 +29,7 @@ build/llvm_bcpl_binding.o: src/c-api/llvm_bcpl_binding.c
 !	@${CC} -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMHDRS} -o $@ -c $<
 
 # Create our bespoke cintsys dispatcher for external functions
-build/extfn.o: src/extfn.c src/c-api/llvm_bcpl_binding.h src/c-api/autogen.enums.h src/c-api/autogen.function_table.imp src/c-api/autogen.string_table.imp
+build/extfn.o: src/extfn.c src/c-api/llvm_bcpl_binding.h src/c-api/extfn.enums.h src/c-api/extfn.function_table.imp src/c-api/extfn.string_table.imp
 !	@echo "** compiling our version of extfn"
 !	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
@@ -52,30 +53,58 @@ CINTSYS = ${BL_ROOT}/bin/cintsys64
 # And we build everything witthout position independence
 CLANG = clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -O2 -g3
 
-# Tailor the standard BCPL BLIB with our own code. We now consider blib.b
-# to be a derived object.
-build/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b
-!   scripts/tailor-blib.py $^ >$@
-
-build/blib.ll : build/blib.b
-!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATH
-
-
-build/%.ll : src/%.b
-!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATH
-
-build/%.s : build/%.ll
-!	llc $< -o $@
-
 # Standard header files used as-is from the officual distribution
 CMPLHDRS = ${BCPL64HDRS}/libhdr.h ${BCPL64HDRS}/bcplfecg.h
 
+# Tailor the standard BCPL BLIB with our own code. We now consider blib.b
+# to be a derived object.
+build/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b
+!   @echo TAILOR BLIB
+!   @scripts/tailor-blib.py $^ >$@
+
+
+src/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b
+!   @echo TAILOR BCPLSYN
+!   @scripts/tailor-blib.py $^ >$@
+
+src/bcpltrn.b : ${BCPL64ROOT}/com/bcpltrn.b
+!   @echo COPY BCPLTRN
+!   @cp $^ $@
+
+# ------------------------ CINTSYS -------------------------------------
+
+# To build the compiler to run as OCODE under CINTSYS64,
+# 1. we must compile everything in a single source file - src/cbcpl.b does this
+# 2. We must inlude the LETs for the LLVM API that use the sys() mechanism
+#    and the llvmapi header included comes from src/cinc not src/ninc
+# 3. The native binding is held in extfn.c linked into CINTSYS64
+cbcpl : src/bcpl.b src/bcplsyn.b src/bcpltrn.b src/bcplcgllvm.b ${CMPLHDRS} src/cinc/llvmapi.h
+!    @echo CINTSYS BCPL
+!    bin/cintsys64 -c bcpl t64 src/bcpl.b to cbcpl hdrs CHDRPATH
+
+# ------------------------ NATIVE- -------------------------------------
+
+build/blib.ll : build/blib.b ${CMPLHDRS}
+!   @echo BCPL BLIB
+!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs NHDRPATH
+
+build/%.ll : src/%.b
+!   @echo BCPL $<
+!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs NHDRPATH
+
+build/%.s : build/%.ll
+!   @echo LLC %
+!	@llc $< -o $@
+
 build/bcplsyn.ll    : src/bcplsyn.b ${CMPLHDRS}
 build/bcpltrn.ll    : src/bcpltrn.b ${CMPLHDRS}
-build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/c-api/autogen.llvmhdr.h src/c-api/llvmenums.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
+build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/inc/llvmhdr.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
+build/llvmcintsysapi.ll	 : src/llvmcintsysapi.b src/inc/llvmhdr.h src/inc/llvmenums.h
 
-mybcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c
-!    ${CC} $^ -o $@
+#
+nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c
+!    @echo LINK $^
+!    @${CLANG} $^ -o $@
 
 clean :
 !    rm build/*.ll

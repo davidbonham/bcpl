@@ -1,13 +1,14 @@
 GET "libhdr"
 GET "bcplfecg"
-GET "c-api/autogen.llvmhdr"
-GET "c-api/llvmenums"
+GET "llvmgvec"
+GET "llvmapi"
+GET "llvmenums"
 
-MANIFEST $( BYTESPERWORD     =   8 $)
-MANIFEST $( GLOBALVECTORSIZE = 256 $)
-MANIFEST $( READAHEAD        =   4 $)
-MANIFEST $( MAXPENDINGLLPS   = 512 $)
-MANIFEST $( MAXPARAMETERS    =  32 $)
+MANIFEST $( BYTESPERWORD     =   8  $)
+MANIFEST $( GLOBALVECTORSIZE = 1024 $)
+MANIFEST $( READAHEAD        =   4  $)
+MANIFEST $( MAXPENDINGLLPS   = 512  $)
+MANIFEST $( MAXPARAMETERS    =  32  $)
 
 STATIC
 $(
@@ -122,7 +123,7 @@ $(
   
     LET l_param_types = VEC 10
     IF errcount > 0 RETURN
-    writef("LLVM code generator with %N words of workspace*N", workspace_size)
+    writef("LLVM code generator with %N words of workspace. cgg=%n*N", workspace_size,cgg)
     llvm_tracing(debug)
 
     // The following code replaced rdn with a version that reads from
