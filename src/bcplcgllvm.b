@@ -1,3 +1,5 @@
+SECTION "CG"
+
 GET "libhdr"
 GET "bcplfecg"
 GET "llvmgvec"
@@ -157,7 +159,6 @@ $(
 
     // A default section
     cg_section("bcplmain")
-
     cg_ocode()
     emit_and_destroy_module()
 
