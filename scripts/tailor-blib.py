@@ -69,21 +69,25 @@ if __name__ == '__main__':
                 if directive == '%insert':
                     for srcline in range (start, finish+1):
                         print (official_blib[srcline], end='')
-                    print(f'inserted {name}', file=sys.stderr)
+                    if args.verbose:
+                        print(f'inserted {name}', file=sys.stderr)
                     next_line = finish
 
                 elif directive == '%skipto':
-                    print(f'skipped lines {next_line}-{start-1}', file=sys.stderr)
+                    if args.verbose:
+                        print(f'skipped lines {next_line}-{start-1}', file=sys.stderr)
                     next_line = start
 
                 elif directive == '%copyto':
                     for srcline in range(next_line, start):
                         print(official_blib[srcline], end='')
-                    print(f'copied lines {next_line}-{start-1}', file=sys.stderr)
+                    if args.verbose:
+                        print(f'copied lines {next_line}-{start-1}', file=sys.stderr)
                     next_line = start
 
                 elif directive == '%after':
-                    print(f'skipped past routine {name} lines {next_line}-{finish}', file=sys.stderr)
+                    if args.verbose:
+                        print(f'skipped past routine {name} lines {next_line}-{finish}', file=sys.stderr)
                     next_line = finish + 1
             else:
                 print(line,end='')

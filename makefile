@@ -63,11 +63,11 @@ build/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b
 !   @scripts/tailor-blib.py $^ >$@
 
 
-src/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b
+build/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b
 !   @echo TAILOR BCPLSYN
 !   @scripts/tailor-blib.py $^ >$@
 
-src/bcpltrn.b : ${BCPL64ROOT}/com/bcpltrn.b
+build/bcpltrn.b : ${BCPL64ROOT}/com/bcpltrn.b
 !   @echo COPY BCPLTRN
 !   @cp $^ $@
 
@@ -78,7 +78,7 @@ src/bcpltrn.b : ${BCPL64ROOT}/com/bcpltrn.b
 # 2. We must inlude the LETs for the LLVM API that use the sys() mechanism
 #    and the llvmapi header included comes from src/cinc not src/ninc
 # 3. The native binding is held in extfn.c linked into CINTSYS64
-cbcpl : src/bcpl.b src/bcplsyn.b src/bcpltrn.b src/bcplcgllvm.b ${CMPLHDRS} src/cinc/llvmapi.h
+cbcpl : src/bcpl.b build/bcplsyn.b build/bcpltrn.b src/bcplcgllvm.b ${CMPLHDRS} src/cinc/llvmapi.h
 !    @echo CINTSYS BCPL
 !    bin/cintsys64 -c bcpl t64 src/bcpl.b to cbcpl hdrs CHDRPATH
 
@@ -92,12 +92,16 @@ build/%.ll : src/%.b
 !   @echo BCPL $<
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs NHDRPATH
 
+build/%.ll : src/%.b
+!   @echo BCPL $<
+!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs NHDRPATH
+
 build/%.s : build/%.ll
 !   @echo LLC %
 !	@llc $< -o $@
 
-build/bcplsyn.ll    : src/bcplsyn.b ${CMPLHDRS}
-build/bcpltrn.ll    : src/bcpltrn.b ${CMPLHDRS}
+build/bcplsyn.ll    : build/bcplsyn.b ${CMPLHDRS}
+build/bcpltrn.ll    : build/bcpltrn.b ${CMPLHDRS}
 build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/inc/llvmhdr.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
 build/llvmcintsysapi.ll	 : src/llvmcintsysapi.b src/inc/llvmhdr.h src/inc/llvmenums.h
 
