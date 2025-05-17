@@ -660,13 +660,14 @@ BCPLWORD llvm_tracing(BCPLWORD flag)
 }
 
 
+
 BCPLWORD llvm_const_string_in_context(BCPLWORD c, BCPLWORD str, BCPLWORD length, BCPLWORD dont_null_terminate)
 {
     // Because we want to initialise memory with a BCPL string, don't
     // convert it into a c string, just pass its real address
     const char* address = (char*)b2c_address(str);
     return (BCPLWORD)(uintptr_t) LLVMConstStringInContext((LLVMContextRef)(uintptr_t)c, address, (unsigned)length, (LLVMBool)dont_null_terminate);
-} 
+}
 
 BCPLWORD llvm_int8type_in_context(BCPLWORD c)
 {
@@ -847,6 +848,7 @@ BCPLWORD llvm_get_default_target_triple()
     return bcpl_build_message("llvm_get_default_target_triple", message);
 }
 
+
 BCPLWORD llvm_get_target_from_triple(BCPLWORD target_triple, BCPLWORD unused_target, BCPLWORD unused_error)
 {
     // We return the triple as the result and the error via llvm_result
@@ -854,7 +856,8 @@ BCPLWORD llvm_get_target_from_triple(BCPLWORD target_triple, BCPLWORD unused_tar
     LLVMTargetRef target;
     LLVMBool failed = LLVMGetTargetFromTriple(b2c_string1(target_triple), &target, &error_message);
     return failed ? bcpl_build_message("llvm_get_target_from_triple", error_message) : (BCPLWORD)(uintptr_t)target;
-}    
+}
+
 BCPLWORD llvm_create_target_machine(BCPLWORD t, BCPLWORD triple, BCPLWORD cpu, BCPLWORD features, BCPLWORD level, BCPLWORD reloc, BCPLWORD code_model)
 {
     return (BCPLWORD)(uintptr_t)LLVMCreateTargetMachine((LLVMTargetRef)(uintptr_t)t, (const char*)(uintptr_t)b2c_string1(triple), (const char*)(uintptr_t)b2c_string2(cpu), (const char*)(uintptr_t)b2c_string3(features), (LLVMCodeGenOptLevel)(uintptr_t)level, (LLVMRelocMode)(uintptr_t)reloc, (LLVMCodeModel)(uintptr_t)code_model);
@@ -914,10 +917,12 @@ BCPLWORD llvm_get_host_cpuname(void)
     return bcpl_build_message("llvm_get_host_cpuname", LLVMGetHostCPUName());
 }
 
+
 BCPLWORD llvm_get_host_cpufeatures(void)
 {
     return bcpl_build_message("llvm_get_host_features", LLVMGetHostCPUFeatures());
 }
+
 BCPLWORD llvm_set_target(BCPLWORD m, BCPLWORD triple)
 {
     LLVMSetTarget((LLVMModuleRef)(uintptr_t)m, (const char*)(uintptr_t)b2c_string1(triple));
