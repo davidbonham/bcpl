@@ -1,4 +1,5 @@
 GLOBAL $(
+   llvm_set_message_buffer: cgg+0
    llvm_shutdown: cgg+1
    llvm_context_create: cgg+2
    llvm_get_global_context: cgg+3

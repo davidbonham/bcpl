@@ -468,9 +468,6 @@ extern BCPLWORD getvec(BCPLWORD upb);
     with open(os.path.join(srcdir, 'inc', 'llvmgvec.h'), 'w') as w:
         print('GLOBAL $(', file=w)
         for offset, name in enumerate(globals):
-            if name == 'llvm_set_message_buffer':
-                # This is declared elsewhere as global cgg
-                continue
             print(f'   {name}: cgg+{offset}', file=w)
         print('$)', file=w)
 
