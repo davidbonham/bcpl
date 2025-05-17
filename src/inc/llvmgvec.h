@@ -1,158 +1,157 @@
 GLOBAL $(
-    llvm_set_message_buffer: cgg
-    llvm_shutdown
-    llvm_context_create
-    llvm_get_global_context
-    llvm_context_dispose
-    llvm_module_create_with_name
-    llvm_module_create_with_name_in_context
-    llvm_dispose_module
-    llvm_dump_module
-    llvm_print_module_to_file
-    llvm_add_function
-    llvm_int64_type_in_context
-    llvm_function_type
-    llvm_array_type
-    llvm_pointer_type
-    llvm_void_type_in_context
-    llvm_print_value_to_string
-    llvm_const_ptr_to_int
-    llvm_const_int_to_ptr
-    llvm_const_int
-    llvm_set_linkage
-    llvm_set_section
-    llvm_set_visibility
-    llvm_add_global
-    llvm_set_initializer
-    llvm_set_externally_initialized
-    llvm_delete_function
-    llvm_insert_existing_basic_block_after_insert_block
-    llvm_append_existing_basic_block
-    llvm_create_basic_block_in_context
-    llvm_append_basic_block_in_context
-    llvm_append_basic_block
-    llvm_insert_basic_block_in_context
-    llvm_insert_basic_block
-    llvm_create_builder_in_context
-    llvm_position_builder
-    llvm_position_builder_before
-    llvm_position_builder_at_end
-    llvm_get_insert_block
-    llvm_clear_insertion_position
-    llvm_insert_into_builder
-    llvm_insert_into_builder_with_name
-    llvm_dispose_builder
-    llvm_build_ret_void
-    llvm_build_ret
-    llvm_build_br
-    llvm_build_cond_br
-    llvm_build_switch
-    llvm_build_indirect_br
-    llvm_add_case
-    llvm_add_destination
-    llvm_build_add
-    llvm_build_nswadd
-    llvm_build_nuwadd
-    llvm_build_fadd
-    llvm_build_sub
-    llvm_build_nswsub
-    llvm_build_nuwsub
-    llvm_build_fsub
-    llvm_build_mul
-    llvm_build_nswmul
-    llvm_build_nuwmul
-    llvm_build_fmul
-    llvm_build_udiv
-    llvm_build_exact_udiv
-    llvm_build_sdiv
-    llvm_build_exact_sdiv
-    llvm_build_fdiv
-    llvm_build_urem
-    llvm_build_srem
-    llvm_build_frem
-    llvm_build_shl
-    llvm_build_lshr
-    llvm_build_ashr
-    llvm_build_and
-    llvm_build_or
-    llvm_build_xor
-    llvm_build_bin_op
-    llvm_build_neg
-    llvm_build_nswneg
-    llvm_build_fneg
-    llvm_build_not
-    llvm_build_alloca
-    llvm_build_array_alloca
-    llvm_build_load2
-    llvm_build_store
-    llvm_build_gep2
-    llvm_build_call2
-    llvm_build_ptr_to_int
-    llvm_build_int_to_ptr
-    llvm_verify_module
-    llvm_get_initializer
-    llvm_get_param
-    llvm_build_icmp
-    llvm_int1type_in_context
-    llvm_get_basic_block_name
-    llvm_get_basic_block_parent
-    llvm_get_basic_block_terminator
-    llvm_count_basic_blocks
-    llvm_get_first_basic_block
-    llvm_get_last_basic_block
-    llvm_get_next_basic_block
-    llvm_get_previous_basic_block
-    llvm_get_entry_basic_block
-    llvm_build_int_cast2
-    llvm_verify_function
-    llvm_print_module_to_string
-    llvm_dispose_message
-    llvm_tracing
-    llvm_const_string_in_context
-    llvm_int8type_in_context
-    llvm_build_extract_element
-    llvm_build_zext
-    llvm_build_pointer_cast
-    llvm_build_global_string
-    llvm_build_global_string_ptr
-    llvm_const_array
-    llvm_get_next_instruction
-    llvm_get_first_instruction
-    llvm_is_aterminator_inst
-    llvm_set_alignment
-    llvm_delete_basic_block
-    llvm_build_free
-    llvm_get_last_instruction
-    llvm_instruction_erase_from_parent
-    llvm_get_instruction_parent
-    llvm_get_previous_instruction
-    llvm_int128type_in_context
-    llvm_double_type_in_context
-    llvm_build_fpto_si
-    llvm_build_sito_fp
-    llvm_build_bit_cast
-    llvm_lookup_intrinsic_id
-    llvm_get_intrinsic_declaration
-    llvm_build_fcmp
-    llvm_block_address
-    llvm_type_of
-    llvm_build_phi
-    llvm_add_incoming
-    llvm_count_incoming
-    llvm_run_passes
-    llvm_initialize_all_target_infos
-    llvm_get_default_target_triple
-    llvm_get_target_from_triple
-    llvm_create_target_machine
-    llvm_dispose_target_machine
-    llvm_create_pass_builder_options
-    llvm_get_error_message
-    llvm_dispose_pass_builder_options
-    llvm_get_target_name
-    llvm_set_function_call_conv
-    llvm_add_alias2
-    llvm_print_type_to_string
-    llvm_get_host_cpuname
-    llvm_get_host_cpufeatures
-    llvm_set_target
+   llvm_shutdown: cgg+1
+   llvm_context_create: cgg+2
+   llvm_get_global_context: cgg+3
+   llvm_context_dispose: cgg+4
+   llvm_module_create_with_name: cgg+5
+   llvm_module_create_with_name_in_context: cgg+6
+   llvm_dispose_module: cgg+7
+   llvm_dump_module: cgg+8
+   llvm_print_module_to_file: cgg+9
+   llvm_add_function: cgg+10
+   llvm_int64_type_in_context: cgg+11
+   llvm_function_type: cgg+12
+   llvm_array_type: cgg+13
+   llvm_pointer_type: cgg+14
+   llvm_void_type_in_context: cgg+15
+   llvm_print_value_to_string: cgg+16
+   llvm_const_ptr_to_int: cgg+17
+   llvm_const_int_to_ptr: cgg+18
+   llvm_const_int: cgg+19
+   llvm_set_linkage: cgg+20
+   llvm_set_section: cgg+21
+   llvm_set_visibility: cgg+22
+   llvm_add_global: cgg+23
+   llvm_set_initializer: cgg+24
+   llvm_set_externally_initialized: cgg+25
+   llvm_delete_function: cgg+26
+   llvm_insert_existing_basic_block_after_insert_block: cgg+27
+   llvm_append_existing_basic_block: cgg+28
+   llvm_create_basic_block_in_context: cgg+29
+   llvm_append_basic_block_in_context: cgg+30
+   llvm_append_basic_block: cgg+31
+   llvm_insert_basic_block_in_context: cgg+32
+   llvm_insert_basic_block: cgg+33
+   llvm_create_builder_in_context: cgg+34
+   llvm_position_builder: cgg+35
+   llvm_position_builder_before: cgg+36
+   llvm_position_builder_at_end: cgg+37
+   llvm_get_insert_block: cgg+38
+   llvm_clear_insertion_position: cgg+39
+   llvm_insert_into_builder: cgg+40
+   llvm_insert_into_builder_with_name: cgg+41
+   llvm_dispose_builder: cgg+42
+   llvm_build_ret_void: cgg+43
+   llvm_build_ret: cgg+44
+   llvm_build_br: cgg+45
+   llvm_build_cond_br: cgg+46
+   llvm_build_switch: cgg+47
+   llvm_build_indirect_br: cgg+48
+   llvm_add_case: cgg+49
+   llvm_add_destination: cgg+50
+   llvm_build_add: cgg+51
+   llvm_build_nswadd: cgg+52
+   llvm_build_nuwadd: cgg+53
+   llvm_build_fadd: cgg+54
+   llvm_build_sub: cgg+55
+   llvm_build_nswsub: cgg+56
+   llvm_build_nuwsub: cgg+57
+   llvm_build_fsub: cgg+58
+   llvm_build_mul: cgg+59
+   llvm_build_nswmul: cgg+60
+   llvm_build_nuwmul: cgg+61
+   llvm_build_fmul: cgg+62
+   llvm_build_udiv: cgg+63
+   llvm_build_exact_udiv: cgg+64
+   llvm_build_sdiv: cgg+65
+   llvm_build_exact_sdiv: cgg+66
+   llvm_build_fdiv: cgg+67
+   llvm_build_urem: cgg+68
+   llvm_build_srem: cgg+69
+   llvm_build_frem: cgg+70
+   llvm_build_shl: cgg+71
+   llvm_build_lshr: cgg+72
+   llvm_build_ashr: cgg+73
+   llvm_build_and: cgg+74
+   llvm_build_or: cgg+75
+   llvm_build_xor: cgg+76
+   llvm_build_bin_op: cgg+77
+   llvm_build_neg: cgg+78
+   llvm_build_nswneg: cgg+79
+   llvm_build_fneg: cgg+80
+   llvm_build_not: cgg+81
+   llvm_build_alloca: cgg+82
+   llvm_build_array_alloca: cgg+83
+   llvm_build_load2: cgg+84
+   llvm_build_store: cgg+85
+   llvm_build_gep2: cgg+86
+   llvm_build_call2: cgg+87
+   llvm_build_ptr_to_int: cgg+88
+   llvm_build_int_to_ptr: cgg+89
+   llvm_verify_module: cgg+90
+   llvm_get_initializer: cgg+91
+   llvm_get_param: cgg+92
+   llvm_build_icmp: cgg+93
+   llvm_int1type_in_context: cgg+94
+   llvm_get_basic_block_name: cgg+95
+   llvm_get_basic_block_parent: cgg+96
+   llvm_get_basic_block_terminator: cgg+97
+   llvm_count_basic_blocks: cgg+98
+   llvm_get_first_basic_block: cgg+99
+   llvm_get_last_basic_block: cgg+100
+   llvm_get_next_basic_block: cgg+101
+   llvm_get_previous_basic_block: cgg+102
+   llvm_get_entry_basic_block: cgg+103
+   llvm_build_int_cast2: cgg+104
+   llvm_verify_function: cgg+105
+   llvm_print_module_to_string: cgg+106
+   llvm_dispose_message: cgg+107
+   llvm_tracing: cgg+108
+   llvm_const_string_in_context: cgg+109
+   llvm_int8type_in_context: cgg+110
+   llvm_build_extract_element: cgg+111
+   llvm_build_zext: cgg+112
+   llvm_build_pointer_cast: cgg+113
+   llvm_build_global_string: cgg+114
+   llvm_build_global_string_ptr: cgg+115
+   llvm_const_array: cgg+116
+   llvm_get_next_instruction: cgg+117
+   llvm_get_first_instruction: cgg+118
+   llvm_is_aterminator_inst: cgg+119
+   llvm_set_alignment: cgg+120
+   llvm_delete_basic_block: cgg+121
+   llvm_build_free: cgg+122
+   llvm_get_last_instruction: cgg+123
+   llvm_instruction_erase_from_parent: cgg+124
+   llvm_get_instruction_parent: cgg+125
+   llvm_get_previous_instruction: cgg+126
+   llvm_int128type_in_context: cgg+127
+   llvm_double_type_in_context: cgg+128
+   llvm_build_fpto_si: cgg+129
+   llvm_build_sito_fp: cgg+130
+   llvm_build_bit_cast: cgg+131
+   llvm_lookup_intrinsic_id: cgg+132
+   llvm_get_intrinsic_declaration: cgg+133
+   llvm_build_fcmp: cgg+134
+   llvm_block_address: cgg+135
+   llvm_type_of: cgg+136
+   llvm_build_phi: cgg+137
+   llvm_add_incoming: cgg+138
+   llvm_count_incoming: cgg+139
+   llvm_run_passes: cgg+140
+   llvm_initialize_all_target_infos: cgg+141
+   llvm_get_default_target_triple: cgg+142
+   llvm_get_target_from_triple: cgg+143
+   llvm_create_target_machine: cgg+144
+   llvm_dispose_target_machine: cgg+145
+   llvm_create_pass_builder_options: cgg+146
+   llvm_get_error_message: cgg+147
+   llvm_dispose_pass_builder_options: cgg+148
+   llvm_get_target_name: cgg+149
+   llvm_set_function_call_conv: cgg+150
+   llvm_add_alias2: cgg+151
+   llvm_print_type_to_string: cgg+152
+   llvm_get_host_cpuname: cgg+153
+   llvm_get_host_cpufeatures: cgg+154
+   llvm_set_target: cgg+155
 $)

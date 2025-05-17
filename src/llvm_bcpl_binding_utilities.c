@@ -160,3 +160,4 @@ llvm_set_message_buffer(BCPLWORD buffer)
     return 0;
 }
 
+BCPLWORD __bcpl_gv425() __attribute__((alias("llvm_set_message_buffer")));

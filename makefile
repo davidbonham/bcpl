@@ -24,14 +24,14 @@ build/llvm_bcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/
 !	@echo "** compiling the C API binding utilities"
 !	@${CC} -g -O0  -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
 
-build/llvm_bcpl_binding.o: src/c-api/llvm_bcpl_binding.c
+build/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h
 !	@echo "** compiling the C API binding"
 !	@${CC} -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMHDRS} -o $@ -c $<
 
 # Create our bespoke cintsys dispatcher for external functions
-build/extfn.o: src/extfn.c src/c-api/llvm_bcpl_binding.h src/c-api/extfn.enums.h src/c-api/extfn.function_table.imp src/c-api/extfn.string_table.imp
+build/extfn.o: src/extfn.c src/inc/llvm_bcpl_binding.h src/c-api/extfn.enums.h src/c-api/extfn.function_table.imp src/c-api/extfn.string_table.imp
 !	@echo "** compiling our version of extfn"
-!	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+!	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 build/stubzlib.o : src/stubzlib.c
 !	@echo "** compiling our zlib stub for LLVM"
