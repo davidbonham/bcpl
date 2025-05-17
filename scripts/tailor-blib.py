@@ -14,6 +14,13 @@ import argparse
 import re
 import sys
 
+def locate(map: dict[str, tuple[int,int]], name: str) -> tuple[int,int]:
+    if name not in blib_map:
+        print(f'error: routine {name} not found in official blib', file=sys.stderr)
+        sys.exit(1)
+    else:
+        return blib_map[name]
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Merge selected routines from official BLIB into ours')
@@ -44,18 +51,40 @@ if __name__ == '__main__':
         if args.verbose:
             print(f'lines {start_line:4d}-{line-1:4d} {name}', file=sys.stderr)
 
+    blib_map['%%EOF%%'] = (line+1, line+1)
 
+    next_line = 0
     with open(args.template, 'r') as template:
         for line in template.readlines():
-            if line.startswith('%insert '):
-                name = line[8:-1]
-                if name not in blib_map:
-                    print(f'error: routine {name} not found in official blib', file=sys.stderr)
-                else:
+            if line.startswith('%'):
+
+                # This is a directive
+                directive, name = line.split()
+                if name in blib_map:
                     start, finish = blib_map[name]
-                    for line in range (start, finish+1):
-                        print (official_blib[line], end='')
+                else:
+                    line_number = int(name)
+                    start, finish = line_number, line_number
+
+                if directive == '%insert':
+                    for srcline in range (start, finish+1):
+                        print (official_blib[srcline], end='')
                     print(f'inserted {name}', file=sys.stderr)
+                    next_line = finish
+
+                elif directive == '%skipto':
+                    print(f'skipped lines {next_line}-{start-1}', file=sys.stderr)
+                    next_line = start
+
+                elif directive == '%copyto':
+                    for srcline in range(next_line, start):
+                        print(official_blib[srcline], end='')
+                    print(f'copied lines {next_line}-{start-1}', file=sys.stderr)
+                    next_line = start
+
+                elif directive == '%after':
+                    print(f'skipped past routine {name} lines {next_line}-{finish}', file=sys.stderr)
+                    next_line = finish + 1
             else:
                 print(line,end='')
 
