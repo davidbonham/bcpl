@@ -378,7 +378,7 @@ $(
     ibr_insert_and_cleanup(builder)
     IF debug DO $(
         LET error_ref = ?
-        llvm_print_module_to_file(module, "testing.ll", error_ref)
+        llvm_print_module_to_file(module, "testing.ll", @error_ref)
     $)
     r := llvm_verify_function(function, LLVM_PRINT_MESSAGE_ACTION)
     UNLESS r = 0 DO cgerror("unable to verify function*N")
