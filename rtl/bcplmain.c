@@ -317,7 +317,6 @@ bcplword_t __findstream(bcplword_t path, bcplword_t mode, bcplword_t searchvar)
     char search_string[4096];
     strcpy(search_string, variable_text);
 
-    printf("mode 0x%2lx %s in %s\n", mode, c_path, search_string);
     for (const char* directory = strtok(search_string, ":;"); directory != NULL; directory = strtok(NULL, ":;"))
     {
         char full_path[256+256];
