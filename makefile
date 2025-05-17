@@ -92,7 +92,7 @@ build/%.ll : src/%.b
 !   @echo BCPL $<
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs NHDRPATH
 
-build/%.ll : src/%.b
+build/%.ll : build/%.b
 !   @echo BCPL $<
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs NHDRPATH
 
@@ -102,13 +102,13 @@ build/%.s : build/%.ll
 
 build/bcplsyn.ll    : build/bcplsyn.b ${CMPLHDRS}
 build/bcpltrn.ll    : build/bcpltrn.b ${CMPLHDRS}
-build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/inc/llvmhdr.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
+build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
 build/llvmcintsysapi.ll	 : src/llvmcintsysapi.b src/inc/llvmhdr.h src/inc/llvmenums.h
 
 #
-nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c
+nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c build/llvm_bcpl_binding.o build/llvm_bcpl_binding_utilities.o
 !    @echo LINK $^
-!    @${CLANG} $^ -o $@
+!    ${CLANG} $^ -Wl,-defsym,W=0  ${LLVMLIBS} build/stubzlib.o -pthread  -lm -lstdc++ -o $@
 
 clean :
 !    rm build/*.ll

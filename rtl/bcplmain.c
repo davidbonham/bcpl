@@ -379,3 +379,8 @@ int main(int argc, char* argv[])
 }
 
 
+// -- Support previously provided by CINTSYS64 ---------------------------------
+
+bcplword_t getvec(bcplword_t size) __attribute((alias("__getvec")));
+bool extfn_tracing;
+
