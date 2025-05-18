@@ -158,7 +158,7 @@ $(
     is_current_section_empty := TRUE
 
     // A default section
-    cg_section("bcplmain")
+    cg_section("BCPLMAIN")
     cg_ocode()
     emit_and_destroy_module()
 
