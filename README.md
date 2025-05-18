@@ -23,17 +23,37 @@ up to but not including the appendix (which defines extensions). Once that
 target has been reached, the appendix will be included (providing floating
 point and the heap, among other things).
 
+## Stages of Development
+
+### 1. Interpreted Compiler
+
+A BCPL compiler interpreted under CINTSTS64 using the LLVM toolchain that
+compiles, via LLVM-IR, to native code which runs using a run-time layered
+on top of the host's C RTL
+
+### 2. Native Compiler
+
+A native BCPL compiler running on the host using the LLVM toolchain and
+a run-time layered on top of the hosts C RTL that compiles, via LLVM-IR,
+to native code which also runs using the same run-time layered on top of
+the host's C RTL.
+
+The native compiler can compile itself.
+
+### 3. Native Compiler and Runtime
+
+A native BCPL compiler running on the host using using the LLVM toolchain
+and BCPL run-time using system calls and compiles, via LLVM IR, to native
+code which also runs using the same BCPL run-time.
+
 ## The Current State of Play
-The current state of play is that the compiler can now compile itself but
-the result is not yet runnable as the source makes calls to the Sys global.
+
+Stages 2 have just been reached. It passes a number of regression tests
+and correctly compiles itself. It now needs some proper testing.
 
 - It uses LLVM 20.1.3
-- It is compiled using the cintpos BCPL compiler
-- The resulting compiler runs under cintpos but generates standalone code
-- The BCPL run time library is simply layered on top of the native C RTL for the time being
-- Not all of the BCPL RTL is implemented
 - The OCODE operations supporting SLCT are not implemented - specify noselst on the command line to compile BCPL programs using field selectors
 - The BCPL standard requires arguments to routines to have adjacent addresses so that it is possible to take the address of the first argument and treat the argument as a vector. The code generator does not honour this.
-- Much of CMPLTEST currently passes 
+- Much of CMPLTEST currently passes, skipping the floating point tests
 - According to section 2.4.5 of the BCPL Cintsys and Cintpos User Guide, local variables are allocated consecutive locations in the stack frame of the current function. The "Proposed Definition" does not mention this and the code generator does not honour it at the moment.
 
