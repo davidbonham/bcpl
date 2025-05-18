@@ -32,6 +32,10 @@ if __name__ == '__main__':
     with open(args.release, 'r') as source:
         official_blib = source.readlines()
 
+    # We want our line numbering to be 1-based so insert at the start of
+    # of the list
+    official_blib.insert(0, '')
+
     # Build an index mapping the routine name to starting and ending lines
     blib_map = {}
     start_line = None
@@ -57,6 +61,10 @@ if __name__ == '__main__':
     with open(args.template, 'r') as template:
         for line in template.readlines():
             if line.startswith('%'):
+
+                # ignore comments
+                if line.startswith('%!'):
+                    continue
 
                 # This is a directive
                 directive, name = line.split()
