@@ -71,9 +71,9 @@ build/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b
 !   @echo TAILOR BCPLSYN
 !   @scripts/tailor-blib.py $^ >$@
 
-build/bcpltrn.b : ${BCPL64ROOT}/com/bcpltrn.b
-!   @echo COPY BCPLTRN
-!   @cp $^ $@
+build/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b
+!   @echo TAILOR BCPLTRN
+!   @scripts/tailor-blib.py $^ >$@
 
 # ------------------------ CINTSYS -------------------------------------
 
@@ -110,9 +110,9 @@ build/bcplcgllvm.ll : src/bcplcgllvm.b ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/l
 build/llvmcintsysapi.ll	 : src/llvmcintsysapi.b src/inc/llvmhdr.h src/inc/llvmenums.h
 
 #
-nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c build/llvm_bcpl_binding.o build/llvm_nbcpl_binding_utilities.o
+nbcpl : rtl/bcplinit.s build/bcplsyn.ll build/bcpltrn.ll build/bcplcgllvm.ll build/blib.ll rtl/bcplmain.c build/llvm_bcpl_binding.o build/llvm_nbcpl_binding_utilities.o build/stubzlib.o
 !    @echo LINK $^
-!    @${CLANG} $^ ${LLVMLIBS} build/stubzlib.o -pthread  -lm -lstdc++ -o $@
+!    @${CLANG} $^ ${LLVMLIBS} -pthread  -lm -lstdc++ -o $@
 
 clean :
 !    rm build/*.ll

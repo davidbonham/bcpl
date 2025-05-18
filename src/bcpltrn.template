@@ -1,67 +1,24 @@
-%insert genlab
-%insert trnerr
-%insert newblk
-%insert translate
-%insert trnext
-%insert trans
-%insert declnames
-%insert decldyn
-%insert declstat
-%insert decllabels
-%insert checkdistinct
-%insert addname
-%insert undeclare
-%insert cellwithname
-%insert scanlabels
-%insert transdef
-%insert transdyndefs
-%insert transstatdefs
-%insert arglength
-%insert patarglength
-%insert transbreak
-%insert condbreak
-%insert transloop
-%insert condloop
-%insert transendcase
-%insert condendcase
-%insert transnext
-%insert condnext
-%insert transexit
-%insert condexit
-%insert transreturn
-%insert condreturn
-%insert transmatchlist
-%insert declpatnames
-%insert transpattern
-%insert oppath
-%insert statdefs
-%insert jumpcond
-%insert transswitch
-%insert transfor
-%insert isflt
-%insert load
-%insert fnbody
-%insert loadlv
-%insert loadlist
-%insert op2sfop
-%insert assop2op
-%insert rel2patrel
-%insert patrel2rel
-%insert cv2flt
-%insert isconst
-%insert iszero
-%insert evalconst
-%insert assign
-%insert transname
-%insert xref
-%insert prctxt
-%insert prctxtd
-%insert prctxtc
-%insert wrhexval
-%insert prctxte
-%insert out1
-%insert out2
-%insert out3
-%insert out4
-%insert outstring
-%insert outcomment
+%! The assign() routine assumes that locals appear consecutively in memory
+%! and we can't do this. Add a helper function before assign.
+%copyto assign
+                                                                        //PATCH
+AND splitload(op, lhs, rhs, ff) BE $(                                   //PATCH
+    LET tree = VEC 2                                                    //PATCH
+    h1!tree, h2!tree, h3!tree := op, lhs, rhs                           //PATCH
+    load(tree, ff)                                                      //PATCH
+$)                                                                      //PATCH
+                                                                        //PATCH
+%! Now replace all the uses with our patched function
+%copyto 3642
+             splitload(operator, a, b, ff)                              //PATCH
+%skipto 3643
+%copyto 3664
+                     splitload(operator, a, b, ff)                      //PATCH
+%skipto 3665
+%copyto 3692
+                                splitload(operator, a, b, ff)           //PATCH
+%skipto 3693
+%copyto 3760
+             splitload(operator, a, b, FALSE)                           //PATCH
+%skipto 3761
+%copyto %%EOF%%
