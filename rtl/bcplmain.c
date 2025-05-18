@@ -101,17 +101,13 @@ static char* c_string(bcplword_t bcplstring)
 }
 
 
-static char cmdline_buffer[32];
-static const char* cmdline_next = &cmdline_buffer[0];
-static char rdch_ch;
-static bool more_cmdline;
+static char* cmdline_buffer;
+static const char* cmdline_next;
+static long int rdch_ch;
 
 static void __rditem_add(const char* string)
 {
-    size_t buffer_len = strlen(cmdline_buffer);
-    size_t free_space = sizeof(cmdline_buffer) - buffer_len - 1/*nul*/;
-    strncat(cmdline_buffer, string, free_space);
-    more_cmdline = 1;
+    strcat(cmdline_buffer, string);
 }
 
 bcplword_t __rdch(void)
@@ -121,18 +117,23 @@ bcplword_t __rdch(void)
         is_pending_character = false;
         rdch_ch = pending_character;
     }
-    else if (more_cmdline)
+    else if (cmdline_buffer != NULL)
     {
         // There are still some command line arguments to read
         rdch_ch = *cmdline_next++;
-        more_cmdline = *cmdline_next != 0;
+        if (rdch_ch == '\xff') rdch_ch = -1;
+        if (*cmdline_next == 0)
+        {
+            free(cmdline_buffer);
+            cmdline_buffer = 0;
+        }
     }
     else
     {
         FILE* const CIS = (FILE*)__bcpl_global_vector[G_CIS];
         rdch_ch = fgetc(CIS);
     }
-
+    //printf("rdch '%c' (0x%02lx) is_pending=%d cmdline_buffer=%p\n", (char)rdch_ch, rdch_ch, is_pending_character, cmdline_buffer);
     return (bcplword_t)rdch_ch;
 }
 
@@ -342,12 +343,15 @@ int main(int argc, char* argv[])
     // input (which is how the rdarg/rditem mechanism expects them)
     if (argc > 1)
     {
+        size_t length = 2;
+        for (int i = 1; i < argc; i += 1) length += 1 + strlen(argv[i]);
+        cmdline_next = cmdline_buffer = malloc(length);
         for (int i = 1; i < argc; i += 1)
         {
-            __rditem_add(" ");         // Treat args fred and jane as 'fred jane' not 'fredjane'
+            if (i > 1) __rditem_add(" ");         // Treat args fred and jane as 'fred jane' not 'fredjane'
             __rditem_add(argv[i]);
         }
-        __rditem_add("\n");            // Terminate the line
+        __rditem_add("\n\n");            // Terminate the line
     }
 
     //for (int i = 0; i < NUMGLOBALS; i += 1)
