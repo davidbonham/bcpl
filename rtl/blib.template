@@ -4,7 +4,7 @@
 // This is the part of the run-time library that is written in BCPL rather
 // than the assembler components that live in bcplmain.
 
-SECTION "blib"
+SECTION "BLIB"
 
 GET "libhdr"
 
