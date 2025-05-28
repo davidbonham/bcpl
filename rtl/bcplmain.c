@@ -346,6 +346,7 @@ int main(int argc, char* argv[])
         size_t length = 2;
         for (int i = 1; i < argc; i += 1) length += 1 + strlen(argv[i]);
         cmdline_next = cmdline_buffer = malloc(length);
+        cmdline_buffer[0] = 0;
         for (int i = 1; i < argc; i += 1)
         {
             if (i > 1) __rditem_add(" ");         // Treat args fred and jane as 'fred jane' not 'fredjane'
