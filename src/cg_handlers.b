@@ -36,7 +36,7 @@ $(
 
     LET name = VEC 10
     LET op = cg_rdn()
-    LET n, label, save, num_globals, global_number = ?, ?, ?, ?, ?
+    LET n, m, k, label, save, num_globals, global_number = ?, ?, ?, ?, ?, ?, ?
 
     UNTIL op = 0 DO
     $(
@@ -123,6 +123,8 @@ $(
             CASE s_itemn:       n := cg_rdn(); wf(" %N*N", n); cg_itemn(n, cg_rdn_peek(0));   ENDCASE
 
             // Special cases
+            CASE s_selld:       n := cg_rdn(); m := cg_rdn();                wf(" %N %N*N", n, m);       cg_selld(n, m);    ENDCASE
+            CASE s_selst:       n := cg_rdn(); m := cg_rdn(); k := cg_rdn(); wf(" %N %N %N*N", n, m, k); cg_selst(n, m, k); ENDCASE
 
             CASE s_section:
                 cg_rdname(name, 10)
@@ -838,6 +840,13 @@ $)
 
 AND cg_store() BE RETURN
 
+AND cg_build_binary_fop(builder, fop, lhs, rhs, label) = VALOF $(
+    LET frhs = llvm_build_bit_cast(builder, rhs, float_type, "frhs")
+    LET flhs = llvm_build_bit_cast(builder, lhs, float_type, "flhs")
+    LET fresult = fop(builder, flhs, frhs, "fresult")
+    LET result = llvm_build_bit_cast(builder, fresult, word_type, label)
+    RESULTIS result
+$)
 
 AND cg_binary_fop(build_fop, label) BE
 $(
@@ -845,10 +854,7 @@ $(
     // result
     LET rhs = ss_pop("rhs")
     LET lhs = ss_pop("lhs")
-    LET frhs = llvm_build_bit_cast(builder, rhs, float_type, "frhs")
-    LET flhs = llvm_build_bit_cast(builder, lhs, float_type, "flhs")
-    LET fresult = build_fop(builder, flhs, frhs, "fresult")
-    LET result = llvm_build_bit_cast(builder, fresult, word_type, label)
+    LET result = cg_build_binary_fop(builder, lhs, rhs, label)
     ss_push(result)
 $)
 
@@ -1264,6 +1270,132 @@ $(
     // Store the bcpl address of the string
     ss_push(bcpl_address)
 $)
+
+AND cg_selld(len, sh) BE $(
+    // SELLD takes two argments len and sh. It effect is equivalent to
+    // P!(S-1) := !(P!(S-1)) >> sh & mask
+    // where mask is a bit pattern containing len right justified ones. If em len is zero no
+    // masking is done.
+    LET mask = (1 << len) - 1
+
+    // Get !(P!S-1))
+    LET bcpl_address = ss_pop("selld.bcpladdress")
+    LET llvm_address = llvm_build_shl(builder, bcpl_address, llvm_const_int(word_type, 3, 0), "selld.llvmaddr")
+    LET lv = llvm_build_int_to_ptr(builder, llvm_address, llvm_pointer_type(word_type, 0), "selld.lv")
+    LET value = llvm_build_load2(builder, word_type, lv, "selld.value")
+
+    // Apply the shift
+    LET shift_value = llvm_const_int(word_type, sh, 0)
+    LET shifted_value = llvm_build_lshr(builder, value, shift_value, "selld.shifted")
+
+    // If the length is not zero, apply the mask
+    TEST len ~= 0 THEN $(
+        LET mask_value = llvm_const_int(word_type, mask, 0)
+        LET masked_value = llvm_build_and(builder, shifted_value, mask_value, "selld.masked")
+        ss_push(masked_value)
+    $)
+    ELSE $(
+        ss_push(shifted_value)
+    $)
+$)
+
+AND cg_selst(op, len, sh) BE $(
+    // SELST takes three argments op, len and sh. If op is zero, its effect is
+    // equivalent to
+    //     SLCT len:sh:0 OF (P!(S-1)) := P!(S-2); S := S-2
+    // but if op is non zero it represents and assignment operator (assop) and
+    // the statement is equivalent to:
+    //     SLCT len:sh:0 OF (P!(S-1)) assop:= P!(S-2); S := S-2
+    // The mapping between op and assop is given by the following table.
+    //
+    // op assop       op assop     op assop
+    //  0  none        1     !      2    #*
+    //  3    #/        4  #MOD      5    #+
+    //  6    #-        7     *      8     /
+    //  9   MOD       10     +     11     -
+    // 12    <<       13    >>     14     &
+    // 15     |       16   EQV     17   XOR
+    //
+    // The floating-point assignment operators are only allowed when the
+    // specified fieldis a full word, typically with len and sh both zero
+
+    // The value on the top of the stack is the address of the element of
+    // the vector to be modified. Get the original value
+    LET bcpl_address = ss_pop("selst.bcpladdress")
+    LET rhs = ss_pop("selst.rhs")
+    LET llvm_address = llvm_build_shl(builder, bcpl_address, llvm_const_int(word_type, 3, 0), "selst.llvmaddr")
+    LET lv = llvm_build_int_to_ptr(builder, llvm_address, llvm_pointer_type(word_type, 0), "selst.lv")
+    LET lhs_value = llvm_build_load2(builder, word_type, lv, "selst.value")
+
+    // Mask covering all the bits in the target field, used to or-in the result
+    LET mask = ((1 << len) - 1) << sh
+    LET mask_value = llvm_const_int(word_type, mask, 0)
+
+    // Mask covering all bits except the field, used to clear the target field.
+    LET not_mask = ~mask
+    LET not_mask_value = llvm_const_int(word_type, not_mask, 0)
+
+
+    // We have a binary operation so get the working value out of the lhs field
+    // and remove its shift
+    LET target_field_value = llvm_build_and(builder, lhs_value, mask_value, "selst.masked.rhs")
+    LET shift_value = llvm_const_int(word_type, sh, 0)
+    LET working_field_value = llvm_build_lshr(builder, target_field_value, shift_value, "selst.working.field")
+
+    // The lhs value with the target field cleared, ready to receive the result
+    LET prepared_value = llvm_build_and(builder, lhs_value, not_mask_value, "selst.prepared.lhs")
+
+    LET result_value, shifted_result, masked_result, new_value = 42, 43, 44, 45
+    SWITCHON (op) INTO $(
+
+        // Simple assignment
+        CASE  0: result_value := rhs;                                                                 ENDCASE
+
+        // Indirection
+        CASE  1: $(
+            // field !:= rhs  === field := field ! rhs === field := !(field + rhs)
+            LET bcpl_address = llvm_build_add(builder, working_field_value, rhs, "selst.pling.bcpladdr")
+            LET llvm_address = llvm_build_shl(builder, rhs, llvm_const_int(word_type, 3, 0), "selst.pling.lv.llvmaddr")
+            LET lv = llvm_build_int_to_ptr(builder, llvm_address, llvm_pointer_type(word_type, 0), "selst.pling.lv")
+            result_value := llvm_build_load2(builder, word_type, lv, "selst.pling.result")
+        $)
+        ENDCASE
+
+        // Floating point
+        CASE  2: result_value := cg_build_binary_fop(builder, llvm_build_fmul, working_field_value, rhs, "selst.fmul.result"); ENDCASE
+        CASE  3: result_value := cg_build_binary_fop(builder, llvm_build_fdiv, working_field_value, rhs, "selst.fdiv.result"); ENDCASE
+        CASE  4: result_value := cg_build_binary_fop(builder, llvm_build_frem, working_field_value, rhs, "selst.frem.result"); ENDCASE
+        CASE  5: result_value := cg_build_binary_fop(builder, llvm_build_fadd, working_field_value, rhs, "selst.fadd.result"); ENDCASE
+        CASE  6: result_value := cg_build_binary_fop(builder, llvm_build_fsub, working_field_value, rhs, "selst.fsub.result"); ENDCASE
+
+        // Word
+        CASE  7: result_value := llvm_build_mul(builder,  working_field_value, rhs, "selst.mul.result");  ENDCASE
+        CASE  8: result_value := llvm_build_sdiv(builder, working_field_value, rhs, "selst.sdiv.result");  ENDCASE
+        CASE  9: result_value := llvm_build_srem(builder, working_field_value, rhs, "selst.srem.result");  ENDCASE
+        CASE 10: result_value := llvm_build_add(builder,  working_field_value, rhs, "selst.add.result");  ENDCASE
+        CASE 11: result_value := llvm_build_sub(builder,  working_field_value, rhs, "selst.sub.result");  ENDCASE
+        CASE 12: result_value := llvm_build_shl(builder,  working_field_value, rhs, "selst.shl.result");  ENDCASE
+        CASE 13: result_value := llvm_build_lshr(builder, working_field_value, rhs, "selst.shr.result");  ENDCASE
+        CASE 14: result_value := llvm_build_and(builder,  working_field_value, rhs, "selst.and.result");  ENDCASE
+        CASE 15: result_value := llvm_build_or(builder,   working_field_value, rhs, "selst.or.result");  ENDCASE
+        CASE 16: result_value := llvm_build_not(builder,  llvm_build_xor(builder, working_field_value, rhs, "selst.xor"), "selst.eqv.result"); ENDCASE
+        CASE 17: result_value := llvm_build_xor(builder,  working_field_value, rhs, "selst.xor.result");  ENDCASE
+
+        DEFAULT: cgerror("Bad OP %n in SELST*n", op)
+    $)
+
+    // Shift the new value into position and then mask any bits that have
+    // overflowed the field
+    shifted_result := llvm_build_shl(builder, result_value, shift_value, "selst.shifted.result")
+    masked_result := llvm_build_and(builder, shifted_result, mask_value, "selst.masked.result")
+
+    // So we can now combine them to give the new lhs
+    new_value := llvm_build_or(builder, prepared_value, masked_result, "selst.updated.lhs")
+    llvm_build_store(builder, new_value, lv)
+$)
+
+
+
 
 AND cg_sl(n) BE
 $(
