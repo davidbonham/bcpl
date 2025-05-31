@@ -140,7 +140,8 @@ do
 
         b)
             echo bcpl $input to $object_path
-            perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
+            #perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
+            perform "$BL_ROOT/bin/bcpl t64  $input to $ll_path"
             perform "llc --relocation-model=pic $ll_path -o $s_path"
             clang_inputs="$clang_inputs $s_path"
             ;;
