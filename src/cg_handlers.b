@@ -669,6 +669,7 @@ $(
     // Build the argument list by loading their values. We need to do this
     // in reverse as we pop the arguments of the stack
     LET arg_values = VEC MAXPARAMETERS
+    IF num_args > MAXPARAMETERS DO cgerror("Too many arguments (%N) in RTAP/FNAP*N", num_args)
     FOR i = num_args - 1 TO 0 BY -1 DO
     $(
         arg_values!i := ss_pop("arg")
