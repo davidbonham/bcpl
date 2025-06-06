@@ -136,7 +136,7 @@ $(
     // Set up the workspace
     ws_init(workspace, workspace_size)
     context := llvm_context_create()
-    builder := llvm_create_builder_in_context()
+    builder := llvm_create_builder_in_context(context)
 
     // LLVM types for BCPLWORD &c, commonly used
     word_type := llvm_int64_type_in_context(context)
