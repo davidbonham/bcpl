@@ -1318,8 +1318,10 @@ AND cg_selst(op, len, sh) BE $(
     // 15     |       16   EQV     17   XOR
     //
     // The floating-point assignment operators are only allowed when the
-    // specified fieldis a full word, typically with len and sh both zero
+    // specified field is a full word, typically with len and sh both zero
 
+    // If len us null, then we use the full word length
+    LET length = len = 0 -> 8*BYTESPERWORD, len
     // The value on the top of the stack is the address of the element of
     // the vector to be modified. Get the original value
     LET bcpl_address = ss_pop("selst.bcpladdress")
@@ -1329,7 +1331,7 @@ AND cg_selst(op, len, sh) BE $(
     LET lhs_value = llvm_build_load2(builder, word_type, lv, "selst.value")
 
     // Mask covering all the bits in the target field, used to or-in the result
-    LET mask = ((1 << len) - 1) << sh
+    LET mask = ((1 << length) - 1) << sh
     LET mask_value = llvm_const_int(word_type, mask, 0)
 
     // Mask covering all bits except the field, used to clear the target field.
