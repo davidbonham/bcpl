@@ -643,12 +643,12 @@ AND testslct() BE
 { MANIFEST {
     S0_0_0 = SLCT 0      // Full word offset 0
     S0_0_1 = SLCT 1      // Full word offset 1
-    S0_4_0 = SLCT 4:0    // 28-bit field, shift of 4, offset 0
+    S0_4_0 = SLCT 4:0    // 60-bit field, shift of 4, offset 0
     S8_4_1 = SLCT 8:4:1  //  8-bit field, shift of 4, offset 1
     S8_0_0 = SLCT 8:0:0  // ls 8 bits, offset 0
   }
 
-  LET a, b = #x12345678, #xFEDCBA98  // Two bit patterns
+  LET a, b = #x1122334412345678, #xAABBCCDDFEDCBA98  // Two bit patterns
   LET x, y = a, b  // A two word test record
 
   //DB Test modified to remove the need for locals to be allocated
@@ -658,9 +658,9 @@ AND testslct() BE
   LET r = VEC 1     //DB
   r!0, r!1 := x, y  //DB
 
-  t(S0_0_0::r, #x12345678)  // 1000
-  t(S0_0_1::r, #xFEDCBA98)  // 1001
-  t(S0_4_0::r, #x01234567)  // 1002
+  t(S0_0_0::r, #x1122334412345678)  // 1000
+  t(S0_0_1::r, #xAABBCCDDFEDCBA98)  // 1001
+  t(S0_4_0::r, #x0112233441234567)  // 1002
   t(S8_4_1::r, #x000000A9)  // 1003
   t(S8_0_0::r, #x00000078)  // 1004
 
@@ -672,13 +672,13 @@ AND testslct() BE
   S0_0_1::r := #xEFCDAB89;   t(r!1, #xEFCDAB89)  // 1006
   //DB x, y := a, b
   r!0, r!1 := a, b  //DB
-  S0_4_0::r := #xEFCDAB89;   t(r!0, #xEFCDAB898)  // 1007 ?????????
+  S0_4_0::r := #xEFCDAB89;   t(r!0, #x0000000EFCDAB898)  // 1007 ?????????
   //DB x, y := a, b
   r!0, r!1 := a, b  //DB
-  S8_4_1::r := #xA9876543;   t(r!1, #xFEDCB438)  // 1008
+  S8_4_1::r := #xA9876543;   t(r!1, #xAABBCCDDFEDCB438)  // DB - 64 bit word 1008
   //DB x, y := a, b
   r!0, r!1 := a, b  //DB
-  S8_0_0::r := #xCBA98765;   t(r!0, #x12345665)  // 1009
+  S8_0_0::r := #xCBA98765;   t(r!0, #x1122334412345665)  // DB - 64 bit word 1009
 }
 
 AND locals(p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17) BE
