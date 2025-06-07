@@ -7,10 +7,10 @@
 # we assume debug.
 umode=DEBUG
 
-if [[ $# -eq 1 ]]
+if [[ $# -eq 1 ]] || [[ $# -eq 2 ]]
 then
     umode="${1^^}"
-    if [[ "${umode}" != "DEBUG" ]] && [[ "${umode}" != "RELEASE" ]]
+    if [[ "${umode}" != "DEBUG" ]] && [[ "${umode}" != "RELEASE" ]] && [[ "${umode}" != "RELWITHDEBINFO" ]]
     then
         echo error: expected optional parameter DEBUG or RELEASE
         exit 1
@@ -20,8 +20,7 @@ then
     echo error: expected optional parameter DEBUG or RELEASE
     exit 1
 fi
-mode="${umode,,}"
-builddir=llvm-build-${mode}
+
 
 # Download the following release of LLVM and build a debug version, installing
 # it in llvm-debug-install. You should be in the development root (the parent
@@ -35,8 +34,12 @@ else
 
     # Specify the release
     export DEVROOT=$(pwd)
-    export LLVM_VERSION=20.1.3
+    export LLVM_VERSION=20.1.6
     export LLVMREL=llvm-project-${LLVM_VERSION}
+
+    mode="${umode,,}"
+    builddir=llvm-build-${mode}
+    installdir=${DEVROOT}/llvm-${LLVM_VERSION}-${mode}-install
 
     echo === Building ${mode} version of ${LLVM_VERSION}
 
@@ -71,17 +74,35 @@ else
         fi
     fi
 
+    # Preserve any existing installation directory
+    if [ -d ${installdir} ]
+    then
+        if [ -d ${installdir}-old ]
+        then
+            # We want to preseve llvm-build in llvm-build-old but it already
+            # exists. I really should clean things up
+            echo \*\*\* Unable to preserve ${installdir} - do some tidying up:
+            ls -ltrd ${installdir}*
+        else
+            echo === Preserving ${installdir} in ${installdir}-old
+            mv ${installdir} ${installdir}-old
+        fi
+    fi
+
     # Build llvm
+    PATH=/usr/lib/llvm-20/bin:${PATH}
+
     echo === Configuring  ${LLVMREL}.src/llvm
     mkdir ${builddir}
     cmake -B ${builddir} -G "Unix Makefiles"                    \
         -DLLVM_BUILD_TOOLS=NO                                   \
-        -DLLVM_ENABLE_TERMINFO=NO                               \
         -DLLVM_TARGETS_TO_BUILD=llvm                            \
-        -DCMAKE_BUILD_TYPE=$umode                               \
-        -DCMAKE_INSTALL_PREFIX=${DEVROOT}/llvm-${mode}-install  \
+        -DCMAKE_BUILD_TYPE=${umode}                             \
+        -DCMAKE_INSTALL_PREFIX=${installdir}                    \
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE                   \
         -DLLVM_TARGETS_TO_BUILD=host                            \
+        -DLLVM_ABI_BREAKING_CHECKS=WITH_ASSERTS                 \
+        -DLLVM_BUILD_LLVM_DYLIB=TRUE                            \
         -DCMAKE_C_COMPILER=clang-20                             \
         ${LLVMREL}.src/llvm
 
@@ -93,14 +114,12 @@ else
     echo === Installing 
 
     make -C ${builddir} install
-    cp ${builddir}/bin/llvm-config ${DEVROOT}/llvm-${mode}-install/bin/
+    cp ${builddir}/bin/llvm-config ${installdir}/bin/
 
     # Clean up
     if [ "$2" = "clean" ]
     then
         echo === Cleaning up
-        rm -r ${LLVMREL}.src 
-        rm /tmp/${LLVMREL}.src.tar.xz
         rm -r ${builddir}
     fi
 

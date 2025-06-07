@@ -4,7 +4,7 @@
 # official BCPL release
 export HDRPATHC64 = src:src/inc:src/cinc:builddbg:${BCPL64HDRS}
 export HDRPATHDBG = src:src/inc:src/ninc:builddbg:${BCPL64HDRS}
-export HDRPATHREL = src:src/inc:src/ninc:builddbg:${BCPL64HDRS}
+export HDRPATHREL = src:src/inc:src/ninc:buildrel:${BCPL64HDRS}
 
 # ----------------------------------------------------------------------
 # Our version of the CINTSYS system providing access to our LLVM binding
@@ -12,25 +12,19 @@ export HDRPATHREL = src:src/inc:src/ninc:builddbg:${BCPL64HDRS}
 # ----------------------------------------------------------------------
 
 LLVMREL=/usr/lib/llvm-20
-
-MODE ?= dbg
-
-ifeq "${MODE}" "dbg"
-	LLVMBIN=${DEVROOT}/llvm-debug-install/bin
-	EXT=dbg
-else
-	LLVMBIN=${DEVROOT}/llvm-release-install/bin
-	#LLVMBIN=${LLVMREL}/bin
-	EXT=rel
-endif
+LLVMVER=20.1.6
 
 # We need to use our debug build because we need the C API header files
-LLVMDBGHDRS=$(shell ${DEVROOT}/llvm-debug-install/bin/llvm-config --includedir)
-LLVMDBGLIBS=$(shell ${DEVROOT}/llvm-debug-install/bin/llvm-config --ldflags --libs)
-LLVMRELHDRS=$(shell ${DEVROOT}/llvm-release-install/bin/llvm-config --includedir)
-LLVMRELLIBS=$(shell ${DEVROOT}/llvm-release-install/bin/llvm-config --ldflags --libs)
+LLVMDBGHDRS=$(shell ${DEVROOT}/llvm-${LLVMVER}-debug-install/bin/llvm-config --includedir)
+LLVMDBGLIBS=$(shell ${DEVROOT}/llvm-${LLVMVER}-debug-install/bin/llvm-config --link-static --ldflags --libs)
+LLVMRELHDRS=$(shell ${DEVROOT}/llvm-${LLVMVER}-release-install/bin/llvm-config --includedir)
+LLVMRELLIBS=$(shell ${DEVROOT}/llvm-${LLVMVER}-release-install/bin/llvm-config --link-static --ldflags --libs)
+DBGCFLAGS=$(shell ${DEVROOT}/llvm-${LLVMVER}-debug-install/bin/llvm-config --cflags)
+RELCFLAGS=$(shell ${DEVROOT}/llvm-${LLVMVER}-release-install/bin/llvm-config --cflags)
 
-CC=${LLVMREL}/bin/clang
+# And we build everything witthout position independence
+CLANG=${LLVMREL}/bin/clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -g3
+CC=${LLVMREL}/bin/clang -g3
 
 # Object files from the official BCPL release of cintsys64
 OBJ=${BCPLROOT}/obj64
@@ -39,25 +33,22 @@ CINTSYSOBJS=${OBJ}/cinterp.o ${OBJ}/fasterp.o ${OBJ}/kblib.o ${OBJ}/cfuncs.o ${O
 # THe code generator and the files it include
 CGSRC=src/bcplcgllvm.b src/cg_llvmhelpers.b src/cg_errors.b src/cg_workspace.b src/cg_simstack.b src/cg_labels.b src/cg_indirect.b src/cg_handlers.b
 
+
 build%/llvm_cbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMDBGHDRS}/llvm-c/Core.h
 !	@echo "** compiling the C API binding utilities"
-!	@${CC} -g -O0  -I src/inc  -I ${LLVMHDRS} -I src/inc -o $@ -c $<
+!	@${CC} ${DBGCFLAGS} -O0  -I src/inc -I src/inc -o $@ -c $<
 
 
 # Create our bespoke cintsys dispatcher for external functions
 build%/extfn.o: src/extfn.c src/inc/llvm_bcpl_binding.h src/c-api/extfn.enums.h src/c-api/extfn.function_table.imp src/c-api/extfn.string_table.imp
 !	@echo "** compiling our version of extfn"
-!	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
-
-build%/stubzlib.o : src/stubzlib.c
-!	@echo "** compiling our zlib stub for LLVM"
-!	@${CC} -g -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+!	@${CC}  ${DBGCFLAGS}-O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 
 # Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
-bin/cintsys64 : ${CINTSYSOBJS} build${EXT}/extfn.o build${EXT}/stubzlib.o build${EXT}/llvm_bcpl_binding.o build${EXT}/llvm_cbcpl_binding_utilities.o ${OBJ}/cintmain.o
+bin/cintsys64 : ${CINTSYSOBJS} builddbg/extfn.o builddbg/stubzlib.o builddbg/llvm_bcpl_binding.o builddbg/llvm_cbcpl_binding_utilities.o ${OBJ}/cintmain.o
 !	@echo "** building our cintpos64 system"
-!	@${CC}  -g -O0 -Xlinker -Map=/tmp/output${EXT}.map -o $@ $^  ${LLVMDBGLIBS} -pthread  -lm -lstdc++
+!	@${CC} ${DBGCFLAGS} -O0 -Xlinker -Map=/tmp/output.map -o $@ $^  ${LLVMDBGLIBS} -pthread  -lm -lstdc++
 
 # ----------------------------------------------------------------------
 # Build our BCPL compiler - debug version
@@ -66,19 +57,20 @@ bin/cintsys64 : ${CINTSYSOBJS} build${EXT}/extfn.o build${EXT}/stubzlib.o build$
 # We use the 64-bit CINTSYS interpreter's BCPL to run our compiler
 CINTSYS = ${BL_ROOT}/bin/cintsys64
 
-# And we build everything witthout position independence
-CLANG = ${LLVMREL}/bin/clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -O2 -g3
-
 # Standard header files used as-is from the officual distribution
 CMPLHDRS = ${BCPL64HDRS}/libhdr.h ${BCPL64HDRS}/bcplfecg.h
 
 builddbg/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMDBGHDRS}/llvm-c/Core.h
 !	@echo "** compiling the C API binding utilities"
-!	@${CC} -g -O0  -DNATIVE -I src/inc  -I ${LLVMDBGHDRS} -I src/inc -o $@ -c $<
+!	@${CC} ${DBGCFLAGS} -O0  -DNATIVE -I src/inc -I src/inc -o $@ -c $<
 
 builddbg/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h
 !	@echo "** compiling the C API binding"
-!	@${CC} -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMDBGHDRS} -o $@ -c $<
+!	@${CC} ${DBGCFLAGS} -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+
+builddbg/stubzlib.o : src/stubzlib.c
+!	@echo "** compiling our zlib stub for LLVM"
+!	@${CC} ${DBGCFLAGS} -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
@@ -113,7 +105,7 @@ builddbg/bcpltrn.ll : builddbg/bcpltrn.b
 
 bcpld : rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgllvm.ll builddbg/blib.ll rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
 !    @echo \*\* LINK BCPLD
-!    @${CLANG} $^ ${LLVMDBGLIBS} -pthread  -lm -lstdc++ -o $@
+!    @${CLANG}  ${DBGCFLAGS} -O0 $^ ${LLVMDBGLIBS} -pthread  -lm -lstdc++ -o $@
 
 # ----------------------------------------------------------------------
 # Build our BCPL compiler - release version
@@ -122,11 +114,15 @@ bcpld : rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgll
 
 buildrel/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h
 !	@echo "** compiling the C API binding"
-!	@${CC} -g -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -I ${LLVMRELHDRS} -o $@ -c $<
+!	@${CC} ${RELCFLAGS} -O2 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 buildrel/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMRELHDRS}/llvm-c/Core.h
 !	@echo "** compiling the C API binding utilities"
-!	@${CC} -g -O0  -DNATIVE -I src/inc  -I ${LLVMRELHDRS} -I src/inc -o $@ -c $<
+!	@${CC} ${RELCFLAGS} -O2  -DNATIVE -I src/inc -I src/inc -o $@ -c $<
+
+buildrel/stubzlib.o : src/stubzlib.c
+!	@echo "** compiling our zlib stub for LLVM"
+!	@${CC} ${RELCFLAGS} -O2  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
@@ -161,7 +157,7 @@ buildrel/bcpltrn.ll : buildrel/bcpltrn.b
 
 bcplr : rtl/bcplinit.s buildrel/bcplsyn.ll buildrel/bcpltrn.ll buildrel/bcplcgllvm.ll buildrel/blib.ll rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
 !    @echo \*\* LINK BCPLR
-!    ${CLANG} $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
+!    ${CLANG} ${RELCFLAGS} -O2 $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
 
 
 # ------------------------ CINTSYS -------------------------------------
