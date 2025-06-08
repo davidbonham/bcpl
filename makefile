@@ -60,30 +60,34 @@ CINTSYS = ${BL_ROOT}/bin/cintsys64
 # Standard header files used as-is from the officual distribution
 CMPLHDRS = ${BCPL64HDRS}/libhdr.h ${BCPL64HDRS}/bcplfecg.h
 
-builddbg/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMDBGHDRS}/llvm-c/Core.h
+builddbg:
+!   @echo "** create builddbg"
+!   @mkdir builddbg
+
+builddbg/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMDBGHDRS}/llvm-c/Core.h | builddbg
 !	@echo "** compiling the C API binding utilities"
 !	@${CC} ${DBGCFLAGS} -O0  -DNATIVE -I src/inc -I src/inc -o $@ -c $<
 
-builddbg/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h
+builddbg/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h | builddbg
 !	@echo "** compiling the C API binding"
 !	@${CC} ${DBGCFLAGS} -O0 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
-builddbg/stubzlib.o : src/stubzlib.c
+builddbg/stubzlib.o : src/stubzlib.c | builddbg
 !	@echo "** compiling our zlib stub for LLVM"
 !	@${CC} ${DBGCFLAGS} -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
-builddbg/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b
+builddbg/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | builddbg
 !   @echo \*\* TAILOR BLIB.B
 !   @scripts/tailor-blib.py $^ >$@
 
 
-builddbg/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b
+builddbg/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b | builddbg
 !   @echo \*\* TAILOR BCPLSYN.B
 !   @scripts/tailor-blib.py $^ >$@
 
-builddbg/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b
+builddbg/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b | builddbg
 !   @echo \*\* TAILOR BCPLTRN.B
 !   @scripts/tailor-blib.py $^ >$@
 
@@ -91,7 +95,7 @@ builddbg/blib.ll : builddbg/blib.b ${CMPLHDRS}
 !   @echo \*\* BCPL BLIB.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
-builddbg/bcplcgllvm.ll : ${CGSRC} ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h
+builddbg/bcplcgllvm.ll : ${CGSRC} ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | builddbg
 !   @echo \*\* BCPL BCPLCGLLVM.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
@@ -111,31 +115,34 @@ bcpld : rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgll
 # Build our BCPL compiler - release version
 # ----------------------------------------------------------------------
 
+buildrel:
+!   @echo "** create buildrel"
+!   @mkdir buildrel
 
-buildrel/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h
+buildrel/llvm_bcpl_binding.o: src/llvm_bcpl_binding.c src/inc/llvm_bcpl_binding.h src/inc/llvm_bcpl_binding_utilities.h | buildrel
 !	@echo "** compiling the C API binding"
 !	@${CC} ${RELCFLAGS} -O2 -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
-buildrel/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMRELHDRS}/llvm-c/Core.h
+buildrel/llvm_nbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/inc/llvm_bcpl_binding_utilities.h ${LLVMRELHDRS}/llvm-c/Core.h | buildrel
 !	@echo "** compiling the C API binding utilities"
 !	@${CC} ${RELCFLAGS} -O2  -DNATIVE -I src/inc -I src/inc -o $@ -c $<
 
-buildrel/stubzlib.o : src/stubzlib.c
+buildrel/stubzlib.o : src/stubzlib.c | buildrel
 !	@echo "** compiling our zlib stub for LLVM"
 !	@${CC} ${RELCFLAGS} -O2  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
-buildrel/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b
+buildrel/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | buildrel
 !   @echo \*\* TAILOR BLIB.B
 !   @scripts/tailor-blib.py $^ >$@
 
 
-buildrel/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b
+buildrel/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b | buildrel
 !   @echo \*\* TAILOR BCPLSYN.B
 !   @scripts/tailor-blib.py $^ >$@
 
-buildrel/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b
+buildrel/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b | buildrel
 !   @echo \*\* TAILOR BCPLTRN.B
 !   @scripts/tailor-blib.py $^ >$@
 
@@ -143,7 +150,7 @@ buildrel/blib.ll : buildrel/blib.b ${CMPLHDRS}
 !   @echo \*\* BCPL BLIB.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
 
-buildrel/bcplcgllvm.ll : ${CGSRC} ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h
+buildrel/bcplcgllvm.ll : ${CGSRC} ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | buildrel
 !   @echo \*\* BCPL BCPLCGLLVM.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
 
