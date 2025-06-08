@@ -12,13 +12,71 @@
 // being build up as we process OCODE.
 
 STATIC $(
-    ss_workspace     // Contents of our stack of call frames
-    ss_pastworkspace // Address past the end, not ours to use
-    ss_p             // Pointer to the current stack frame in the above
-    ss_s             // S for the current frame
+    ss_p             // P forthe current stack frame in the stack map
+    ss_s             // S for the current frame in the stack map
+    ss_free          // The index of the next stack map entry to use
+    ss_data          // Stack map: the deta held in the stack cell
+    ss_addr          // Stack map: the address of the stack cell
+    ss_capacity      // The number of stack map entries available
+$)
+
+MANIFEST $(
+    SS_BASE = 100   // The minimum value of P
+    SS_OLDP = 0     // The offset from P of the previous P
+    SS_OLDS = 1     // The offset from P of the previous S
+    SS_OLDB = 2     // The offset from P of the previous basic block
 $)
 
 LET ss_ps(label) BE trace("%S: P=%N S=%N P+S=%N", label, ss_p, ss_s, ss_p+ss_s)
+
+// Given a stack address (so a combination of P and S) return the index
+// of the stack map entry corresponding to that address. If the address
+// dont not yet exist, return 0. Note that because entry 0 is the sentinal
+// we can always use it to indicate failure.
+LET ss_address_to_entry(n) = VALOF $(
+
+    // Assume that there is some recency in requests and so search from
+    // the top to the bottom. Remember we have a sentinal in entry 0 of
+    // the map. We don't expect there to be many entries in the map and
+    // so a linear search will do.
+    FOR i = ss_free - 1 TO 1 BY -1 DO $(
+        IF ss_addr!i = n DO $(
+            RESULTIS i
+        $)
+    $)
+
+    RESULTIS 0
+$)
+
+// Given a location n (typically the p+s of a local), locate the entry
+// in the stack map with that address and return the corresponding value.
+LET ss_x_get(n) = VALOF $(
+
+    LET entry = ss_address_to_entry(n)
+    IF entry = 0 DO cgerror("stack entry %n not found*N", n)
+    RESULTIS ss_data!entry
+ $)
+
+// Given a location n (typically the p+s of a local), locate the entry
+// in the stack map with that address and set its value to that given.
+// If there is no entry with address n, create one.
+LET ss_x_set(n, value) BE $(
+
+    LET entry = ss_address_to_entry(n)
+    IF entry = 0 DO $(
+        //trace("ss_x_set new cell %N: located at %N value=%N*N", n, ss_free, value)
+        assert(ss_free < ss_capacity, "stack map is full*N")
+        ss_addr!ss_free := n
+        entry := ss_free
+        ss_free +:= 1
+    $)
+
+    ss_data!entry := value
+$)
+
+// Get the value of a local in the current stack frame (that is, the stack
+// frame pointed to by P).
+LET ss_getframe(s) = ss_x_get(ss_p + s)
 
 // ss_init - initialise the simulated stack ready for use
 //
@@ -29,11 +87,23 @@ LET ss_ps(label) BE trace("%S: P=%N S=%N P+S=%N", label, ss_p, ss_s, ss_p+ss_s)
 // cellcount - the number of BCPLWORDS of space available
 
 LET ss_init(workspace, cellcount) BE $(
-    ss_workspace := workspace
-    ss_pastworkspace := ss_workspace + cellcount
-    ss_p := ss_workspace
+
+    // The workspace we are given is allocated entirely to the stack map,
+    // half to the addresses and half to the values.
+    ss_addr := workspace
+    ss_data := workspace + cellcount / 2
+    ss_capacity := cellcount / 2
+    ss_free := 0
+
+    ss_p := SS_BASE
     ss_s := 0
     trace("ss_init P=%N S=%N*N", ss_p, ss_s)
+
+    // Place a sentinal at the bottom of our stack map.
+    ss_data!0 := #xDEADBEEF
+    ss_addr!0 := #xDEADBEEF
+    ss_free := 1
+
 $)
 
 // ss_pushframe - start a new frame on the simulated stack
@@ -88,11 +158,10 @@ LET ss_pushframe(save) BE $(
 
     // Make sure there is room in the frame to preserve our old state
     assert(savespacesize >= 3, "savespace tiny")
-    assert(p1 + 3 < ss_pastworkspace, "P past end of stack space")
 
-    p1!0 := ss_p                         // Caller's P
-    p1!1 := ss_s                         // Caller's S on exit, args &c discarded
-    p1!2 := basicblock                   // So we can reset LLVM to the function and basic block
+    ss_x_set(p1+SS_OLDP, ss_p)                      // Caller's P
+    ss_x_set(p1+SS_OLDS, ss_s)                      // Caller's S on exit, args &c discarded
+    ss_x_set(p1+SS_OLDB, basicblock)                // So we can reset LLVM to the function and basic block
 
     ss_p := p1
     ss_ps("ss_pushframe")
@@ -123,12 +192,9 @@ $)
 
 LET ss_popframe() BE $(
 
-    LET our_p = ss_p
-    ss_p := our_p!0
-    ss_s := our_p!1
-    // Restore the LLVM building context for the parent, if we haven't
-    // reached to the top
-    basicblock := our_p!2
+    ss_s       := ss_getframe(SS_OLDS)
+    basicblock := ss_getframe(SS_OLDB)
+    ss_p       := ss_getframe(SS_OLDP)
     function := basicblock = 0 -> 0, llvm_get_basic_block_parent(basicblock)
     trace("ss_popframe P=%N S now %N basicblock %N function %N *N", ss_p, ss_s, basicblock, function)
 $)
@@ -142,63 +208,31 @@ $)
 
 LET ss_push(value) BE $(
 
-//    // Create an LLVM location representing this stack cell. We need to
-//    // position the build at the start of the function and restore it later
-//    // So that all of our stack allocations are at the function entry. This
-//    // avoids problems when GOTO causes us to add phi nodes that can create
-//    // edges never used but mean that a local doesn't dominate all of its
-//    // apparant uses.
-//    LET current_block = llvm_get_insert_block(builder)
-//
-//    // Move the builder to the start of the function
-//    LET parent_function = llvm_get_basic_block_parent(basicblock)
-//    LET function_entry_block = llvm_get_entry_basic_block(parent_function)
-//    LET terminator = llvm_get_basic_block_terminator(function_entry_block)
-//    TEST terminator = 0 THEN $(
-//        // First block in the function doesn't yet have a terminator so we
-//        // can add stuff to the end of the block
-//        llvm_position_builder_at_end(builder, function_entry_block)
-//    $)
-//    ELSE $(
-//        // The block is terminated so add stuff before it
-//        llvm_position_builder_before(builder, terminator)
-//    $)
-//    // Make sure there's room on the stack
-//    assert (ss_p + ss_s + 1< ss_pastworkspace, "push past end of stack space")
-//
-//    // Allocate our stack cell
-//    ss_p!ss_s := llvm_build_alloca(builder, word_type, "STK")
-//
-//    // Restore the builder's current location
-//    llvm_position_builder_at_end(builder, current_block)
-
     // Make sure there's room on the stack
-    assert (ss_p + ss_s + 1< ss_pastworkspace, "push past end of stack space")
-    ss_p!ss_s := allocate_temporary(builder, basicblock, "STK")
+    ss_x_set(ss_p+ss_s, allocate_temporary(builder, basicblock, "STK"))
 
     // And generate code to store the value in it
-    llvm_build_store(builder, value, ss_p!ss_s)
+    llvm_build_store(builder, value, ss_getframe(ss_s))
     ss_ps("ss_push ")
-    trace(" pushed %N S now %N*N", ss_p!ss_s, ss_s+1)
+    trace(" pushed %N S now %N*N", ss_getframe(ss_s), ss_s+1)
     ss_s +:= 1
 $)
 
 // ss_pop - pop the value off the top of the simulated stack
 
 LET ss_pop(name) = VALOF $(
-    // Remember S points to the free cell so once we decrement S, it
-    // conveniently points to the value we need to return.
-
+    // Remember S points to the free cell so S-1 is the value we need
+    LET value = ss_getframe(ss_s - 1)
     ss_s -:= 1
-    trace("ss_pop %S value %N P=%N S now %N*N", name, ss_p!(ss_s+1), ss_p, ss_s)
-    RESULTIS llvm_build_load2(builder, word_type, ss_p!ss_s, name)
+    trace("ss_pop %S value %N P=%N S now %N*N", name, value, ss_p, ss_s)
+    RESULTIS llvm_build_load2(builder, word_type, value, name)
 $)
 
 LET ss_drop(name) BE $(
     // We're not emitting IR but we chave consumed the TOS. This is typically
     // the result of being in unreachable code
     ss_s -:= 1
-    trace("ss_pop %S value %N P=%N S now %N*N", name, ss_p!(ss_s+1), ss_p, ss_s)
+    trace("ss_pop %S value %N P=%N S now %N*N", name, ss_getframe(ss_s+1), ss_p, ss_s)
 $)
 
 // ss_tos - return the current value of S, leaving S unchanged
@@ -206,20 +240,6 @@ $)
 LET ss_tos() = ss_s
 
 LET ss_frame() = ss_p
-
-LET ss_get(n) = VALOF $(
-    // Get the LLVM object at offset n from the base of the current
-    // stack frame.
-    assert(n < ss_s, "request for bad stack cell")
-    trace("ss_get from cell %N: value=%N*N", n, ss_p!n)
-    RESULTIS ss_p!n
-$)
-
-LET ss_set(n, value) BE $(
-    assert(n < ss_s, "setting bad stack cell")
-    trace("ss_set cell %N to %N*N", n, value)
-    ss_p!n := value
-$)
 
 LET ss_stack(n) BE $(
     trace("ss_stack: adjust S from %N to %N*N", ss_s, n)
@@ -229,10 +249,10 @@ $)
 LET ss_trace(label) BE $(
     LET top = ss_p
     trace("%S: ", label)
-    WHILE top > ss_workspace DO $(
-       trace("P=%N(P=%N,S=%N,BB); ", top, top!0, top!1)
-       top := top!0
+    WHILE top > SS_BASE DO $(
+       trace("P=%N(P=%N,S=%N,BB); ", top, ss_x_get(top+SS_OLDP), ss_x_get(top+SS_OLDS))
+       top := ss_x_get(top+0)
     $)
-    trace("P=%N(?,?,?) END*N", top, top!0, top!1)
+    trace("P=%N(?,?,?) END*N", top)
 $)
 

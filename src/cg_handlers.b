@@ -29,10 +29,13 @@ LET bb_after_terminator(label) BE $(
     $)
 $)
 
+
 LET cg_ocode() BE
 $(
     LET nl() BE IF debug > 0 THEN newline()
     LET wf(f,a,b,c,d) BE IF debug > 0 THEN writef(f,a,b,c,d)
+    LET trace_op(op) BE IF debug THEN writes(opname(op))
+
 
     LET name = VEC 10
     LET op = cg_rdn()
@@ -40,6 +43,7 @@ $(
 
     UNTIL op = 0 DO
     $(
+        trace_op(op)
         SWITCHON op INTO
         $(
             // OCODE instructions that take no arguments
@@ -149,7 +153,7 @@ $(
                 FOR g = 1 TO cg_rdn() DO
                 $(
                     LET g, v = cg_rdn(), cg_rdn()
-                    wf("GLOBAL %N %N*N", g, v)
+                    wf(" %N %N*N", g, v)
                     cg_global(g, v)
                 $)
             ENDCASE
@@ -518,7 +522,7 @@ $(
         // This is a standard LLP
         // Get the address of the variable P!n and convert it to a BCPL l-value
         // by dividing by BYTESPERWORD and pushing a variable holding this result
-        llvm_address := llvm_build_ptr_to_int(builder, ss_get(n), word_type, "llp.address")
+        llvm_address := llvm_build_ptr_to_int(builder, ss_getframe(n), word_type, "llp.address")
         bcpl_address := llvm_build_ashr(builder, llvm_address, llvm_const_int(word_type, 3, 0), "llp.bcpladdr")
         ss_push(bcpl_address)
     $)
@@ -527,7 +531,7 @@ $)
 AND cg_lp(n) BE
 $(
     TEST n < ss_tos() THEN $(
-        LET cell = ss_get(n)
+        LET cell = ss_getframe(n)
         LET value = llvm_build_load2(builder, word_type, cell, "lp.value")
         ss_push(value)
     $)
@@ -746,7 +750,7 @@ $(
     llvm_set_linkage(G, LLVM_EXTERNAL_LINKAGE)
 
     // Start with a fresh value/type stack
-    ss_init(ws_alloc(1000), 1000)
+    ss_init(ws_alloc(10000), 10000)
 
     // Since all BCPL signatures are just N BCPLWORD parameters, we can just
     // create a single vector for the maximum length we support and use the
@@ -792,7 +796,7 @@ $)
 AND cg_sp(n) BE
 $(
     LET source_value = ss_pop("sp.value")
-    LET destination_variable = ss_get(n)
+    LET destination_variable = ss_getframe(n)
 
     llvm_build_store(builder, source_value, destination_variable)
 $)
