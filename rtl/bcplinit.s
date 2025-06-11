@@ -2,6 +2,7 @@
 
     .section        .text.bcplmain,"ax",@progbits
 
+    .equ MAXGLOBALS,1024
 
 # -- P := LEVEL() --------------------------------------------------------------
 #
@@ -46,11 +47,11 @@ __longjump:
         .data
         .align     8
  __bcpl_global_vector:
-        .rept 1024
+        .rept MAXGLOBALS
         GLOBAL_INIT
         .endr
         .type __bcpl_global_vector, @object
-        .size __bcpl_global_vector, 512*8
+        .size __bcpl_global_vector, MAXGLOBALS*8
 
 # Initialise our global vector with the entries for the standard library
 # by defining the Gn to match the entry point of each routine.
@@ -59,7 +60,7 @@ __longjump:
     .set __bcpl_gv\gn,\symbol
     .endm
 
-#   .quad 0                # 0      glob0 = globsize
+    GLOBAL   0, MAXGLOBALS # 0      globsize
 #   .quad 0                # 1      START
     GLOBAL   2, __stop     # 2      STOP is called by the FINISH O-code operator
 #   .quad 0                # 3      (sys)
