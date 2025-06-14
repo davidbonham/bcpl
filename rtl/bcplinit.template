@@ -76,7 +76,7 @@ __oscall:
 
     GLOBAL   0, MAXGLOBALS # 0      globsize
 #   .quad 0                # 1      START
-    GLOBAL   2, __stop
+    GLOBAL   2, __stop     # 2      STOP is called by the FINISH O-code operator
 #   .quad 0                # 3      (sys)
 #   .quad 0                # 4      (clihook)
     GLOBAL   5, __muldiv

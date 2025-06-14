@@ -9,59 +9,7 @@ typedef int64_t bcplword_t;
 #define NUMGLOBALS 1024
 extern bcplword_t __bcpl_global_vector[NUMGLOBALS];
 
-// 9.1 Standard Stream Organisation Procedures
-enum {
-    G_CIS           =  12,
-    G_COS           =  13,
-    G_FINDINPUT     =  48,
-    G_FINDOUTPUT    =  49,
-    G_SELECTINPUT   =  56,
-    G_SELECTOUTPUT  =  57,
-    G_ENDREAD       =  60,
-    G_ENDWRITE      =  61,
-    G_REWIND        =  65,
-    G_INPUT         =  58,
-    G_OUTPUT        =  59,
-
-// 9.2 Standard Input/Output Procedures
-
-    G_RDCH          =  38,
-    G_WRCH          =  41,
-    G_UNRDCH        =  40,
-    G_READN         =  83, // BLIB
-    G_WRITES        =  89, // BLIB
-    G_WRITED        =  85, // BLIB
-    G_WRITEN        =  86, // BLIB
-    G_WRITEOCT      =  88, // BLIB
-    G_WRITEHEX      =  87, // BLIB
-    G_WRITEF        =  94, // BLIB
-    G_NEWLINE       =  84, // BLIB
-    G_NEWPAGE       = 120, // BLIB
-    G_WRITEFLT      =  74,
-
-// 10.1 Start and Stop
-
-    G_START         =   1,
-    G_STOP          =   2,
-    G_RESULT2       =  10,
-
-// 10.2 Stack Organisation Routines
-
-    G_LEVEL         =  15,
-    G_LONGJUMP      =  16,
-    G_APTOVEC       =  45,
-
-// 10.3 String Handling
-
-    G_PACKSTRING    =  30,
-    G_UNPACKSTRING  =  31,
-    G_GETBYTE       =  48,
-    G_PUTBYTE       =  49,
-
-// A.8 Scaled Arithmetic
-
-    G_MULDIV        =   5,
-};
+#include "global_enums.h"
 
 // -- Our initial RTL is layered on top of the C RTL ---------------------------
 
