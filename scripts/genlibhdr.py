@@ -42,7 +42,7 @@ import sys
 
 def convert(globals, manifests, vector_template, enum_case, verbose):
 
-    vector_pattern = re.compile(r'^[ ]+GLOBAL\s+([0-9]+)\s*,\s*__(\S+)')
+    vector_pattern = re.compile(r'^[ ]+GLOBAL\s+([^, ]+)\s*,\s*__(\S+)')
     pattern = re.compile(r'^[ ]*([^:= ]+)\s*([=:])\s*(\S+)')
 
     # Read in the template
@@ -87,13 +87,14 @@ def convert(globals, manifests, vector_template, enum_case, verbose):
                     while str(next_free) in used_global_name:
                         next_free += 1
                     if verbose:
-                        print(f'"{name}" not found in the cintsys header - allocated global {value}')
+                        print(f'"{name}" not found in the cintsys header - allocated global {value}', file=sys.stderr)
 
                     # This global is now in use
                     used_global_name[value] = used_global_name.get(value, []) + [name]
+                    used_global_value[name] = value
 
             elif name in table and table[name] != value:
-                    print(f'error: "{name}" is {value}, but cintpos header value is {table[name]}')
+                    print(f'error: "{name}" is {value}, but cintpos header value is {table[name]}', file=sys.stderr)
                     status = 1
                     continue
 
@@ -113,14 +114,14 @@ def convert(globals, manifests, vector_template, enum_case, verbose):
                     number, name = match.groups()
                     if number == '?':
                         if name not in used_global_value:
-                            print(f'error: global vector entry __{name} has no global defined in libhdr')
+                            print(f'error: global vector entry __{name} has no global defined in libhdr', file=sys.stderr)
                             status = 1
                         else:
                             number = used_global_value[name]
                     else:
                         if name in used_global_value:
                             if used_global_value[name] != number:
-                                print(f'error: global vector entry for __{name} specified global {number} but the libhdr definition is {used_global_value[name]} in libhdr')
+                                print(f'error: global vector entry for __{name} specified global {number} but the libhdr definition is {used_global_value[name]} in libhdr', file=sys.stderr)
                                 status = 1
 
                     if status == 0:

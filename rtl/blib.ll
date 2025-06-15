@@ -1,21 +1,20 @@
-; ModuleID = 'blib'
-source_filename = "blib"
+; ModuleID = 'BLIB'
+source_filename = "BLIB"
 target triple = "x86_64-unknown-linux-gnu"
 
-@__bcpl_global_vector = external local_unnamed_addr global [256 x i64], section "BCPLGVEC"
-@lstr.global = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".rodata.blib", align 8
-@itemn.global = internal global [16 x i64] [i64 48, i64 49, i64 50, i64 51, i64 52, i64 53, i64 54, i64 55, i64 56, i64 57, i64 65, i64 66, i64 67, i64 68, i64 69, i64 70], section ".rodata.blib"
-@lstr.global.20 = private global [51 x i8] c"2Error: rdargs format specified too many arguments\0A", section ".rodata.blib", align 8
-@lstr.global.21 = private global [10 x i8] c"\09 (yes/no)", section ".rodata.blib", align 8
-@lstr.global.22 = private global [4 x i8] c"\03 > ", section ".rodata.blib", align 8
-@lstr.global.23 = private global [4 x i8] c"\03yes", section ".rodata.blib", align 8
-@lstr.global.24 = private global [2 x i8] c"\01y", section ".rodata.blib", align 8
-@lstr.global.27 = private global [2 x i8] c"\01?", section ".rodata.blib", align 8
-@lstr.global.28 = private global [3 x i8] c"\02: ", section ".rodata.blib", align 8
-@lstr.global.47 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".rodata.blib", align 8
-@lstr.global.48 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".rodata.blib", align 8
-@lstr.global.49 = private global [56 x i8] c"7ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.blib", align 8
-@lstr.global.51 = private global [63 x i8] c">ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.blib", align 8
+@__bcpl_global_vector = external local_unnamed_addr global [1024 x i64], section "BCPLGVEC"
+@lstr.global = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".rodata.BLIB", align 8
+@itemn.global = internal global [16 x i64] [i64 48, i64 49, i64 50, i64 51, i64 52, i64 53, i64 54, i64 55, i64 56, i64 57, i64 65, i64 66, i64 67, i64 68, i64 69, i64 70], section ".rodata.BLIB"
+@lstr.global.21 = private global [51 x i8] c"2Error: rdargs format specified too many arguments\0A", section ".rodata.BLIB", align 8
+@lstr.global.22 = private global [10 x i8] c"\09 (yes/no)", section ".rodata.BLIB", align 8
+@lstr.global.23 = private global [4 x i8] c"\03 > ", section ".rodata.BLIB", align 8
+@lstr.global.24 = private global [4 x i8] c"\03yes", section ".rodata.BLIB", align 8
+@lstr.global.25 = private global [2 x i8] c"\01y", section ".rodata.BLIB", align 8
+@lstr.global.30 = private global [3 x i8] c"\02: ", section ".rodata.BLIB", align 8
+@lstr.global.47 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".rodata.BLIB", align 8
+@lstr.global.48 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".rodata.BLIB", align 8
+@lstr.global.49 = private global [56 x i8] c"7ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.BLIB", align 8
+@lstr.global.51 = private global [63 x i8] c">ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.BLIB", align 8
 
 @__bcpl_gv43 = alias ptr, ptr @deplete
 @__bcpl_gv89 = alias ptr, ptr @writes
@@ -24,22 +23,13 @@ target triple = "x86_64-unknown-linux-gnu"
 @__bcpl_gv61 = alias ptr, ptr @endwrite
 @__bcpl_gv60 = alias ptr, ptr @endread
 @__bcpl_gv130 = alias ptr, ptr @findappend
-@__bcpl_gv51 = alias ptr, ptr @findupdate
-@__bcpl_gv50 = alias ptr, ptr @findinoutput
 @__bcpl_gv49 = alias ptr, ptr @findoutput
 @__bcpl_gv53 = alias ptr, ptr @pathfindinput
 @__bcpl_gv48 = alias ptr, ptr @findinput
 @__bcpl_gv83 = alias ptr, ptr @readn
-@__bcpl_gv116 = alias ptr, ptr @copy_bytes
-@__bcpl_gv115 = alias ptr, ptr @clear_words
-@__bcpl_gv114 = alias ptr, ptr @copy_words
-@__bcpl_gv99 = alias ptr, ptr @copystring
-@__bcpl_gv100 = alias ptr, ptr @string_to_number
-@__bcpl_gv104 = alias ptr, ptr @findarg
 @__bcpl_gv103 = alias ptr, ptr @rditem
 @__bcpl_gv26 = alias ptr, ptr @rdargs2
 @__bcpl_gv102 = alias ptr, ptr @rdargs
-@__bcpl_gv98 = alias ptr, ptr @compstring
 @__bcpl_gv97 = alias ptr, ptr @compch
 @__bcpl_gv84 = alias ptr, ptr @newline
 @__bcpl_gv87 = alias ptr, ptr @writehex
@@ -50,7 +40,7 @@ target triple = "x86_64-unknown-linux-gnu"
 @__bcpl_gv34 = alias ptr, ptr @randno
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, argmem: none, inaccessiblemem: none)
-define range(i64 -3074457345618258601, 3074457345618258604) i64 @randno(i64 %0) #0 section ".text.blib" {
+define range(i64 -3074457345618258601, 3074457345618258604) i64 @randno(i64 %0) #0 section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 1016), align 4
   %mul = mul i64 %lg.value, 2147001325
@@ -65,7 +55,7 @@ entry:
   ret i64 %add22
 }
 
-define noundef i64 @write_format(i64 %0, i64 %1) local_unnamed_addr section ".text.blib" {
+define noundef i64 @write_format(i64 %0, i64 %1) local_unnamed_addr section ".text.BLIB" {
 entry:
   %stack.vec.i = alloca [21 x i64], align 8
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 80), align 4
@@ -533,7 +523,7 @@ jf.then_L045:                                     ; preds = %jump.target_L044, %
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i64 @capitalch(i64 %0) #1 section ".text.blib" {
+define i64 @capitalch(i64 %0) #1 section ".text.BLIB" {
 entry:
   %1 = add i64 %0, -123
   %or.cond = icmp ult i64 %1, -26
@@ -542,7 +532,7 @@ entry:
   ret i64 %common.ret.op
 }
 
-define noundef i64 @writedz(i64 %0, i64 %1, i64 %2, i64 %3) local_unnamed_addr section ".text.blib" {
+define noundef i64 @writedz(i64 %0, i64 %1, i64 %2, i64 %3) local_unnamed_addr section ".text.BLIB" {
 entry:
   %stack.vec = alloca [21 x i64], align 8
   %stack.vecaddr = ptrtoint ptr %stack.vec to i64
@@ -633,7 +623,7 @@ jt.then_L125:                                     ; preds = %lab_L124, %jf.then_
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @writed(i64 %0, i64 %1) section ".text.blib" {
+define noundef i64 @writed(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %stack.vec.i = alloca [21 x i64], align 8
   call void @llvm.lifetime.start.p0(i64 168, ptr nonnull %stack.vec.i)
@@ -709,7 +699,7 @@ writedz.exit:                                     ; preds = %lab_L124.i, %jf.the
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @writen(i64 %0) section ".text.blib" {
+define noundef i64 @writen(i64 %0) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 680), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -717,7 +707,7 @@ entry:
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @writeoct(i64 %0, i64 %1) section ".text.blib" {
+define noundef i64 @writeoct(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %gr = icmp slt i64 %1, 2
   br i1 %gr, label %jf.then_L128, label %jf.else
@@ -739,7 +729,7 @@ jf.then_L128:                                     ; preds = %jf.else, %entry
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @writehex(i64 %0, i64 %1) section ".text.blib" {
+define noundef i64 @writehex(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %gr = icmp slt i64 %1, 2
   br i1 %gr, label %jf.then_L129, label %jf.else
@@ -764,7 +754,7 @@ jf.then_L129:                                     ; preds = %jf.else, %entry
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @writebin(i64 %0, i64 %1) section ".text.blib" {
+define noundef i64 @writebin(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %gr = icmp slt i64 %1, 2
   br i1 %gr, label %jf.then_L131, label %jf.else
@@ -784,7 +774,7 @@ jf.then_L131:                                     ; preds = %jf.else, %entry
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @newline() section ".text.blib" {
+define noundef i64 @newline() section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -792,7 +782,7 @@ entry:
   ret i64 -4985279381848933680
 }
 
-define i64 @compch(i64 %0, i64 %1) section ".text.blib" {
+define i64 @compch(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 768), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -804,7 +794,7 @@ entry:
   ret i64 %sub
 }
 
-define i64 @compstring(i64 %0, i64 %1) section ".text.blib" {
+define i64 @compstring(i64 %0, i64 %1) local_unnamed_addr section ".text.BLIB" {
 entry:
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
@@ -855,7 +845,7 @@ jf.then_L139:                                     ; preds = %jt.then_L135
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(readwrite, inaccessiblemem: none)
-define i64 @getkeylen(i64 %0, i64 %1, i64 %2, i64 returned %3) local_unnamed_addr #2 section ".text.blib" {
+define i64 @getkeylen(i64 %0, i64 %1, i64 %2, i64 returned %3) local_unnamed_addr #2 section ".text.BLIB" {
 entry:
   %gr = icmp slt i64 %1, 1
   br i1 %gr, label %jt.then_L143, label %lab_L141.preheader
@@ -937,7 +927,7 @@ jf.then_L147:                                     ; preds = %jt.then_L143.jf.the
   ret i64 %3
 }
 
-define i64 @rdargs(i64 %0, i64 %1, i64 %2) section ".text.blib" {
+define i64 @rdargs(i64 %0, i64 %1, i64 %2) section ".text.BLIB" {
 entry:
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
@@ -947,7 +937,7 @@ entry:
   ret i64 %fnap
 }
 
-define i64 @rdargs2(i64 %0, i64 %1, i64 %2, i64 %3) section ".text.blib" {
+define i64 @rdargs2(i64 %0, i64 %1, i64 %2, i64 %3) section ".text.BLIB" {
 entry:
   %stack.vec = alloca [64 x i64], align 8
   %stack.vec165 = ptrtoint ptr %stack.vec to i64
@@ -1069,7 +1059,7 @@ jt.then_L154:                                     ; preds = %lab_L153, %middle.b
   ret i64 %fnap
 }
 
-define i64 @rdargslen(i64 %0, i64 %1, i64 %2, i64 %3) section ".text.blib" {
+define i64 @rdargslen(i64 %0, i64 %1, i64 %2, i64 %3) section ".text.BLIB" {
 entry:
   %stack.vec = alloca [31 x i64], align 8
   %stack.vecaddr = ptrtoint ptr %stack.vec to i64
@@ -1077,17 +1067,37 @@ entry:
   %stack.vec8 = alloca [128 x i64], align 8
   %stack.vecaddr9 = ptrtoint ptr %stack.vec8 to i64
   %stack.bcpladdr10 = ashr exact i64 %stack.vecaddr9, 3
-  %add = add i64 %3, 1
-  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 920), align 4
-  %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
-  %rtap = call i64 %rtap_ep_p_fn(i64 %2, i64 %add)
-  %lg.value22 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 920), align 4
-  %rtap_ep_p_fn25 = inttoptr i64 %lg.value22 to ptr
-  %rtap28 = call i64 %rtap_ep_p_fn25(i64 %stack.bcpladdr10, i64 128)
+  %gr.i = icmp slt i64 %3, 0
+  br i1 %gr.i, label %lab_L311.i1863.preheader, label %lab_L311.i
+
+lab_L311.i:                                       ; preds = %entry, %lab_L311.i
+  %STK2.0.i = phi i64 [ %add26.i, %lab_L311.i ], [ 0, %entry ]
+  %add.i = add i64 %STK2.0.i, %2
+  %stind.llvmaddr.i = shl i64 %add.i, 3
+  %stind.lv.i = inttoptr i64 %stind.llvmaddr.i to ptr
+  store i64 0, ptr %stind.lv.i, align 8
+  %add26.i = add i64 %STK2.0.i, 1
+  %le.not.i = icmp sgt i64 %add26.i, %3
+  br i1 %le.not.i, label %lab_L311.i1863.preheader, label %lab_L311.i
+
+lab_L311.i1863.preheader:                         ; preds = %lab_L311.i, %entry
+  br label %lab_L311.i1863
+
+lab_L311.i1863:                                   ; preds = %lab_L311.i1863.preheader, %lab_L311.i1863
+  %STK2.0.i1864 = phi i64 [ %add26.i1868, %lab_L311.i1863 ], [ 0, %lab_L311.i1863.preheader ]
+  %add.i1865 = add nsw i64 %STK2.0.i1864, %stack.bcpladdr10
+  %stind.llvmaddr.i1866 = shl i64 %add.i1865, 3
+  %stind.lv.i1867 = inttoptr i64 %stind.llvmaddr.i1866 to ptr
+  store i64 0, ptr %stind.lv.i1867, align 8
+  %add26.i1868 = add nuw nsw i64 %STK2.0.i1864, 1
+  %le.not.i1869 = icmp samesign ugt i64 %STK2.0.i1864, 126
+  br i1 %le.not.i1869, label %clear_words.exit1870, label %lab_L311.i1863
+
+clear_words.exit1870:                             ; preds = %lab_L311.i1863
   %gr = icmp slt i64 %1, 1
   br i1 %gr, label %lab_L173.preheader, label %lab_L158.preheader
 
-lab_L158.preheader:                               ; preds = %entry
+lab_L158.preheader:                               ; preds = %clear_words.exit1870
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
   br label %lab_L158
@@ -1106,9 +1116,9 @@ jf.else:                                          ; preds = %lab_L158
   %getbyte.charptr66 = getelementptr i8, ptr %getbyte.charptr, i64 1
   %getbyte.char67 = load i8, ptr %getbyte.charptr66, align 1
   %getbyte.charword68 = zext i8 %getbyte.char67 to i64
-  %lg.value70 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 768), align 4
-  %rtap_ep_p_fn73 = inttoptr i64 %lg.value70 to ptr
-  %fnap = call i64 %rtap_ep_p_fn73(i64 %getbyte.charword68)
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 768), align 4
+  %rtap_ep_p_fn72 = inttoptr i64 %lg.value to ptr
+  %fnap = call i64 %rtap_ep_p_fn72(i64 %getbyte.charword68)
   switch i64 %fnap, label %goto.phi.bb [
     i64 80, label %lab_L170
     i64 78, label %lab_L169
@@ -1135,11 +1145,11 @@ jf.else229:                                       ; preds = %lab_L158
   br i1 %gr242, label %lab_L161, label %jf.else247
 
 common.ret:                                       ; preds = %lab_L235, %jt.then_L206, %jf.else247
-  %common.ret.op = phi i64 [ 0, %jf.else247 ], [ %STK4.41884, %jt.then_L206 ], [ 0, %lab_L235 ]
+  %common.ret.op = phi i64 [ 0, %jf.else247 ], [ %STK4.41914, %jt.then_L206 ], [ 0, %lab_L235 ]
   ret i64 %common.ret.op
 
 jf.else247:                                       ; preds = %jf.else229
-  %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global.20 to i64), 3
+  %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global.21 to i64), 3
   %lg.value249 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 760), align 4
   %rtap_ep_p_fn252 = inttoptr i64 %lg.value249 to ptr
   %rtap254 = call i64 %rtap_ep_p_fn252(i64 %lstr.bcpladdr)
@@ -1165,8 +1175,8 @@ jt.then_L159:                                     ; preds = %lab_L161
   %gr284 = icmp slt i64 %STK5.1, 0
   br i1 %gr284, label %jt.then_L174, label %lab_L173.preheader
 
-lab_L173.preheader:                               ; preds = %entry, %jt.then_L159
-  %STK5.21930 = phi i64 [ %STK5.1, %jt.then_L159 ], [ 0, %entry ]
+lab_L173.preheader:                               ; preds = %clear_words.exit1870, %jt.then_L159
+  %STK5.21970 = phi i64 [ %STK5.1, %jt.then_L159 ], [ 0, %clear_words.exit1870 ]
   br label %lab_L173
 
 lab_L173:                                         ; preds = %lab_L173.preheader, %lab_L176
@@ -1181,18 +1191,17 @@ lab_L173:                                         ; preds = %lab_L173.preheader,
 
 lab_L176:                                         ; preds = %lab_L173
   %add325 = add i64 %STK275.0, 1
-  %le334.not = icmp sgt i64 %add325, %STK5.21930
+  %le334.not = icmp sgt i64 %add325, %STK5.21970
   br i1 %le334.not, label %jt.then_L174, label %lab_L173
 
 jt.then_L174:                                     ; preds = %lab_L176, %jt.then_L159
-  %gr2841934 = phi i1 [ true, %jt.then_L159 ], [ false, %lab_L176 ]
-  %STK5.21931 = phi i64 [ %STK5.1, %jt.then_L159 ], [ %STK5.21930, %lab_L176 ]
+  %gr2841974 = phi i1 [ true, %jt.then_L159 ], [ false, %lab_L176 ]
+  %STK5.21971 = phi i64 [ %STK5.1, %jt.then_L159 ], [ %STK5.21970, %lab_L176 ]
   %add346 = add i64 %2, 1
-  %add351 = add i64 %add346, %STK5.21931
-  %getbyte.llvmaddr.i1864 = shl i64 %0, 3
-  %getbyte.string.i1865 = inttoptr i64 %getbyte.llvmaddr.i1864 to ptr
-  %lstr.bcpladdr1252 = ashr exact i64 ptrtoint (ptr @lstr.global.27 to i64), 3
-  %lstr.bcpladdr1326 = ashr exact i64 ptrtoint (ptr @lstr.global.28 to i64), 3
+  %add351 = add i64 %add346, %STK5.21971
+  %getbyte.llvmaddr.i1884 = shl i64 %0, 3
+  %getbyte.string.i1885 = inttoptr i64 %getbyte.llvmaddr.i1884 to ptr
+  %lstr.bcpladdr1326 = ashr exact i64 ptrtoint (ptr @lstr.global.30 to i64), 3
   br label %lab_L178.outer
 
 lab_L178.outer:                                   ; preds = %lab_L178.outer.backedge, %jt.then_L174
@@ -1201,16 +1210,27 @@ lab_L178.outer:                                   ; preds = %lab_L178.outer.back
   %sub366 = add i64 %sub.neg, %3
   %getbyte.llvmaddr65.i = shl i64 %STK4.0.ph, 3
   %getbyte.string66.i = inttoptr i64 %getbyte.llvmaddr65.i to ptr
+  %getbyte.charptr69.i = getelementptr i8, ptr %getbyte.string66.i, i64 1
   br label %lab_L178
 
 lab_L178:                                         ; preds = %lab_L178.backedge, %lab_L178.outer
   %lg.value372 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 824), align 4
   %rtap_ep_p_fn375 = inttoptr i64 %lg.value372 to ptr
   %fnap378 = call i64 %rtap_ep_p_fn375(i64 %STK4.0.ph, i64 %sub366)
-  %lg.value383 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 920), align 4
-  %rtap_ep_p_fn386 = inttoptr i64 %lg.value383 to ptr
-  %rtap389 = call i64 %rtap_ep_p_fn386(i64 %stack.bcpladdr, i64 31)
-  switch i64 %fnap378, label %goto.phi.bb.loopexit1963 [
+  br label %lab_L311.i1871
+
+lab_L311.i1871:                                   ; preds = %lab_L311.i1871, %lab_L178
+  %STK2.0.i1872 = phi i64 [ %add26.i1876, %lab_L311.i1871 ], [ 0, %lab_L178 ]
+  %add.i1873 = add nsw i64 %STK2.0.i1872, %stack.bcpladdr
+  %stind.llvmaddr.i1874 = shl i64 %add.i1873, 3
+  %stind.lv.i1875 = inttoptr i64 %stind.llvmaddr.i1874 to ptr
+  store i64 0, ptr %stind.lv.i1875, align 8
+  %add26.i1876 = add nuw nsw i64 %STK2.0.i1872, 1
+  %le.not.i1877 = icmp samesign ugt i64 %STK2.0.i1872, 29
+  br i1 %le.not.i1877, label %clear_words.exit1878, label %lab_L311.i1871
+
+clear_words.exit1878:                             ; preds = %lab_L311.i1871
+  switch i64 %fnap378, label %goto.phi.bb.loopexit2007 [
     i64 2, label %lab_L223
     i64 1, label %lab_L210
     i64 4, label %lab_L183
@@ -1218,14 +1238,14 @@ lab_L178:                                         ; preds = %lab_L178.backedge, 
     i64 0, label %lab_L183
   ]
 
-lab_L183:                                         ; preds = %lab_L178, %lab_L178, %lab_L178
-  br i1 %gr2841934, label %jt.then_L206, label %lab_L184
+lab_L183:                                         ; preds = %clear_words.exit1878, %clear_words.exit1878, %clear_words.exit1878
+  br i1 %gr2841974, label %jt.then_L206, label %lab_L184
 
 lab_L184:                                         ; preds = %lab_L183, %jf.then_L187
-  %STK399.0 = phi i64 [ %STK399.2, %jf.then_L187 ], [ %STK5.21931, %lab_L183 ]
+  %STK399.0 = phi i64 [ %STK399.2, %jf.then_L187 ], [ %STK5.21971, %lab_L183 ]
   %STK397.0 = phi i64 [ %add962, %jf.then_L187 ], [ 0, %lab_L183 ]
   %STK367.0 = phi i64 [ %STK367.2, %jf.then_L187 ], [ %sub366, %lab_L183 ]
-  %STK5.3 = phi i64 [ %STK5.5, %jf.then_L187 ], [ %STK5.21931, %lab_L183 ]
+  %STK5.3 = phi i64 [ %STK5.5, %jf.then_L187 ], [ %STK5.21971, %lab_L183 ]
   %STK4.1 = phi i64 [ %STK4.3, %jf.then_L187 ], [ %STK4.0.ph, %lab_L183 ]
   %add418 = add i64 %STK397.0, %stack.bcpladdr10
   %rv.llvmaddr421 = shl i64 %add418, 3
@@ -1237,8 +1257,7 @@ lab_L184:                                         ; preds = %lab_L183, %jf.then_
 
 jf.else451:                                       ; preds = %lab_L184
   %lg.value453 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 96), align 4
-  %add457 = shl i64 %lg.value453, 3
-  %rv.llvmaddr460 = add i64 %add457, 8
+  %rv.llvmaddr460 = shl i64 %lg.value453, 3
   %rv.lv461 = inttoptr i64 %rv.llvmaddr460 to ptr
   %rv.rv462 = load i64, ptr %rv.lv461, align 8
   %eq467.not = icmp eq i64 %rv.rv462, -1
@@ -1246,8 +1265,7 @@ jf.else451:                                       ; preds = %lab_L184
 
 jf.else472:                                       ; preds = %jf.else451
   %lg.value474 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 104), align 4
-  %add478 = shl i64 %lg.value474, 3
-  %rv.llvmaddr481 = add i64 %add478, 8
+  %rv.llvmaddr481 = shl i64 %lg.value474, 3
   %rv.lv482 = inttoptr i64 %rv.llvmaddr481 to ptr
   %rv.rv483 = load i64, ptr %rv.lv482, align 8
   %eq488.not = icmp eq i64 %rv.rv483, -1
@@ -1262,9 +1280,9 @@ lab_L141.preheader.i:                             ; preds = %jf.else493
   br label %lab_L141.i
 
 lab_L141.i:                                       ; preds = %jf.else.i, %lab_L141.preheader.i
-  %STK4.0.i = phi i64 [ %add.i, %jf.else.i ], [ 1, %lab_L141.preheader.i ]
-  %STK2.0.i = phi i64 [ %spec.select.i, %jf.else.i ], [ %STK397.0, %lab_L141.preheader.i ]
-  %if_cond13.i = icmp eq i64 %STK2.0.i, 0
+  %STK4.0.i = phi i64 [ %add.i1881, %jf.else.i ], [ 1, %lab_L141.preheader.i ]
+  %STK2.0.i1880 = phi i64 [ %spec.select.i, %jf.else.i ], [ %STK397.0, %lab_L141.preheader.i ]
+  %if_cond13.i = icmp eq i64 %STK2.0.i1880, 0
   br i1 %if_cond13.i, label %jt.then_L143.i, label %jf.else.i
 
 jf.else.i:                                        ; preds = %lab_L141.i
@@ -1272,15 +1290,15 @@ jf.else.i:                                        ; preds = %lab_L141.i
   %getbyte.char.i = load i8, ptr %getbyte.charptr.i, align 1
   %eq.not.i = icmp eq i8 %getbyte.char.i, 44
   %sub.i = sext i1 %eq.not.i to i64
-  %spec.select.i = add i64 %STK2.0.i, %sub.i
-  %add.i = add i64 %STK4.0.i, 1
-  %gr46.not.i = icmp sgt i64 %add.i, %1
+  %spec.select.i = add i64 %STK2.0.i1880, %sub.i
+  %add.i1881 = add i64 %STK4.0.i, 1
+  %gr46.not.i = icmp sgt i64 %add.i1881, %1
   br i1 %gr46.not.i, label %jt.then_L143.i, label %lab_L141.i
 
 jt.then_L143.i:                                   ; preds = %jf.else.i, %lab_L141.i, %jf.else493
-  %STK4.1.i = phi i64 [ 1, %jf.else493 ], [ %STK4.0.i, %lab_L141.i ], [ %add.i, %jf.else.i ]
-  %le.not.i = icmp sgt i64 %STK4.1.i, %1
-  br i1 %le.not.i, label %getkeylen.exit, label %lab_L145.preheader.i
+  %STK4.1.i = phi i64 [ 1, %jf.else493 ], [ %STK4.0.i, %lab_L141.i ], [ %add.i1881, %jf.else.i ]
+  %le.not.i1882 = icmp sgt i64 %STK4.1.i, %1
+  br i1 %le.not.i1882, label %getkeylen.exit, label %lab_L145.preheader.i
 
 lab_L145.preheader.i:                             ; preds = %jt.then_L143.i
   %getbyte.llvmaddr69.i = shl i64 %0, 3
@@ -1331,14 +1349,14 @@ getkeylen.exit:                                   ; preds = %jt.then_L143.i, %jf
   br i1 %eq539, label %jt.then_L189, label %jt.else544
 
 jt.else544:                                       ; preds = %getkeylen.exit
-  %lstr.bcpladdr545 = ashr exact i64 ptrtoint (ptr @lstr.global.21 to i64), 3
+  %lstr.bcpladdr545 = ashr exact i64 ptrtoint (ptr @lstr.global.22 to i64), 3
   %lg.value547 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 712), align 4
   %rtap_ep_p_fn550 = inttoptr i64 %lg.value547 to ptr
   %rtap552 = call i64 %rtap_ep_p_fn550(i64 %lstr.bcpladdr545)
   br label %jt.then_L189
 
 jt.then_L189:                                     ; preds = %jt.else544, %getkeylen.exit
-  %lstr.bcpladdr553 = ashr exact i64 ptrtoint (ptr @lstr.global.22 to i64), 3
+  %lstr.bcpladdr553 = ashr exact i64 ptrtoint (ptr @lstr.global.23 to i64), 3
   %lg.value555 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 712), align 4
   %rtap_ep_p_fn558 = inttoptr i64 %lg.value555 to ptr
   %rtap560 = call i64 %rtap_ep_p_fn558(i64 %lstr.bcpladdr553)
@@ -1367,18 +1385,14 @@ jf.else599:                                       ; preds = %lab_L193
   %stind.llvmaddr611 = shl i64 %add607, 3
   %stind.lv612 = inttoptr i64 %stind.llvmaddr611 to ptr
   store i64 0, ptr %stind.lv612, align 8
-  %lstr.bcpladdr615 = ashr exact i64 ptrtoint (ptr @lstr.global.23 to i64), 3
-  %lg.value617 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 784), align 4
-  %rtap_ep_p_fn620 = inttoptr i64 %lg.value617 to ptr
-  %fnap623 = call i64 %rtap_ep_p_fn620(i64 %STK4.1, i64 %lstr.bcpladdr615)
+  %lstr.bcpladdr615 = ashr exact i64 ptrtoint (ptr @lstr.global.24 to i64), 3
+  %fnap623 = call i64 @compstring(i64 %STK4.1, i64 %lstr.bcpladdr615)
   %eq628 = icmp eq i64 %fnap623, 0
   br i1 %eq628, label %jt.then_L196, label %jt.else633
 
 jt.else633:                                       ; preds = %jf.else599
-  %lstr.bcpladdr636 = ashr exact i64 ptrtoint (ptr @lstr.global.24 to i64), 3
-  %lg.value638 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 784), align 4
-  %rtap_ep_p_fn641 = inttoptr i64 %lg.value638 to ptr
-  %fnap644 = call i64 %rtap_ep_p_fn641(i64 %STK4.1, i64 %lstr.bcpladdr636)
+  %lstr.bcpladdr636 = ashr exact i64 ptrtoint (ptr @lstr.global.25 to i64), 3
+  %fnap644 = call i64 @compstring(i64 %STK4.1, i64 %lstr.bcpladdr636)
   %eq649.not = icmp eq i64 %fnap644, 0
   br i1 %eq649.not, label %jt.then_L196, label %jf.then_L195
 
@@ -1402,9 +1416,7 @@ jf.else717:                                       ; preds = %jf.then_L194
   %stind.llvmaddr730 = shl i64 %add726, 3
   %stind.lv731 = inttoptr i64 %stind.llvmaddr730 to ptr
   store i64 %STK4.1, ptr %stind.lv731, align 8
-  %lg.value734 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 800), align 4
-  %rtap_ep_p_fn737 = inttoptr i64 %lg.value734 to ptr
-  %fnap739 = call i64 %rtap_ep_p_fn737(i64 %STK4.1)
+  %fnap739 = call i64 @string_to_number(i64 %STK4.1)
   %if_cond742.not = icmp eq i64 %fnap739, 0
   br i1 %if_cond742.not, label %goto.phi.bb, label %jt.then_L198
 
@@ -1494,77 +1506,77 @@ lab_L208:                                         ; preds = %lab_L205
   br i1 %le1037.not, label %jt.then_L206, label %lab_L205
 
 jt.then_L206:                                     ; preds = %lab_L208, %lab_L183, %jt.then_L185
-  %STK4.41884 = phi i64 [ %STK4.3, %jt.then_L185 ], [ %STK4.0.ph, %lab_L183 ], [ %STK4.3, %lab_L208 ]
+  %STK4.41914 = phi i64 [ %STK4.3, %jt.then_L185 ], [ %STK4.0.ph, %lab_L183 ], [ %STK4.3, %lab_L208 ]
   store i64 0, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 80), align 4
   br label %common.ret
 
-lab_L210:                                         ; preds = %lab_L178
+lab_L210:                                         ; preds = %clear_words.exit1878
   br i1 %gr, label %jf.else191.i, label %lab_L268.i
 
 lab_L268.i:                                       ; preds = %lab_L210, %jf.then_L272.i
   %STK6.0.i = phi i64 [ %add167.i, %jf.then_L272.i ], [ 1, %lab_L210 ]
-  %STK5.0.i1866 = phi i64 [ %STK5.1.i1873, %jf.then_L272.i ], [ 0, %lab_L210 ]
-  %STK4.0.i1867 = phi i64 [ %STK4.2.i1872, %jf.then_L272.i ], [ 0, %lab_L210 ]
+  %STK5.0.i1886 = phi i64 [ %STK5.1.i1893, %jf.then_L272.i ], [ 0, %lab_L210 ]
+  %STK4.0.i1887 = phi i64 [ %STK4.2.i1892, %jf.then_L272.i ], [ 0, %lab_L210 ]
   %STK3.0.i = phi i64 [ %STK3.2.i, %jf.then_L272.i ], [ 0, %lab_L210 ]
-  %getbyte.charptr.i1868 = getelementptr i8, ptr %getbyte.string.i1865, i64 %STK6.0.i
-  %getbyte.char.i1869 = load i8, ptr %getbyte.charptr.i1868, align 1
-  %getbyte.charword.i = zext i8 %getbyte.char.i1869 to i64
-  %eq.not.i1870 = icmp eq i64 %STK3.0.i, 0
-  br i1 %eq.not.i1870, label %jf.else.i1875, label %jf.then_L272.i
+  %getbyte.charptr.i1888 = getelementptr i8, ptr %getbyte.string.i1885, i64 %STK6.0.i
+  %getbyte.char.i1889 = load i8, ptr %getbyte.charptr.i1888, align 1
+  %getbyte.charword.i = zext i8 %getbyte.char.i1889 to i64
+  %eq.not.i1890 = icmp eq i64 %STK3.0.i, 0
+  br i1 %eq.not.i1890, label %jf.else.i1895, label %jf.then_L272.i
 
-jf.else.i1875:                                    ; preds = %lab_L268.i
-  switch i8 %getbyte.char.i1869, label %jf.then_L273.i [
+jf.else.i1895:                                    ; preds = %lab_L268.i
+  switch i8 %getbyte.char.i1889, label %jf.then_L273.i [
     i8 61, label %jt.then_L274.i
     i8 47, label %jt.then_L274.i
     i8 44, label %jt.then_L274.i
   ]
 
-jt.then_L274.i:                                   ; preds = %jf.else.i1875, %jf.else.i1875, %jf.else.i1875
+jt.then_L274.i:                                   ; preds = %jf.else.i1895, %jf.else.i1895, %jf.else.i1895
   %getbyte.char68.i = load i8, ptr %getbyte.string66.i, align 8
   %getbyte.charword69.i = zext i8 %getbyte.char68.i to i64
-  %eq75.not.i = icmp eq i64 %STK4.0.i1867, %getbyte.charword69.i
+  %eq75.not.i = icmp eq i64 %STK4.0.i1887, %getbyte.charword69.i
   br i1 %eq75.not.i, label %findarglen.exit, label %jf.then_L273.i
 
-jf.then_L273.i:                                   ; preds = %jt.then_L274.i, %jf.else.i1875
-  %add.i1876 = add i64 %STK4.0.i1867, 1
-  %getbyte.charptr99.i = getelementptr i8, ptr %getbyte.string66.i, i64 %add.i1876
+jf.then_L273.i:                                   ; preds = %jt.then_L274.i, %jf.else.i1895
+  %add.i1896 = add i64 %STK4.0.i1887, 1
+  %getbyte.charptr99.i = getelementptr i8, ptr %getbyte.string66.i, i64 %add.i1896
   %getbyte.char100.i = load i8, ptr %getbyte.charptr99.i, align 1
   %getbyte.charword101.i = zext i8 %getbyte.char100.i to i64
   %lg.value.i = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 776), align 4
   %rtap_ep_p_fn.i = inttoptr i64 %lg.value.i to ptr
   %fnap.i = call i64 %rtap_ep_p_fn.i(i64 %getbyte.charword.i, i64 %getbyte.charword101.i)
   %eq109.i = icmp ne i64 %fnap.i, 0
-  %spec.select.i1877 = zext i1 %eq109.i to i64
+  %spec.select.i1897 = zext i1 %eq109.i to i64
   br label %jf.then_L272.i
 
 jf.then_L272.i:                                   ; preds = %jf.then_L273.i, %lab_L268.i
-  %STK4.1.i1871 = phi i64 [ %STK4.0.i1867, %lab_L268.i ], [ %add.i1876, %jf.then_L273.i ]
-  %STK3.1.i = phi i64 [ %STK3.0.i, %lab_L268.i ], [ %spec.select.i1877, %jf.then_L273.i ]
-  %eq122.not.i = icmp eq i8 %getbyte.char.i1869, 44
-  %eq133.not.i = icmp eq i8 %getbyte.char.i1869, 61
+  %STK4.1.i1891 = phi i64 [ %STK4.0.i1887, %lab_L268.i ], [ %add.i1896, %jf.then_L273.i ]
+  %STK3.1.i = phi i64 [ %STK3.0.i, %lab_L268.i ], [ %spec.select.i1897, %jf.then_L273.i ]
+  %eq122.not.i = icmp eq i8 %getbyte.char.i1889, 44
+  %eq133.not.i = icmp eq i8 %getbyte.char.i1889, 61
   %or.cond.i = or i1 %eq122.not.i, %eq133.not.i
-  %STK4.2.i1872 = select i1 %or.cond.i, i64 0, i64 %STK4.1.i1871
+  %STK4.2.i1892 = select i1 %or.cond.i, i64 0, i64 %STK4.1.i1891
   %STK3.2.i = select i1 %or.cond.i, i64 0, i64 %STK3.1.i
   %add159.i = zext i1 %eq122.not.i to i64
-  %STK5.1.i1873 = add i64 %STK5.0.i1866, %add159.i
+  %STK5.1.i1893 = add i64 %STK5.0.i1886, %add159.i
   %add167.i = add i64 %STK6.0.i, 1
-  %le.not.i1874 = icmp sgt i64 %add167.i, %1
-  br i1 %le.not.i1874, label %jt.then_L269.i, label %lab_L268.i
+  %le.not.i1894 = icmp sgt i64 %add167.i, %1
+  br i1 %le.not.i1894, label %jt.then_L269.i, label %lab_L268.i
 
 jt.then_L269.i:                                   ; preds = %jf.then_L272.i
   %eq186.not.i = icmp eq i64 %STK3.2.i, 0
   br i1 %eq186.not.i, label %jf.else191.i, label %jf.then_L211
 
 jf.else191.i:                                     ; preds = %lab_L210, %jt.then_L269.i
-  %STK4.3244.i = phi i64 [ %STK4.2.i1872, %jt.then_L269.i ], [ 0, %lab_L210 ]
-  %STK5.2243.i = phi i64 [ %STK5.1.i1873, %jt.then_L269.i ], [ 0, %lab_L210 ]
+  %STK4.3244.i = phi i64 [ %STK4.2.i1892, %jt.then_L269.i ], [ 0, %lab_L210 ]
+  %STK5.2243.i = phi i64 [ %STK5.1.i1893, %jt.then_L269.i ], [ 0, %lab_L210 ]
   %getbyte.char200.i = load i8, ptr %getbyte.string66.i, align 8
   %getbyte.charword201.i = zext i8 %getbyte.char200.i to i64
   %eq207.not.i = icmp eq i64 %STK4.3244.i, %getbyte.charword201.i
   br i1 %eq207.not.i, label %findarglen.exit, label %jf.then_L211
 
 findarglen.exit:                                  ; preds = %jt.then_L274.i, %jf.else191.i
-  %common.ret.op.i = phi i64 [ %STK5.2243.i, %jf.else191.i ], [ %STK5.0.i1866, %jt.then_L274.i ]
+  %common.ret.op.i = phi i64 [ %STK5.2243.i, %jf.else191.i ], [ %STK5.0.i1886, %jt.then_L274.i ]
   %ge = icmp slt i64 %common.ret.op.i, 0
   br i1 %ge, label %jf.then_L211, label %jf.else1072
 
@@ -1575,7 +1587,7 @@ jf.else1072:                                      ; preds = %findarglen.exit
   %rv.rv1084 = load i64, ptr %rv.lv1083, align 8
   %logand1089.mask = and i64 %rv.rv1084, 32
   %if_cond1098 = icmp eq i64 %logand1089.mask, 0
-  br i1 %if_cond1098, label %jf.then_L213, label %goto.phi.bb.loopexit1963
+  br i1 %if_cond1098, label %jf.then_L213, label %goto.phi.bb.loopexit2007
 
 jf.then_L213:                                     ; preds = %jf.else1072
   %logand1120.mask = and i64 %rv.rv1084, 4
@@ -1612,10 +1624,10 @@ jf.then_L215:                                     ; preds = %jf.else1196, %jf.th
   %STK1185.0 = phi i64 [ %fnap1184, %jf.then_L214 ], [ %fnap1207, %jf.else1196 ]
   %STK1185.0.off = add i64 %STK1185.0, -1
   %switch = icmp ult i64 %STK1185.0.off, 2
-  br i1 %switch, label %jt.then_L230, label %goto.phi.bb.loopexit1964
+  br i1 %switch, label %jt.then_L230, label %goto.phi.bb.loopexit2008
 
 jf.then_L211:                                     ; preds = %jf.else191.i, %jt.then_L269.i, %findarglen.exit
-  %common.ret.op.i1887 = phi i64 [ %common.ret.op.i, %findarglen.exit ], [ -1, %jt.then_L269.i ], [ -1, %jf.else191.i ]
+  %common.ret.op.i1917 = phi i64 [ %common.ret.op.i, %findarglen.exit ], [ -1, %jt.then_L269.i ], [ -1, %jf.else191.i ]
   %lg.value1237 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 304), align 4
   %rtap_ep_p_fn1240 = inttoptr i64 %lg.value1237 to ptr
   %fnap1241 = call i64 %rtap_ep_p_fn1240()
@@ -1623,18 +1635,27 @@ jf.then_L211:                                     ; preds = %jf.else191.i, %jt.t
   br i1 %eq1246.not, label %jf.else1251, label %jf.then_L217
 
 jf.else1251:                                      ; preds = %jf.then_L211
-  %lg.value1256 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 784), align 4
-  %rtap_ep_p_fn1259 = inttoptr i64 %lg.value1256 to ptr
-  %fnap1262 = call i64 %rtap_ep_p_fn1259(i64 %lstr.bcpladdr1252, i64 %STK4.0.ph)
-  %eq1267.not = icmp eq i64 %fnap1262, 0
-  br i1 %eq1267.not, label %jf.else1272, label %jf.then_L217
+  %getbyte.char13.i = load i8, ptr %getbyte.string66.i, align 8
+  %cond = icmp eq i8 %getbyte.char13.i, 0
+  br i1 %cond, label %jf.then_L217, label %lab_L134.i
 
-jf.else1272:                                      ; preds = %jf.else1251
+lab_L134.i:                                       ; preds = %jf.else1251
+  %getbyte.char70.i = load i8, ptr %getbyte.charptr69.i, align 1
+  %getbyte.charword71.i = zext i8 %getbyte.char70.i to i64
+  %lg.value.i1902 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 776), align 4
+  %rtap_ep_p_fn.i1903 = inttoptr i64 %lg.value.i1902 to ptr
+  %fnap.i1904 = call i64 %rtap_ep_p_fn.i1903(i64 63, i64 %getbyte.charword71.i)
+  %if_cond79.i = icmp eq i64 %fnap.i1904, 0
+  %eq.not.i1907 = icmp eq i8 %getbyte.char13.i, 1
+  %or.cond = and i1 %if_cond79.i, %eq.not.i1907
+  br i1 %or.cond, label %jf.else1272, label %jf.then_L217
+
+jf.else1272:                                      ; preds = %lab_L134.i
   br i1 %gr, label %jt.then_L220, label %lab_L219
 
 lab_L219:                                         ; preds = %jf.else1272, %lab_L219
   %STK1273.0 = phi i64 [ %add1311, %lab_L219 ], [ 1, %jf.else1272 ]
-  %getbyte.charptr1296 = getelementptr i8, ptr %getbyte.string.i1865, i64 %STK1273.0
+  %getbyte.charptr1296 = getelementptr i8, ptr %getbyte.string.i1885, i64 %STK1273.0
   %getbyte.char1297 = load i8, ptr %getbyte.charptr1296, align 1
   %getbyte.charword1298 = zext i8 %getbyte.char1297 to i64
   %lg.value1300 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
@@ -1654,15 +1675,17 @@ jt.then_L220:                                     ; preds = %lab_L219, %jf.else1
   %rtap1341 = call i64 %rtap_ep_p_fn1339(i64 %lg.value1334)
   br label %lab_L178.backedge
 
-jf.then_L217:                                     ; preds = %jf.else1251, %jf.then_L211
+jf.then_L217:                                     ; preds = %jf.else1251, %jf.then_L211, %lab_L134.i
   %lg.value1342 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 320), align 4
   %rtap_ep_p_fn1345 = inttoptr i64 %lg.value1342 to ptr
   %rtap1346 = call i64 %rtap_ep_p_fn1345()
   br label %lab_L223
 
-lab_L223:                                         ; preds = %lab_L178, %jf.then_L217
-  %STK354.0 = phi i64 [ %common.ret.op.i1887, %jf.then_L217 ], [ -1, %lab_L178 ]
-  br i1 %gr2841934, label %goto.phi.bb.loopexit1964, label %lab_L225
+lab_L223:                                         ; preds = %clear_words.exit1878, %jf.then_L217
+  %STK354.0 = phi i64 [ %common.ret.op.i1917, %jf.then_L217 ], [ -1, %clear_words.exit1878 ]
+  %if_cond1355 = icmp sgt i64 %STK354.0, -1
+  %brmerge = or i1 %gr2841974, %if_cond1355
+  br i1 %brmerge, label %jf.then_L224, label %lab_L225
 
 lab_L225:                                         ; preds = %lab_L223, %lab_L228
   %STK1357.0 = phi i64 [ %add1407, %lab_L228 ], [ 0, %lab_L223 ]
@@ -1676,27 +1699,27 @@ lab_L225:                                         ; preds = %lab_L223, %lab_L228
 
 lab_L228:                                         ; preds = %lab_L225
   %add1407 = add i64 %STK1357.0, 1
-  %le1416.not = icmp sgt i64 %add1407, %STK5.21931
+  %le1416.not = icmp sgt i64 %add1407, %STK5.21971
   br i1 %le1416.not, label %jf.then_L224, label %lab_L225
 
-jf.then_L224:                                     ; preds = %lab_L225, %lab_L228
-  %STK354.1 = phi i64 [ %STK354.0, %lab_L228 ], [ %STK1357.0, %lab_L225 ]
+jf.then_L224:                                     ; preds = %lab_L225, %lab_L228, %lab_L223
+  %STK354.1 = phi i64 [ %STK354.0, %lab_L223 ], [ %STK1357.0, %lab_L225 ], [ %STK354.0, %lab_L228 ]
   %ge1427 = icmp sgt i64 %STK354.1, -1
-  br i1 %ge1427, label %jf.then_L224.jt.then_L230_crit_edge, label %goto.phi.bb.loopexit1964
+  br i1 %ge1427, label %jf.then_L224.jt.then_L230_crit_edge, label %goto.phi.bb.loopexit2008
 
 jf.then_L224.jt.then_L230_crit_edge:              ; preds = %jf.then_L224
   %.pre = add i64 %STK354.1, %stack.bcpladdr10
-  %.pre1926 = shl i64 %.pre, 3
-  %.pre1927 = inttoptr i64 %.pre1926 to ptr
+  %.pre1966 = shl i64 %.pre, 3
+  %.pre1967 = inttoptr i64 %.pre1966 to ptr
   br label %jt.then_L230
 
 jt.then_L230:                                     ; preds = %jf.then_L224.jt.then_L230_crit_edge, %jf.then_L215
-  %rv.lv1447.pre-phi = phi ptr [ %.pre1927, %jf.then_L224.jt.then_L230_crit_edge ], [ %rv.lv1083, %jf.then_L215 ]
-  %STK354.11893 = phi i64 [ %STK354.1, %jf.then_L224.jt.then_L230_crit_edge ], [ %common.ret.op.i, %jf.then_L215 ]
+  %rv.lv1447.pre-phi = phi ptr [ %.pre1967, %jf.then_L224.jt.then_L230_crit_edge ], [ %rv.lv1083, %jf.then_L215 ]
+  %STK354.11925 = phi i64 [ %STK354.1, %jf.then_L224.jt.then_L230_crit_edge ], [ %common.ret.op.i, %jf.then_L215 ]
   %rv.rv1448 = load i64, ptr %rv.lv1447.pre-phi, align 4
   %logand1453.mask = and i64 %rv.rv1448, 32
   %if_cond1462 = icmp eq i64 %logand1453.mask, 0
-  br i1 %if_cond1462, label %jf.then_L231, label %goto.phi.bb.loopexit1964
+  br i1 %if_cond1462, label %jf.then_L231, label %goto.phi.bb.loopexit2008
 
 jf.then_L231:                                     ; preds = %jt.then_L230
   %logand1484.mask = and i64 %rv.rv1448, 8
@@ -1704,16 +1727,14 @@ jf.then_L231:                                     ; preds = %jt.then_L230
   br i1 %if_cond1493, label %jf.then_L232, label %jf.else1494
 
 jf.else1494:                                      ; preds = %jf.then_L231
-  %lg.value1497 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 800), align 4
-  %rtap_ep_p_fn1500 = inttoptr i64 %lg.value1497 to ptr
-  %fnap1502 = call i64 %rtap_ep_p_fn1500(i64 %STK4.0.ph)
+  %fnap1502 = call i64 @string_to_number(i64 %STK4.0.ph)
   %if_cond1505.not = icmp eq i64 %fnap1502, 0
-  br i1 %if_cond1505.not, label %goto.phi.bb.loopexit1964, label %jt.then_L233
+  br i1 %if_cond1505.not, label %goto.phi.bb.loopexit2008, label %jt.then_L233
 
 jt.then_L233:                                     ; preds = %jf.else1494
   %lg.value1511 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 80), align 4
   store i64 %lg.value1511, ptr %getbyte.string66.i, align 8
-  %add1527 = add i64 %STK354.11893, %2
+  %add1527 = add i64 %STK354.11925, %2
   %stind.llvmaddr1531 = shl i64 %add1527, 3
   %stind.lv1532 = inttoptr i64 %stind.llvmaddr1531 to ptr
   store i64 %STK4.0.ph, ptr %stind.lv1532, align 8
@@ -1724,7 +1745,7 @@ jt.then_L233:                                     ; preds = %jf.else1494
   br label %lab_L178.outer.backedge
 
 jf.then_L232:                                     ; preds = %jf.then_L231
-  %add1579 = add i64 %STK354.11893, %2
+  %add1579 = add i64 %STK354.11925, %2
   %stind.llvmaddr1583 = shl i64 %add1579, 3
   %stind.lv1584 = inttoptr i64 %stind.llvmaddr1583 to ptr
   store i64 %STK4.0.ph, ptr %stind.lv1584, align 8
@@ -1762,23 +1783,23 @@ lab_L235:                                         ; preds = %lab_L234, %lab_L234
   store i64 120, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 80), align 4
   br label %common.ret
 
-goto.phi.bb.loopexit1963:                         ; preds = %lab_L178, %jf.else1072
+goto.phi.bb.loopexit2007:                         ; preds = %clear_words.exit1878, %jf.else1072
   br label %goto.phi.bb
 
-goto.phi.bb.loopexit1964:                         ; preds = %lab_L223, %jf.then_L224, %jt.then_L230, %jf.else1494, %jf.then_L215
+goto.phi.bb.loopexit2008:                         ; preds = %jf.then_L224, %jt.then_L230, %jf.else1494, %jf.then_L215
   br label %goto.phi.bb
 
-goto.phi.bb:                                      ; preds = %jf.else, %lab_L173, %lab_L205, %goto.phi.bb.loopexit1964, %goto.phi.bb.loopexit1963, %jt.then_L189, %jf.else717, %jt.then_L198, %jf.then_L195
-  %STK399.4 = phi i64 [ %STK399.0, %jt.then_L198 ], [ %STK399.0, %jf.then_L195 ], [ %STK399.0, %jf.else717 ], [ %STK399.0, %jt.then_L189 ], [ undef, %goto.phi.bb.loopexit1963 ], [ undef, %goto.phi.bb.loopexit1964 ], [ %STK399.2, %lab_L205 ], [ undef, %lab_L173 ], [ undef, %jf.else ]
-  %STK397.4 = phi i64 [ %STK397.0, %jt.then_L198 ], [ %STK397.0, %jf.then_L195 ], [ %STK397.0, %jf.else717 ], [ %STK397.0, %jt.then_L189 ], [ undef, %goto.phi.bb.loopexit1963 ], [ undef, %goto.phi.bb.loopexit1964 ], [ %add962, %lab_L205 ], [ undef, %lab_L173 ], [ undef, %jf.else ]
-  %STK367.4 = phi i64 [ %sub813, %jt.then_L198 ], [ %STK367.0, %jf.then_L195 ], [ %STK367.0, %jf.else717 ], [ %STK367.0, %jt.then_L189 ], [ %sub366, %goto.phi.bb.loopexit1963 ], [ %sub366, %goto.phi.bb.loopexit1964 ], [ %STK367.2, %lab_L205 ], [ undef, %lab_L173 ], [ undef, %jf.else ]
-  %STK5.7 = phi i64 [ %STK5.3, %jt.then_L198 ], [ %STK5.3, %jf.then_L195 ], [ %STK5.3, %jf.else717 ], [ %STK5.3, %jt.then_L189 ], [ %STK5.21931, %goto.phi.bb.loopexit1963 ], [ %STK5.21931, %goto.phi.bb.loopexit1964 ], [ %STK5.5, %lab_L205 ], [ %STK5.21930, %lab_L173 ], [ %STK5.0, %jf.else ]
-  %STK4.5 = phi i64 [ %add805, %jt.then_L198 ], [ %STK4.1, %jf.then_L195 ], [ %STK4.1, %jf.else717 ], [ %STK4.1, %jt.then_L189 ], [ %STK4.0.ph, %goto.phi.bb.loopexit1963 ], [ %STK4.0.ph, %goto.phi.bb.loopexit1964 ], [ %STK4.3, %lab_L205 ], [ 0, %lab_L173 ], [ 0, %jf.else ]
-  %goto.phi = phi ptr [ blockaddress(@rdargslen, %lf_L188), %jt.then_L198 ], [ blockaddress(@rdargslen, %lf_L188), %jf.then_L195 ], [ blockaddress(@rdargslen, %lf_L157), %jf.else717 ], [ blockaddress(@rdargslen, %lf_L157), %jt.then_L189 ], [ blockaddress(@rdargslen, %lf_L157), %goto.phi.bb.loopexit1963 ], [ blockaddress(@rdargslen, %lf_L157), %goto.phi.bb.loopexit1964 ], [ blockaddress(@rdargslen, %lf_L157), %lab_L205 ], [ blockaddress(@rdargslen, %lf_L157), %lab_L173 ], [ blockaddress(@rdargslen, %lf_L157), %jf.else ]
+goto.phi.bb:                                      ; preds = %jf.else, %lab_L173, %lab_L205, %goto.phi.bb.loopexit2008, %goto.phi.bb.loopexit2007, %jt.then_L189, %jf.else717, %jt.then_L198, %jf.then_L195
+  %STK399.4 = phi i64 [ %STK399.0, %jt.then_L198 ], [ %STK399.0, %jf.then_L195 ], [ %STK399.0, %jf.else717 ], [ %STK399.0, %jt.then_L189 ], [ undef, %goto.phi.bb.loopexit2007 ], [ undef, %goto.phi.bb.loopexit2008 ], [ %STK399.2, %lab_L205 ], [ undef, %lab_L173 ], [ undef, %jf.else ]
+  %STK397.4 = phi i64 [ %STK397.0, %jt.then_L198 ], [ %STK397.0, %jf.then_L195 ], [ %STK397.0, %jf.else717 ], [ %STK397.0, %jt.then_L189 ], [ undef, %goto.phi.bb.loopexit2007 ], [ undef, %goto.phi.bb.loopexit2008 ], [ %add962, %lab_L205 ], [ undef, %lab_L173 ], [ undef, %jf.else ]
+  %STK367.4 = phi i64 [ %sub813, %jt.then_L198 ], [ %STK367.0, %jf.then_L195 ], [ %STK367.0, %jf.else717 ], [ %STK367.0, %jt.then_L189 ], [ %sub366, %goto.phi.bb.loopexit2007 ], [ %sub366, %goto.phi.bb.loopexit2008 ], [ %STK367.2, %lab_L205 ], [ undef, %lab_L173 ], [ undef, %jf.else ]
+  %STK5.7 = phi i64 [ %STK5.3, %jt.then_L198 ], [ %STK5.3, %jf.then_L195 ], [ %STK5.3, %jf.else717 ], [ %STK5.3, %jt.then_L189 ], [ %STK5.21971, %goto.phi.bb.loopexit2007 ], [ %STK5.21971, %goto.phi.bb.loopexit2008 ], [ %STK5.5, %lab_L205 ], [ %STK5.21970, %lab_L173 ], [ %STK5.0, %jf.else ]
+  %STK4.5 = phi i64 [ %add805, %jt.then_L198 ], [ %STK4.1, %jf.then_L195 ], [ %STK4.1, %jf.else717 ], [ %STK4.1, %jt.then_L189 ], [ %STK4.0.ph, %goto.phi.bb.loopexit2007 ], [ %STK4.0.ph, %goto.phi.bb.loopexit2008 ], [ %STK4.3, %lab_L205 ], [ 0, %lab_L173 ], [ 0, %jf.else ]
+  %goto.phi = phi ptr [ blockaddress(@rdargslen, %lf_L188), %jt.then_L198 ], [ blockaddress(@rdargslen, %lf_L188), %jf.then_L195 ], [ blockaddress(@rdargslen, %lf_L157), %jf.else717 ], [ blockaddress(@rdargslen, %lf_L157), %jt.then_L189 ], [ blockaddress(@rdargslen, %lf_L157), %goto.phi.bb.loopexit2007 ], [ blockaddress(@rdargslen, %lf_L157), %goto.phi.bb.loopexit2008 ], [ blockaddress(@rdargslen, %lf_L157), %lab_L205 ], [ blockaddress(@rdargslen, %lf_L157), %lab_L173 ], [ blockaddress(@rdargslen, %lf_L157), %jf.else ]
   indirectbr ptr %goto.phi, [label %lf_L188, label %lf_L157]
 }
 
-define range(i64 -1, 6) i64 @rditem(i64 %0, i64 %1) section ".text.blib" {
+define range(i64 -1, 6) i64 @rditem(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %add = shl i64 %1, 3
   %sub = or disjoint i64 %add, 7
@@ -1947,7 +1968,7 @@ jt.else546:                                       ; preds = %lab_L263, %lab_L263
   br label %common.ret
 }
 
-define i64 @findarg(i64 %0, i64 %1) section ".text.blib" {
+define i64 @findarg(i64 %0, i64 %1) local_unnamed_addr section ".text.BLIB" {
 entry:
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
@@ -2028,7 +2049,7 @@ findarglen.exit:                                  ; preds = %jt.then_L274.i, %jf
   ret i64 %common.ret.op.i
 }
 
-define i64 @findarglen(i64 %0, i64 %1, i64 %2) local_unnamed_addr section ".text.blib" {
+define i64 @findarglen(i64 %0, i64 %1, i64 %2) local_unnamed_addr section ".text.BLIB" {
 entry:
   %gr = icmp slt i64 %1, 1
   br i1 %gr, label %entry.jf.else191_crit_edge, label %lab_L268.preheader
@@ -2116,7 +2137,7 @@ jf.then_L279:                                     ; preds = %jf.else191, %jt.the
   br label %common.ret
 }
 
-define range(i64 -1, 1) i64 @string_to_number(i64 %0) section ".text.blib" {
+define range(i64 -1, 1) i64 @string_to_number(i64 %0) local_unnamed_addr section ".text.BLIB" {
 entry:
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
@@ -2291,7 +2312,7 @@ jf.else472:                                       ; preds = %jt.then_L301
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(readwrite, inaccessiblemem: none)
-define noundef i64 @copystring(i64 %0, i64 %1) #2 section ".text.blib" {
+define noundef i64 @copystring(i64 %0, i64 %1) local_unnamed_addr #2 section ".text.BLIB" {
 entry:
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
@@ -2342,7 +2363,7 @@ jt.then_L304:                                     ; preds = %lab_L303, %middle.b
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(readwrite, inaccessiblemem: none)
-define noundef i64 @copy_words(i64 %0, i64 %1, i64 %2) #2 section ".text.blib" {
+define noundef i64 @copy_words(i64 %0, i64 %1, i64 %2) local_unnamed_addr #2 section ".text.BLIB" {
 entry:
   %sub = add i64 %2, -1
   %gr = icmp slt i64 %sub, 0
@@ -2367,7 +2388,7 @@ jt.then_L308:                                     ; preds = %lab_L307, %entry
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(write, inaccessiblemem: none)
-define noundef i64 @clear_words(i64 %0, i64 %1) #3 section ".text.blib" {
+define noundef i64 @clear_words(i64 %0, i64 %1) local_unnamed_addr #3 section ".text.BLIB" {
 entry:
   %sub = add i64 %1, -1
   %gr = icmp slt i64 %sub, 0
@@ -2388,7 +2409,7 @@ jt.then_L312:                                     ; preds = %lab_L311, %entry
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(readwrite, inaccessiblemem: none)
-define i64 @copy_bytes(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4) #2 section ".text.blib" {
+define i64 @copy_bytes(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4) local_unnamed_addr #2 section ".text.BLIB" {
 entry:
   %spec.select = tail call i64 @llvm.smin.i64(i64 %0, i64 %3)
   %sub = add i64 %spec.select, -1
@@ -2502,7 +2523,7 @@ jt.then_L321:                                     ; preds = %lab_L320, %middle.b
   ret i64 %sub133
 }
 
-define i64 @readn() section ".text.blib" {
+define i64 @readn() section ".text.BLIB" {
 entry:
   %lg.value139 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 304), align 4
   %rtap_ep_p_fn140 = inttoptr i64 %lg.value139 to ptr
@@ -2575,7 +2596,7 @@ jf.then_L336:                                     ; preds = %lab_L334, %jt.then_
   br label %common.ret
 }
 
-define i64 @findinput(i64 %0) section ".text.blib" {
+define i64 @findinput(i64 %0) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 416), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -2583,7 +2604,7 @@ entry:
   ret i64 %fnap
 }
 
-define i64 @pathfindinput(i64 %0, i64 %1) section ".text.blib" {
+define i64 @pathfindinput(i64 %0, i64 %1) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 416), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -2591,7 +2612,7 @@ entry:
   ret i64 %fnap
 }
 
-define i64 @findoutput(i64 %0) section ".text.blib" {
+define i64 @findoutput(i64 %0) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 416), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -2599,7 +2620,7 @@ entry:
   ret i64 %fnap
 }
 
-define i64 @findinoutput(i64 %0) section ".text.blib" {
+define i64 @findinoutput(i64 %0) local_unnamed_addr section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 416), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -2607,7 +2628,7 @@ entry:
   ret i64 %fnap
 }
 
-define i64 @findupdate(i64 %0) section ".text.blib" {
+define i64 @findupdate(i64 %0) local_unnamed_addr section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 416), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -2615,7 +2636,7 @@ entry:
   ret i64 %fnap
 }
 
-define i64 @findappend(i64 %0) section ".text.blib" {
+define i64 @findappend(i64 %0) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 416), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
@@ -2623,7 +2644,7 @@ entry:
   ret i64 %fnap
 }
 
-define noundef i64 @endread() section ".text.blib" {
+define noundef i64 @endread() section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 96), align 4
   %lg.value1 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 496), align 4
@@ -2632,7 +2653,7 @@ entry:
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @endwrite() section ".text.blib" {
+define noundef i64 @endwrite() section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 104), align 4
   %lg.value1 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 496), align 4
@@ -2641,7 +2662,7 @@ entry:
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @writef(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4, i64 %5, i64 %6, i64 %7, i64 %8, i64 %9, i64 %10) section ".text.blib" {
+define noundef i64 @writef(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4, i64 %5, i64 %6, i64 %7, i64 %8, i64 %9, i64 %10) section ".text.BLIB" {
 entry:
   %stack.vec = alloca [10 x i64], align 8
   %stack.vecaddr = ptrtoint ptr %stack.vec to i64
@@ -2682,7 +2703,7 @@ entry:
   ret i64 -4985279381848933680
 }
 
-define i64 @sys_flt(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4) local_unnamed_addr section ".text.blib" {
+define i64 @sys_flt(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4) local_unnamed_addr section ".text.BLIB" {
 entry:
   switch i64 %0, label %lab_L380 [
     i64 17, label %lab_L379
@@ -2910,7 +2931,7 @@ jump.target_L342:                                 ; preds = %jump.target_L342.lo
   ret i64 %STK5.3
 }
 
-define i64 @sys(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4, i64 %5) section ".text.blib" {
+define i64 @sys(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4, i64 %5) section ".text.BLIB" {
 entry:
   switch i64 %0, label %lab_L388 [
     i64 63, label %lab_L387
@@ -2949,7 +2970,7 @@ jump.target_L384:                                 ; preds = %lab_L388, %lab_L387
   ret i64 %STK6.0
 }
 
-define noundef i64 @writes(i64 %0) section ".text.blib" {
+define noundef i64 @writes(i64 %0) section ".text.BLIB" {
 entry:
   %getbyte.llvmaddr = shl i64 %0, 3
   %getbyte.string = inttoptr i64 %getbyte.llvmaddr to ptr
@@ -2974,7 +2995,7 @@ jt.then_L390:                                     ; preds = %lab_L389, %entry
   ret i64 -4985279381848933680
 }
 
-define noundef i64 @deplete(i64 %0) section ".text.blib" {
+define noundef i64 @deplete(i64 %0) section ".text.BLIB" {
 entry:
   %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 16), align 4
   %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr

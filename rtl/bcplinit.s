@@ -25,7 +25,7 @@ __longjump:
     popq    %rdi                   # discard the caller's return address
     jmpq    *%rsi                  # branch to the label
 
-__oscall:
+__opsys:
     endbr64
     movq    %rdi,%rax
     movq    %rsi,%rdi
@@ -119,8 +119,8 @@ __oscall:
 #   .quad 0                # 42
 #   .quad 0                # 43
 #   .quad 0                # 44
-    GLOBAL  45, __aptovec
-    GLOBAL  46, __oscall
+    GLOBAL   6, __aptovec
+    GLOBAL  32, __opsys
 #   .quad 0                # 46
 #   .quad 0                # 47
 #   .quad 0                # 48     findinput
@@ -140,7 +140,7 @@ __oscall:
     GLOBAL  62, __endstream
 #   .quad 0                # 63
 #   .quad 0                # 64
-    GLOBAL  65, __rewind
+    GLOBAL   4, __rewind
 #   .quad 0                # 66
 #   .quad 0                # 67
 #   .quad 0                # 68
