@@ -1,10 +1,15 @@
 .RECIPEPREFIX = !
 
+.PHONY: clean libhdr reallyclean
+
 # The GET directive will prefer our local versions of file to those in the
 # official BCPL release
-export HDRPATHC64 = src:src/inc:src/cinc:builddbg:${BCPL64HDRS}
-export HDRPATHDBG = src:src/inc:src/ninc:builddbg:${BCPL64HDRS}
-export HDRPATHREL = src:src/inc:src/ninc:buildrel:${BCPL64HDRS}
+export HDRPATHC64 = src:src/inc:src/cinc:builddbg
+export HDRPATHDBG = src:src/inc:src/ninc:builddbg
+export HDRPATHREL = src:src/inc:src/ninc:buildrel
+
+# Whatever this is set to externally, this is whe we need here
+BCPL64HDRS=/mnt/data/fs/bcpl-development/official_bcpl_release/BCPL/cintcode/g
 
 # ----------------------------------------------------------------------
 # Our version of the CINTSYS system providing access to our LLVM binding
@@ -58,7 +63,8 @@ bin/cintsys64 : ${CINTSYSOBJS} builddbg/extfn.o builddbg/stubzlib.o builddbg/llv
 CINTSYS = ${BL_ROOT}/bin/cintsys64
 
 # Standard header files used as-is from the officual distribution
-CMPLHDRS = ${BCPL64HDRS}/libhdr.h ${BCPL64HDRS}/bcplfecg.h
+RELCMPLHDRS = src/inc/libhdr.h buildrel/bcplfecg.h
+DBGCMPLHDRS = src/inc/libhdr.h builddbg/bcplfecg.h
 
 builddbg:
 !   @echo "** create builddbg"
@@ -82,6 +88,9 @@ builddbg/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | builddbg
 !   @echo \*\* TAILOR BLIB.B
 !   @scripts/tailor-blib.py $^ >$@
 
+builddbg/bcplfecg.h: ${BCPL64HDRS}/bcplfecg.h
+!   @echo \*\* COPY BCPLFEGC.H
+!   @cp ${BCPL64HDRS}/bcplfecg.h builddbg/
 
 builddbg/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b | builddbg
 !   @echo \*\* TAILOR BCPLSYN.B
@@ -91,21 +100,21 @@ builddbg/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b | builddbg
 !   @echo \*\* TAILOR BCPLTRN.B
 !   @scripts/tailor-blib.py $^ >$@
 
-builddbg/blib.ll : builddbg/blib.b ${CMPLHDRS}
+builddbg/blib.ll : builddbg/blib.b ${DBGCMPLHDRS}
 !   @echo \*\* BCPL BLIB.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
-builddbg/bcplcgllvm.ll : ${CGSRC} ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | builddbg
+builddbg/bcplcgllvm.ll : ${CGSRC} ${DBGCMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | builddbg
 !   @echo \*\* BCPL BCPLCGLLVM.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
-builddbg/bcplsyn.ll : builddbg/bcplsyn.b
+builddbg/bcplsyn.ll : builddbg/bcplsyn.b builddbg/bcplfecg.h
 !   @echo \*\* BCPL BCPLSYN.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 builddbg/bcpltrn.ll : builddbg/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 bcpld : rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgllvm.ll builddbg/blib.ll rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
 !    @echo \*\* LINK BCPLD
@@ -137,6 +146,9 @@ buildrel/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | buildrel
 !   @echo \*\* TAILOR BLIB.B
 !   @scripts/tailor-blib.py $^ >$@
 
+buildrel/bcplfecg.h: ${BCPL64HDRS}/bcplfecg.h
+!   @echo \*\* COPY BCPLFEGC.H
+!   @cp ${BCPL64HDRS}/bcplfecg.h buildrel/
 
 buildrel/bcplsyn.b : src/bcplsyn.template ${BCPL64ROOT}/com/bcplsyn.b | buildrel
 !   @echo \*\* TAILOR BCPLSYN.B
@@ -146,15 +158,15 @@ buildrel/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b | buildrel
 !   @echo \*\* TAILOR BCPLTRN.B
 !   @scripts/tailor-blib.py $^ >$@
 
-buildrel/blib.ll : buildrel/blib.b ${CMPLHDRS}
+buildrel/blib.ll : buildrel/blib.b ${RELCMPLHDRS}
 !   @echo \*\* BCPL BLIB.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
 
-buildrel/bcplcgllvm.ll : ${CGSRC} ${CMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | buildrel
+buildrel/bcplcgllvm.ll : ${CGSRC} ${RELCMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | buildrel
 !   @echo \*\* BCPL BCPLCGLLVM.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
 
-buildrel/bcplsyn.ll : buildrel/bcplsyn.b
+buildrel/bcplsyn.ll : buildrel/bcplsyn.b buildrel/bcplfecg.h
 !   @echo \*\* BCPL BCPLSYN.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
 
@@ -174,7 +186,7 @@ bcplr : rtl/bcplinit.s buildrel/bcplsyn.ll buildrel/bcpltrn.ll buildrel/bcplcgll
 # 2. We must inlude the LETs for the LLVM API that use the sys() mechanism
 #    and the llvmapi header included comes from src/cinc not src/ninc
 # 3. The native binding is held in extfn.c linked into CINTSYS64
-cbcpl : src/bcpl.b builddbg/bcplsyn.b builddbg/bcpltrn.b ${CGSRC} ${CMPLHDRS} src/cinc/llvmapi.h
+cbcpl : src/bcpl.b builddbg/bcplsyn.b builddbg/bcpltrn.b ${CGSRC} ${DBGCMPLHDRS} src/cinc/llvmapi.h
 !    @echo \*\*  CINTSYS BCPL
 !    bin/cintsys64 -c bcpl t64 src/bcpl.b to cbcpl hdrs HDRPATHC64
 
@@ -184,8 +196,15 @@ cbcpl : src/bcpl.b builddbg/bcplsyn.b builddbg/bcpltrn.b ${CGSRC} ${CMPLHDRS} sr
 %/llvmcintsysapi.ll	 : src/llvmcintsysapi.b src/inc/llvmhdr.h src/inc/llvmenums.h
 
 
-clean :
+clean:
 !    rm builddbg/*.ll buildrel/*.ll
 
 reallyclean:
 !    rm builddbg/* buildrel/*
+
+libhdr:
+!    @ bin/cintsys64 -c bcpl t64 xref ${BCPL64HDRS}/libhdr.h >/tmp/cintsys64_libhdr.xref
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref                                <src/inc/libhdr.template >src/inc/libhdr.h
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --vector rtl/bcplinit.template <src/inc/libhdr.template >rtl/bcplinit.s
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --enum                         <src/inc/libhdr.template >rtl/global_enums.h
+!    @ ls -ltr src/inc/libhdr.h rtl/global_enums.h rtl/bcplinit.s
