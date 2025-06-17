@@ -42,35 +42,49 @@ import sys
 
 def convert(globals, manifests, vector_template, enum_case, verbose):
 
+    # Match GLOBAL <xx>,__<name> from the bcplinit template
     vector_pattern = re.compile(r'^[ ]+GLOBAL\s+([^, ]+)\s*,\s*__(\S+)')
+
+    # Match <name>: <value?> or <name> = <value> from the libhdr template
     pattern = re.compile(r'^[ ]*([^:= ]+)\s*([=:])\s*(\S+)')
 
-    # Read in the template
-    template = sys.stdin.readlines()
+    # Read in the libhdr template from standard input
+    libhdr_template = sys.stdin.readlines()
 
-    # For all of the globals in the template that are also in the cintsys
-    # header, build a map from name to cintsys global number
+    # In our first pass over the libhdr template, we find all of the globals
+    # in the template that are also in the cintsys header and build a map
+    # from name to cintsys global number
     used_global_value = {} # map name to value
-    used_global_name = {}  # map value to list of names
 
-    for line in template:
+    for line in libhdr_template:
         if match := pattern.match(line):
             name,case,value = match.groups()
             if case == ':' and name in globals:
                 used_global_value[name] = globals[name]
 
     # Build an inverse map from the used global values to the names
+    used_global_name = {}  # map value to list of names
     for k, v in used_global_value.items():
         used_global_name[v] = used_global_name.get(v, []) + [k]
 
-    # We keep the value of the next free global
+    # We keep the value of the next free global to be used when we need to
+    # allocate one
     next_free = 0
     while str(next_free) in used_global_name:
         next_free += 1
 
+    # Capture the generated libhdr in a list
     libhdr_output = []
+
+    # Our exit status - 0 is success
     status = 0
-    for line in template:
+
+    # IN our second pass over the libhdr template globals:
+    # a) if the template specifies a value, check that any cintsys64 definition
+    #    has the same value
+    # b) if no value is specified (text is '?') then assign the cintsys64 value
+    #    if it is present otherwise allocate a free one.
+    for line in libhdr_template:
         line = line.rstrip()
         if match := pattern.match(line):
             name,case,value = match.groups()
@@ -104,6 +118,7 @@ def convert(globals, manifests, vector_template, enum_case, verbose):
         else:
             libhdr_output.append(line)
 
+
     if vector_template and status == 0:
 
         # We now have all of the information we need to generate the global
@@ -131,6 +146,8 @@ def convert(globals, manifests, vector_template, enum_case, verbose):
 
     elif enum_case:
 
+        # Write out the C enum that's used by bcplmain() to set up the
+        # run-time environment before entering start()
         keys = sorted([int(key) for key in used_global_name])
         print ('enum\n{')
         for number in keys:
@@ -139,10 +156,11 @@ def convert(globals, manifests, vector_template, enum_case, verbose):
 
     else:
 
+        # Output the libhsr we have generated
         for line in libhdr_output:
             print(line)
 
-    sys.exit(status)
+    return status
 
 
 
@@ -151,6 +169,8 @@ def convert(globals, manifests, vector_template, enum_case, verbose):
 
 def main(vector_template, cintpos_xref_path, enum, verbose):
 
+    # Process the XREF file to extract all of the manifest constants and
+    # globals it defines.
     cintsys_manifests = {} # map name to number
     cintsys_globals = {}   # map name to number
     with open(cintpos_xref_path, 'r') as c:
@@ -167,6 +187,7 @@ def main(vector_template, cintpos_xref_path, enum, verbose):
                 defn = defn[2:]
                 cintsys_globals[name] = defn
 
+    # Use this information to convert our templates into the requested output
     convert(cintsys_globals, cintsys_manifests, vector_template, enum, verbose)
 
 
@@ -179,4 +200,5 @@ if __name__ == '__main__':
     parser.add_argument('xref', help='Path to the xref output from the cintpos libhdr')
     args = parser.parse_args()
 
-    main(args.vector, args.xref, args.enum, args.verbose)
+    status = main(args.vector, args.xref, args.enum, args.verbose)
+    sys.exit(status)
