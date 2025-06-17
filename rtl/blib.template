@@ -141,3 +141,31 @@ AND writes(s) BE FOR i = 1 TO s%0 DO wrch(s%i)
 // A stub to support rditem below
 LET deplete(stream) BE stop(1)
 
+// -- Routines defined in the proposed BCPL standard ---------------------------
+
+// -- Portable implmentations
+
+LET fplus(a, b, c)  = VALOF $( !c := !a #+ !b; RESULTIS c $)
+LET fminus(a, b, c) = VALOF $( !c := !a #- !b; RESULTIS c $)
+LET fmult(a, b, c)  = VALOF $( !c := !a #* !b; RESULTIS c $)
+LET fdiv(a, b, c)   = VALOF $( !c := !a #/ !b; RESULTIS c $)
+LET fneg(a, c)      = VALOF $( !c := #- !a;    RESULTIS c $)
+LET ffix(a)         = FIX !a
+LET ffloat(a, b)    = VALOF $( !b := FLOAT !a; RESULTIS b $)
+LET fcomp(a, b)     = !a = !b -> 0, !a > !b -> 1, -1
+LET fabs(a, b)      = VALOF $( !b := #ABS !a; RESULTIS b $)
+
+// Host-dependent implementations
+
+MANIFEST $( TICKSPERSEC = 1000000000 $)
+LET time() = VALOF $(
+
+    // The tm struct is two 64-bit values
+    LET tm = VEC 1
+
+    // Get CLOCK_MONOTONIC as this never goes backward on wall clock changes
+    // so is reliable for timing intervals. The result will not wrap this
+    // century.
+    LET status = opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
+    RESULTIS status = 0 -> tm!0 * 1000000000 + tm!1, 0
+$)

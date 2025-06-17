@@ -17,12 +17,23 @@ MANIFEST $(
     FP_LEN          = 1 // Extension, A12
 $)
 
-// Constants for the oscall routine
+// Constants for the opsys routine
 MANIFEST $(
-    OSCALL_WRITE = 1
-    OSCALL_MMAP = 9
-    OSCALL_MUNMAP = 11
-    OSCALL_EXIT = 60
+
+    OPSYS_WRITE = 1
+    OPSYS_MMAP = 9
+    OPSYS_MUNMAP = 11
+    OPSYS_EXIT = 60
+    OPSYS_CLOCK_GETTIME = 228
+
+    MMAP_MAP_PRIVATE = 2
+    MMAP_MAP_ANONYMOUS = #x20
+
+    MMAP_PROT_READ = 1
+    MMAPPROT_WRITE = 2
+
+    CLOCK_MONOTONIC = 0
+
 $)
 
 

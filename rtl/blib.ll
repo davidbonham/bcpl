@@ -16,6 +16,16 @@ target triple = "x86_64-unknown-linux-gnu"
 @lstr.global.49 = private global [56 x i8] c"7ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.BLIB", align 8
 @lstr.global.51 = private global [63 x i8] c">ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.BLIB", align 8
 
+@__bcpl_gv63 = alias ptr, ptr @time
+@__bcpl_gv44 = alias ptr, ptr @fabs
+@__bcpl_gv47 = alias ptr, ptr @fcomp
+@__bcpl_gv46 = alias ptr, ptr @ffloat
+@__bcpl_gv45 = alias ptr, ptr @ffix
+@__bcpl_gv37 = alias ptr, ptr @fneg
+@__bcpl_gv42 = alias ptr, ptr @fdiv
+@__bcpl_gv39 = alias ptr, ptr @fmult
+@__bcpl_gv36 = alias ptr, ptr @fminus
+@__bcpl_gv33 = alias ptr, ptr @fplus
 @__bcpl_gv43 = alias ptr, ptr @deplete
 @__bcpl_gv89 = alias ptr, ptr @writes
 @__bcpl_gv3 = alias ptr, ptr @sys
@@ -3003,27 +3013,186 @@ entry:
   ret i64 -4985279381848933680
 }
 
-; Function Attrs: nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
-declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture) #4
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @fplus(i64 %0, i64 %1, i64 returned %2) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv21 = load double, ptr %rv.lv, align 8
+  %rv.llvmaddr8 = shl i64 %1, 3
+  %rv.lv9 = inttoptr i64 %rv.llvmaddr8 to ptr
+  %rv.rv1022 = load double, ptr %rv.lv9, align 8
+  %fresult = fadd double %rv.rv21, %rv.rv1022
+  %stind.llvmaddr = shl i64 %2, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %fresult, ptr %stind.lv, align 8
+  ret i64 %2
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @fminus(i64 %0, i64 %1, i64 returned %2) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv21 = load double, ptr %rv.lv, align 8
+  %rv.llvmaddr8 = shl i64 %1, 3
+  %rv.lv9 = inttoptr i64 %rv.llvmaddr8 to ptr
+  %rv.rv1022 = load double, ptr %rv.lv9, align 8
+  %fresult = fsub double %rv.rv21, %rv.rv1022
+  %stind.llvmaddr = shl i64 %2, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %fresult, ptr %stind.lv, align 8
+  ret i64 %2
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @fmult(i64 %0, i64 %1, i64 returned %2) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv21 = load double, ptr %rv.lv, align 8
+  %rv.llvmaddr8 = shl i64 %1, 3
+  %rv.lv9 = inttoptr i64 %rv.llvmaddr8 to ptr
+  %rv.rv1022 = load double, ptr %rv.lv9, align 8
+  %fresult = fmul double %rv.rv21, %rv.rv1022
+  %stind.llvmaddr = shl i64 %2, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %fresult, ptr %stind.lv, align 8
+  ret i64 %2
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @fdiv(i64 %0, i64 %1, i64 returned %2) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv21 = load double, ptr %rv.lv, align 8
+  %rv.llvmaddr8 = shl i64 %1, 3
+  %rv.lv9 = inttoptr i64 %rv.llvmaddr8 to ptr
+  %rv.rv1022 = load double, ptr %rv.lv9, align 8
+  %fresult = fdiv double %rv.rv21, %rv.rv1022
+  %stind.llvmaddr = shl i64 %2, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %fresult, ptr %stind.lv, align 8
+  ret i64 %2
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @fneg(i64 %0, i64 returned %1) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv13 = load double, ptr %rv.lv, align 8
+  %fresult = fneg double %rv.rv13
+  %stind.llvmaddr = shl i64 %1, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %fresult, ptr %stind.lv, align 8
+  ret i64 %1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define i64 @ffix(i64 %0) #5 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv8 = load double, ptr %rv.lv, align 8
+  %fix3 = fptosi double %rv.rv8 to i64
+  ret i64 %fix3
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @ffloat(i64 %0, i64 returned %1) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv = load i64, ptr %rv.lv, align 8
+  %float.itof = sitofp i64 %rv.rv to double
+  %stind.llvmaddr = shl i64 %1, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %float.itof, ptr %stind.lv, align 8
+  ret i64 %1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define range(i64 -1, 2) i64 @fcomp(i64 %0, i64 %1) #5 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv = load i64, ptr %rv.lv, align 8
+  %rv.llvmaddr7 = shl i64 %1, 3
+  %rv.lv8 = inttoptr i64 %rv.llvmaddr7 to ptr
+  %rv.rv9 = load i64, ptr %rv.lv8, align 8
+  %common.ret.op = tail call i64 @llvm.scmp.i64.i64(i64 %rv.rv, i64 %rv.rv9)
+  ret i64 %common.ret.op
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none)
+define i64 @fabs(i64 %0, i64 returned %1) #4 section ".text.BLIB" {
+entry:
+  %rv.llvmaddr = shl i64 %0, 3
+  %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
+  %rv.rv13 = load double, ptr %rv.lv, align 8
+  %fnap = tail call double @llvm.fabs.f64(double %rv.rv13)
+  %stind.llvmaddr = shl i64 %1, 3
+  %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
+  store double %fnap, ptr %stind.lv, align 8
+  ret i64 %1
+}
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare double @llvm.fabs.f64(double) #6
+
+define i64 @time() section ".text.BLIB" {
+entry:
+  %stack.vec = alloca [2 x i64], align 8
+  %stack.vecaddr = ptrtoint ptr %stack.vec to i64
+  %lg.value = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 256), align 4
+  %rtap_ep_p_fn = inttoptr i64 %lg.value to ptr
+  %fnap = call i64 %rtap_ep_p_fn(i64 228, i64 0, i64 %stack.vecaddr)
+  %eq.not = icmp eq i64 %fnap, 0
+  br i1 %eq.not, label %jf.else, label %common.ret
+
+common.ret:                                       ; preds = %entry, %jf.else
+  %common.ret.op = phi i64 [ %add42, %jf.else ], [ 0, %entry ]
+  ret i64 %common.ret.op
+
+jf.else:                                          ; preds = %entry
+  %rv.rv = load i64, ptr %stack.vec, align 8
+  %mul = mul i64 %rv.rv, 1000000000
+  %rv.llvmaddr36 = add i64 %stack.vecaddr, 8
+  %rv.lv37 = inttoptr i64 %rv.llvmaddr36 to ptr
+  %rv.rv38 = load i64, ptr %rv.lv37, align 8
+  %add42 = add i64 %mul, %rv.rv38
+  br label %common.ret
+}
 
 ; Function Attrs: nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
-declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture) #4
+declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture) #7
+
+; Function Attrs: nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture) #7
 
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
-declare i64 @llvm.abs.i64(i64, i1 immarg) #5
+declare i64 @llvm.abs.i64(i64, i1 immarg) #8
 
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
-declare i64 @llvm.smin.i64(i64, i64) #5
+declare i64 @llvm.smin.i64(i64, i64) #8
 
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
-declare i128 @llvm.smax.i128(i128, i128) #5
+declare i64 @llvm.scmp.i64.i64(i64, i64) #8
+
+; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare i128 @llvm.smax.i128(i128, i128) #8
 
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, argmem: none, inaccessiblemem: none) }
 attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
 attributes #2 = { nofree norecurse nosync nounwind memory(readwrite, inaccessiblemem: none) }
 attributes #3 = { nofree norecurse nosync nounwind memory(write, inaccessiblemem: none) }
-attributes #4 = { nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) }
-attributes #5 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #4 = { mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, inaccessiblemem: none) }
+attributes #5 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }
+attributes #6 = { mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #7 = { nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) }
+attributes #8 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
 
 !0 = distinct !{!0, !1, !2}
 !1 = !{!"llvm.loop.isvectorized", i32 1}
