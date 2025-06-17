@@ -27,6 +27,7 @@ GLOBAL { f:200; g:401; h:602
 STATIC { a=10; b=11; c=12; w=15; minus1=-1  }
 
 MANIFEST { k0=0; k1=1; k2=2  }
+MANIFEST $( minint = MININT; maxint = MAXINT $) //DB
 
 LET wrc(ch) BE wrch(ch)
 
