@@ -99,9 +99,9 @@ __opsys:
 #   .quad 0                # 22     (initco)
 #   .quad 0                # 23     (startco)
 #   .quad 0                # 24     (globin)
-    GLOBAL  25, __getvec
+#   .quad 0                # 25     (globin)
 #   .quad 0                # 26     (rdargs2)
-    GLOBAL  27, __freevec
+#   .quad 0                # 27     (globin)
 #   .quad 0                # 28     (abort)
 #   .quad 0                # 29     (sysabort)
     GLOBAL  30, __packstring

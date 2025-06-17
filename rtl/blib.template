@@ -155,9 +155,279 @@ LET ffloat(a, b)    = VALOF $( !b := FLOAT !a; RESULTIS b $)
 LET fcomp(a, b)     = !a = !b -> 0, !a > !b -> 1, -1
 LET fabs(a, b)      = VALOF $( !b := #ABS !a; RESULTIS b $)
 
+// -- The BCPL Heap ------------------------------------------------------------
+
+MANIFEST $(
+    HEAP_SIZE = 1024*1024
+    SIZE = SLCT 63:0:0
+    FREE = SLCT 1:63:0
+    SUCC = SLCT 0:0:1
+    PREV = SLCT 0:0:2
+    NULLPTR = 0
+    SENTINAL_SIZE = 1
+    SENTINAL = #x0BAD1FDEFACED0
+    ALLOCATED_HEADER_SIZE = 1
+$)
+
+STATIC $(
+    heap_start = 0
+    heap_end
+    free_list
+$)
+
+// A block on the freelist:
+//
+//  --->+---+----------------+
+//      | 1 | size           |     size of block in bcplwords including header
+//      +---+----------------+
+//      |    SUCC            |-->  bcpladdress of SUCC block or NULLPTR
+//      +---+----------------+
+//   <--|    prev            |     bcpladdress of previous block or NULLPT
+//      +---+----------------+
+//      |       space        |
+//      +---+----------------+     <-- bcpl address of space after block = address + size
+//
+// An allocated block:
+//
+//      +---+----------------+
+//      | 0 | size           |     size of block in bcplwords including header
+//      +---+----------------+ <-- returned address
+//      |      SENTINAL      |
+//      +--------------------+
+//      |       space        |
+//      +--------------------+
+//      |      SENTINAL      |
+//      +--------------------+
+
+LET dumpheap(message, user_address) BE $(
+
+    LET current = free_list
+    LET largest = 0
+    LET count = 0
+    LET free_space = 0
+
+    writes("*N*NBCPL HEAP SPACE:  ")
+    IF message ~= 0 DO writef(message, user_address)
+    newline()
+    TEST heap_start = NULLPTR THEN $(
+        writef("Heap not allocated*n")
+    $)
+    ELSE $(
+        writef("Heap of %N words allocated at range %16X..%16X (byte address %16X..%16X)*n", HEAP_SIZE, heap_start, heap_end, heap_start << 3, heap_end << 3)
+
+        writes("*NBlocks on the free list:*n")
+        writes("No.  Size (words)      At BCPL address   To BCPL address    Contents...*N")
+        $(
+            count +:= 1
+            free_space +:= SIZE OF current
+            IF SIZE OF current > largest DO largest := SIZE OF current
+            writef("%4X: %16X %16X..%16X    ", count, SIZE OF current, current, current + SIZE OF current)
+            FOR i = 0 TO 4 DO $(
+                IF current + i < heap_end DO writehex(current!i, 16) <> wrch(' ')
+            $)
+            newline()
+            current := SUCC OF current
+        $) REPEATUNTIL current = NULLPTR
+        writef("Free list contains %N words of space in %N blocks. The largest is %N words*N*N", free_space, count, largest)
+    $)
+$)
+
+LET init_heap() BE $(
+    IF heap_start = NULLPTR THEN $(
+
+        // Allocate the heap using the MMAP system call
+        heap_start := opsys(OPSYS_MMAP, 0, HEAP_SIZE << 3, MMAP_PROT_READ|MMAP_PROT_WRITE, MMAP_MAP_PRIVATE|MMAP_MAP_ANONYMOUS, 0, 0)
+        IF heap_start < 0 THEN opsys(OPSYS_EXIT, -heap_start)
+        heap_start >>:= 3
+        heap_end := heap_start + HEAP_SIZE
+
+        // Create a free list holding a single block which is the entire heap
+        free_list := heap_start
+        SIZE OF free_list := HEAP_SIZE
+        FREE OF free_list := 1
+        SUCC OF free_list := NULLPTR
+        PREV OF free_list := NULLPTR
+    $)
+$)
+
+
+// Add block to free list (sorted by address for coalescing)
+LET add_to_free_list(block) BE $(
+
+    // Mark the block as free
+    FREE OF block := 1
+    TEST free_list = NULLPTR THEN $(
+        free_list := block
+        SUCC OF block := NULLPTR
+        PREV OF block := NULLPTR
+    $)
+    ELSE $(
+
+        // Insert in address order for easier coalescing
+        LET current = free_list;
+        LET prev = 0;
+
+        WHILE current ~= NULLPTR & current < block DO $(
+            prev := current
+            current := SUCC OF current
+        $)
+
+        TEST prev = NULLPTR THEN $(
+            // Insert at beginning
+           SUCC OF block := free_list;
+           PREV OF block := NULLPTR;
+           IF free_list ~= NULLPTR DO PREV OF free_list := block
+           free_list := block
+        $)
+        ELSE $(
+            // Insert after prev
+            SUCC OF block := SUCC OF prev
+            PREV OF block := prev
+            IF SUCC OF prev ~= NULLPTR DO PREV OF (SUCC OF prev) := block
+            SUCC OF prev := block
+        $)
+    $)
+$)
+
+// Remove block from free list
+LET remove_from_free_list(block) BE $(
+    TEST PREV OF block ~= NULLPTR THEN $(
+        SUCC OF (PREV OF block) := SUCC OF block
+    $)
+    ELSE $(
+        free_list := SUCC OF block
+    $)
+    IF SUCC OF block ~= NULLPTR DO PREV OF (SUCC OF block) := PREV OF block
+
+    SUCC OF block := NULLPTR
+    PREV OF block := NULLPTR
+$)
+
+
+// Coalesce adjacent free blocks
+LET coalesce(block) = VALOF $(
+
+    // Try to merge with SUCC block
+    LET block_end = block + SIZE OF block
+    IF block_end < heap_end DO $(
+        LET SUCC_block = block_end
+        IF FREE OF SUCC_block DO $(
+            // Merge with SUCC block
+            remove_from_free_list(SUCC_block)
+            SIZE OF block +:= SIZE OF SUCC_block
+        $)
+    $)
+
+    // Try to merge with previous block
+    IF PREV OF block ~= NULLPTR & PREV OF block + SIZE OF (PREV OF block) = block  DO $(
+        LET prev_block = PREV OF block
+        remove_from_free_list(block)
+        remove_from_free_list(prev_block)
+        SIZE OF prev_block +:= SIZE OF block
+        add_to_free_list(prev_block)
+        RESULTIS prev_block
+    $)
+
+    RESULTIS block
+$)
+
+// Split a block if it's too large
+LET split_block(block, size) BE $(
+    IF SIZE OF block >= size + 1 DO $(
+        LET new_block = block + size
+        SIZE OF new_block := SIZE OF block - size
+        FREE OF new_block := 1
+        SIZE OF block := size
+        add_to_free_list(new_block)
+    $)
+$)
+
+LET getvec(upb) = VALOF $(
+
+    // Allocate memory. Remember that getvec specifies the upper bound of the
+    // allocated vector so that v!0 and v!upb are both valid addresses.
+
+    // The size of block we are looking for needs to be large enough to
+    // hold upb+1 words of user data plus the allocated block header, and
+    // the allocated block sentinels
+    LET required_size = upb + 1 + SENTINAL_SIZE*2 + ALLOCATED_HEADER_SIZE
+    LET current = ?
+
+    init_heap()
+
+    // Find a suitable free block
+    current := free_list;
+    WHILE current ~= NULLPTR DO $(
+        IF SIZE OF current >= required_size DO $(
+
+            // Found a suitable block
+            remove_from_free_list(current)
+            split_block(current, required_size)
+            FREE OF current := 0
+
+            // Place a sentinal in the words before and after the user block
+            current!1 := SENTINAL
+            current!(required_size-1) := SENTINAL
+
+            // Return pointer to data (after header and sentinal)
+            RESULTIS current + 2
+        $)
+
+        current := SUCC OF current
+    $)
+
+    RESULTIS 0 // No suitable block found
+$)
+
+// Free memory
+LET freevec(address) BE $(
+
+    IF address ~= 0 DO $(
+
+        // Get block header and the block size in words
+        LET block, block_size = address - 2, SIZE OF block
+
+        // Check the sentinals are valid
+        IF block!1 ~= SENTINAL | block!(block_size-1) ~= SENTINAL DO $(
+            dumpheap("attempt to free damaged block #X%16X", address);
+            opsys(OPSYS_EXIT, 42)
+        $)
+
+        // Validate pointer is within heap bounds
+        IF block <heap_start | block >= heap_end $(
+            dumpheap("attempt to free block not allocated by getvec #X%16X", address)
+            opsys(OPSYS_EXIT, 42)
+        $)
+
+        // A block should not be already free
+        IF FREE OF block = 1 DO $(
+            dumpheap("attempt to free block already marked as free #X%16X", address)
+            opsys(OPSYS_EXIT, 42)
+        $)
+
+        add_to_free_list(block)
+        coalesce(block)
+    $)
+$)
+
+// Return the size of the largest block (in words) we can allocate
+LET maxvec() = VALOF $(
+    LET largest_block = 0
+    LET next_block = ?
+    init_heap()
+    next_block := free_list
+    UNTIL next_block = NULLPTR DO $(
+        LET usable_size = SIZE OF next_block - (SENTINAL_SIZE*2 + ALLOCATED_HEADER_SIZE)
+        IF usable_size > largest_block DO largest_block := usable_size
+        next_block := SUCC OF next_block
+    $)
+
+    RESULTIS largest_block
+$)
+
+
 // Host-dependent implementations
 
-MANIFEST $( TICKSPERSEC = 1000000000 $)
 LET time() = VALOF $(
 
     // The tm struct is two 64-bit values
@@ -166,6 +436,14 @@ LET time() = VALOF $(
     // Get CLOCK_MONOTONIC as this never goes backward on wall clock changes
     // so is reliable for timing intervals. The result will not wrap this
     // century.
-    LET status = opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
-    RESULTIS status = 0 -> tm!0 * 1000000000 + tm!1, 0
+    result2 := opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
+    RESULTIS result2 = 0 -> tm!0 * 1000000000 + tm!1, 0
+$)
+
+LET stacksize() = VALOF $(
+
+    // Return the maximum size of the stack in machine words
+    LET rlim = VEC 1 // Soft limit and hard limit
+    result2 := opsys(OPSYS_GETRLIMIT, RLIMIT_STACK, rlim << 3)
+    RESULTIS result2 = 0 -> rlim!0 >> 3, 0
 $)

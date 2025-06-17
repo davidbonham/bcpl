@@ -195,21 +195,6 @@ bcplword_t __putbyte(bcplword_t vector, bcplword_t index, bcplword_t byte)
     return 0;
 }
 
-bcplword_t __getvec(bcplword_t size)
-{
-    // Section A7 says we return one more word so that V!0 and V!size are
-    // both legal.
-    void* c_vec = malloc((size+1)*sizeof(bcplword_t));
-    return (bcplword_t)c_vec >> 3;
-}
-
-bcplword_t __freevec(bcplword_t vec)
-{
-    void* c_vec = (void*)(vec << 3);
-    free(c_vec);
-    return 0;
-}
-
 bcplword_t __writeflt(bcplword_t value)
 {
     // Direct casting will perform an integer->>double conversion, which
@@ -331,8 +316,5 @@ int main(int argc, char* argv[])
 }
 
 
-// -- Support previously provided by CINTSYS64 ---------------------------------
-
-bcplword_t getvec(bcplword_t size) __attribute((alias("__getvec")));
 bool extfn_tracing;
 
