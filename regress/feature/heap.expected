@@ -1,5 +1,5 @@
 -- stdout -------------------------------------------
-0x000000000000000C       12 abcdefghijk ABCDEF
+0x000000000000000E       14 abcdefghijk ABCDEF
 vectors freed
 
 
