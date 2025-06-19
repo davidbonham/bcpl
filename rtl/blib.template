@@ -170,9 +170,15 @@ MANIFEST $(
 $)
 
 STATIC $(
+    mmap__head = 0
     heap_start = 0
     heap_end
     free_list
+    num_gets                   // Number of calls to getvec
+    num_frees                  // Number of calls to freevec
+    largest_get                // Largest requested size, in words
+    largest_use                // Usage HWM in words of user space
+    current_use                // Current usage in words of user space
 $)
 
 // A block on the freelist:
@@ -229,6 +235,7 @@ LET dumpheap(message, user_address) BE $(
             current := SUCC OF current
         $) REPEATUNTIL current = NULLPTR
         writef("Free list contains %N words of space in %N blocks. The largest is %N words*N*N", free_space, count, largest)
+        writef("Statistics: getvecs=%n (largest %n) freevecs=%n current use %n (hwm %n)*n", num_gets, largest_get, num_frees, current_use, largest_use)
     $)
 $)
 
@@ -247,9 +254,20 @@ LET init_heap() BE $(
         FREE OF free_list := 1
         SUCC OF free_list := NULLPTR
         PREV OF free_list := NULLPTR
+
+        // Zero our statistics
+        num_gets := 0
+        num_frees := 0
+        largest_get := 0
+        largest_use := 0
+        current_use := 0
     $)
 $)
 
+LET finish_heap() BE $(
+    LET status = opsys(OPSYS_MUNMAP, heap_start << 3, HEAP_SIZE << 3)
+    heap_start := NULLPTR
+$)
 
 // Add block to free list (sorted by address for coalescing)
 LET add_to_free_list(block) BE $(
@@ -370,6 +388,10 @@ LET getvec(upb) = VALOF $(
             current!(required_size-1) := SENTINAL
 
             // Return pointer to data (after header and sentinal)
+            num_gets +:= 1
+            current_use +:= upb + 1
+            IF current_use > largest_use DO largest_use := current_use
+            IF upb + 1 > largest_get DO largest_get := upb + 1
             RESULTIS current + 2
         $)
 
@@ -407,6 +429,9 @@ LET freevec(address) BE $(
 
         add_to_free_list(block)
         coalesce(block)
+
+        num_frees +:= 1
+        current_use -:= block_size - (SENTINAL_SIZE*2 + ALLOCATED_HEADER_SIZE)
     $)
 $)
 
