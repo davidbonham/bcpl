@@ -84,7 +84,7 @@ builddbg/stubzlib.o : src/stubzlib.c | builddbg
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
-builddbg/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | builddbg
+builddbg/blib.b : llvm-rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | builddbg
 !   @echo \*\* TAILOR BLIB.B
 !   @scripts/tailor-blib.py $^ >$@
 
@@ -116,7 +116,7 @@ builddbg/bcpltrn.ll : builddbg/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
 !   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
-bcpld : rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgllvm.ll builddbg/blib.ll rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
+bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgllvm.ll builddbg/blib.ll llvm-rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
 !    @echo \*\* LINK BCPLD
 !    @${CLANG}  ${DBGCFLAGS} -O0 $^ ${LLVMDBGLIBS} -pthread  -lm -lstdc++ -o $@
 
@@ -142,7 +142,7 @@ buildrel/stubzlib.o : src/stubzlib.c | buildrel
 
 # Tailor the standard BCPL BLIB with our own code. We now consider blib.b
 # to be a derived object.
-buildrel/blib.b : rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | buildrel
+buildrel/blib.b : llvm-rtl/blib.template ${BCPL64ROOT}/sysb/blib.b | buildrel
 !   @echo \*\* TAILOR BLIB.B
 !   @scripts/tailor-blib.py $^ >$@
 
@@ -174,7 +174,7 @@ buildrel/bcpltrn.ll : buildrel/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
 !   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
 
-bcplr : rtl/bcplinit.s buildrel/bcplsyn.ll buildrel/bcpltrn.ll buildrel/bcplcgllvm.ll buildrel/blib.ll rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
+bcplr : llvm-rtl/bcplinit.s buildrel/bcplsyn.ll buildrel/bcpltrn.ll buildrel/bcplcgllvm.ll buildrel/blib.ll llvm-rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
 !    @echo \*\* LINK BCPLR
 !    ${CLANG} ${RELCFLAGS} -O2 $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
 
@@ -202,9 +202,17 @@ clean:
 reallyclean:
 !    rm builddbg/* buildrel/*
 
-libhdr:
+llvm-libhdr:
 !    @ bin/cintsys64 -c bcpl t64 xref ${BCPL64HDRS}/libhdr.h >/tmp/cintsys64_libhdr.xref
-!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref                                <src/inc/libhdr.template >src/inc/libhdr.h
-!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --vector rtl/bcplinit.template <src/inc/libhdr.template >rtl/bcplinit.s
-!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --enum                         <src/inc/libhdr.template >rtl/global_enums.h
-!    @ ls -ltr src/inc/libhdr.h rtl/global_enums.h rtl/bcplinit.s
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref                                     <src/inc/libhdr.template >src/inc/libhdr.h
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --vector llvm-rtl/bcplinit.template <src/inc/libhdr.template >llvm-rtl/bcplinit.s
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --enum                              <src/inc/libhdr.template >llvm-rtl/global_enums.h
+!    @ ls -ltr src/inc/libhdr.h llvm-rtl/global_enums.h llvm-rtl/bcplinit.s
+
+# Note that libhdr for user programs goes into the targets RTL
+x86-libhdr:
+!    @ bin/cintsys64 -c bcpl t64 xref ${BCPL64HDRS}/libhdr.h >/tmp/cintsys64_libhdr.xref
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref                                    <x86-rtl/libhdr.template >x86-rtl/libhdr.h
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --vector x86-rtl/bcplinit.template <x86-rtl/libhdr.template >x86-rtl/bcplinit.s
+!    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --enum                             <x86-rtl/libhdr.template >x86-rtl/global_enums.h
+!    @ ls -ltr x86-rtl/libhdr.h x86-rtl/global_enums.h x86-rtl/bcplinit.s

@@ -1,0 +1,948 @@
+// Standard BCPL Run-time library
+// ------------------------------
+//
+// This is the part of the run-time library that is written in BCPL rather
+// than the assembler components that live in bcplmain.
+
+SECTION "BLIB"
+
+GET "libhdr"
+
+// -----------------------------------------------------------------------------
+// OFFICIAL BLIB
+// -----------------------------------------------------------------------------
+//
+// We put randno first because it is declared via LET rather than AND
+
+%insert randno
+%insert unpackstring
+%insert packstring
+%insert write_format
+%insert capitalch
+%insert writedz
+%insert writed
+%insert writen
+%insert writeoct
+%insert writehex
+%insert writebin
+%insert newline
+%insert compch
+%insert compstring
+%insert getkeylen
+%insert rdargs
+%insert rdargs2
+%insert rdargslen
+%insert rditem
+%insert findarg
+%insert findarglen
+%insert string_to_number
+%insert copystring
+%insert copy_words
+%insert clear_words
+%insert copy_bytes
+%insert readn
+%insert findinput
+%insert pathfindinput
+%insert findoutput
+%insert findinoutput
+%insert findupdate
+%insert findappend
+%insert endread
+%insert endwrite
+%insert input
+%insert output
+%insert writeflt
+%insert writez
+
+MANIFEST $(
+    ABORT_UNKNOWNDCB = 100         // Attempt to close a DCB that was already closed?
+    ABORT_NOCIS                    // Attempt to operate on CIS when none is selected
+    ABORT_NOCOS                    // Attempt to operate on COS when none is selected
+    ABORT_UNDEFINEDGLOBAL          // Attempt to call an undefined globak
+    ABORT_STARTUNDEFINED           // No definition for start()
+$)
+
+// -----------------------------------------------------------------------------
+// Local implementations
+// -----------------------------------------------------------------------------
+
+// We don't yet support the BCPL language feature that arguments to routines
+// have consecutive stack addresses and so can be treated as a vector so we
+// need our owr writef wrapper.
+LET writef(format, a, b, c, d, e, f, g, h, i, j) BE $(
+
+    LET argvec = VEC 9
+    argvec!0 := a
+    argvec!1 := b
+    argvec!2 := c
+    argvec!3 := d
+    argvec!4 := e
+    argvec!5 := f
+    argvec!6 := g
+    argvec!7 := h
+    argvec!8 := i
+    argvec!9 := j
+    write_format(format, @argvec)
+$)
+
+// To provide simple cintpos support, we implement sys in BCPL as part
+// of BLIB
+
+LET sys_flt(operation, a, b, c, d) = VALOF $(
+    LET result = ?
+    SWITCHON operation INTO $(
+
+        CASE fl_avail: result := TRUE;                                  ENDCASE
+
+        CASE fl_mk:
+            // a=mantissa, b=exponent
+            result := FLOAT a
+            WHILE b > 0 DO $( result #*:= 10.0; b -:= 1 $)
+            WHILE b < 0 DO $( result #/:= 10.0; b +:= 1 $)
+        ENDCASE
+
+        CASE fl_unmk: $(
+            LET m, e, s = a, 0, m #>= 0.0 -> 1, -1
+            IF s = -1 DO m :=  #- m
+            WHILE m #>= 10.0 DO $( m #/:= 10.0; e +:= 1 ; writef("%10.5f %n*n", m, e) $)
+            WHILE m # <= 1.0 DO $( m #*:= 10.0; e -:= 1 ; writef("%10.5f %n*n", m, e) $)
+            result2 := e
+            result := s = 1 -> m, #-m
+        $)
+        ENDCASE
+
+        CASE fl_float: result := FLOAT a;                               ENDCASE
+        CASE fl_fix:   result := FIX a;                                 ENDCASE
+        CASE fl_abs:   result := a #>= 0.0 -> a, #- a;                  ENDCASE
+        CASE fl_mul:   result := a #* b;                                ENDCASE
+        CASE fl_div:   result := a #/ b;                                ENDCASE
+        CASE fl_add:   result := a #+ b;                                ENDCASE
+        CASE fl_sub:   result := a #- b;                                ENDCASE
+        CASE fl_pos:   result := a;                                     ENDCASE
+        CASE fl_neg:   result := #- a;                                  ENDCASE
+        CASE fl_eq:    result := a #= b;                                ENDCASE
+        CASE fl_ne:    result := a #~= b;                               ENDCASE
+        CASE fl_gr:    result := a #> b;                                ENDCASE
+        CASE fl_ge:    result := a #>= b;                               ENDCASE
+        CASE fl_ls:    result := a #< b;                                ENDCASE
+        CASE fl_le:    result := a #<= b;                               ENDCASE
+
+        DEFAULT:
+            writef("ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x*n", operation, a, b, c, d)
+            stop(1)
+    $)
+    RESULTIS result
+
+$)
+
+LET sys(package, operation, a, b, c, d) = VALOF $(
+    LET result = ?
+    SWITCHON package INTO $(
+        CASE Sys_sardch: result := rdch();                              ENDCASE
+        CASE Sys_sawrch: result := wrch(operation);                     ENDCASE
+        CASE Sys_flt:    result := sys_flt(operation, a, b, c, d);      ENDCASE
+        DEFAULT:
+            writef("ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x*n", package, operation, a, b, c, d)
+            stop(1)
+    $)
+    RESULTIS result
+$)
+
+AND writes(s) BE FOR i = 1 TO s%0 DO wrch(s%i)
+
+// A stub to support rditem below
+LET deplete(stream) BE stop(1)
+
+LET abort(code) BE $(
+    opsys(OPSYS_EXIT, code)
+$)
+
+// -- Routines defined in the proposed BCPL standard ---------------------------
+
+// -- Portable implmentations
+
+LET fplus(a, b, c)  = VALOF $( !c := !a #+ !b; RESULTIS c $)
+LET fminus(a, b, c) = VALOF $( !c := !a #- !b; RESULTIS c $)
+LET fmult(a, b, c)  = VALOF $( !c := !a #* !b; RESULTIS c $)
+LET fdiv(a, b, c)   = VALOF $( !c := !a #/ !b; RESULTIS c $)
+LET fneg(a, c)      = VALOF $( !c := #- !a;    RESULTIS c $)
+LET ffix(a)         = FIX !a
+LET ffloat(a, b)    = VALOF $( !b := FLOAT !a; RESULTIS b $)
+LET fcomp(a, b)     = !a = !b -> 0, !a > !b -> 1, -1
+LET fabs(a, b)      = VALOF $( !b := #ABS !a; RESULTIS b $)
+
+// -- The BCPL Heap ------------------------------------------------------------
+
+MANIFEST $(
+    HEAP_SIZE = 1024*1024
+    SIZE = SLCT 63:0:0
+    FREE = SLCT 1:63:0
+    SUCC = SLCT 0:0:1
+    PREV = SLCT 0:0:2
+    NULLPTR = 0
+    SENTINAL_SIZE = 1
+    SENTINAL = #x0BAD1FDEFACED0
+    ALLOCATED_HEADER_SIZE = 1
+$)
+
+STATIC $(
+    mmap__head = 0
+    heap_start = 0
+    heap_end
+    free_list
+    num_gets                   // Number of calls to getvec
+    num_frees                  // Number of calls to freevec
+    largest_get                // Largest requested size, in words
+    largest_use                // Usage HWM in words of user space
+    current_use                // Current usage in words of user space
+$)
+
+// A block on the freelist:
+//
+//  --->+---+----------------+
+//      | 1 | size           |     size of block in bcplwords including header
+//      +---+----------------+
+//      |    SUCC            |-->  bcpladdress of SUCC block or NULLPTR
+//      +---+----------------+
+//   <--|    prev            |     bcpladdress of previous block or NULLPT
+//      +---+----------------+
+//      |       space        |
+//      +---+----------------+     <-- bcpl address of space after block = address + size
+//
+// An allocated block:
+//
+//      +---+----------------+
+//      | 0 | size           |     size of block in bcplwords including header
+//      +---+----------------+ <-- returned address
+//      |      SENTINAL      |
+//      +--------------------+
+//      |       space        |
+//      +--------------------+
+//      |      SENTINAL      |
+//      +--------------------+
+
+LET blib.dumpheap() BE $(
+
+    LET current = free_list
+    LET largest = 0
+    LET count = 0
+    LET free_space = 0
+
+    writes("*N-- HEAP SPACE ------------------------------------------------------------------*n*n")
+    TEST heap_start = NULLPTR THEN $(
+        writef("Heap not allocated*n")
+    $)
+    ELSE $(
+        writef("Heap of %N words allocated at range %16X..%16X (byte address %16X..%16X)*n", HEAP_SIZE, heap_start, heap_end, heap_start << 3, heap_end << 3)
+
+        writes("*NBlocks on the free list:*n")
+        writes("No.  Size (words)      At BCPL address   To BCPL address    Contents...*N")
+        $(
+            count +:= 1
+            free_space +:= SIZE OF current
+            IF SIZE OF current > largest DO largest := SIZE OF current
+            writef("%4X: %16X %16X..%16X   ", count, SIZE OF current, current, current + SIZE OF current)
+            FOR i = 0 TO 4 DO $(
+                IF current + i < heap_end DO writehex(current!i, 16) <> wrch(' ')
+            $)
+            newline()
+            current := SUCC OF current
+        $) REPEATUNTIL current = NULLPTR
+        writes("*nStatistics:*n")
+        writef("Free list contains %N words of space in %N blocks. The largest is %N words*N", free_space, count, largest)
+        writef("getvecs=%n (largest %n) freevecs=%n current use %n (hwm %n)*n*n", num_gets, largest_get, num_frees, current_use, largest_use)
+    $)
+$)
+
+LET blib.init_heap() BE $(
+    IF heap_start = NULLPTR THEN $(
+
+        // Allocate the heap using the MMAP system call
+        heap_start := opsys(OPSYS_MMAP, 0, HEAP_SIZE << 3, MMAP_PROT_READ|MMAP_PROT_WRITE, MMAP_MAP_PRIVATE|MMAP_MAP_ANONYMOUS, 0, 0)
+        IF heap_start < 0 THEN opsys(OPSYS_EXIT, -heap_start)
+        heap_start >>:= 3
+        heap_end := heap_start + HEAP_SIZE
+
+        // Create a free list holding a single block which is the entire heap
+        free_list := heap_start
+        SIZE OF free_list := HEAP_SIZE
+        FREE OF free_list := 1
+        SUCC OF free_list := NULLPTR
+        PREV OF free_list := NULLPTR
+
+        // Zero our statistics
+        num_gets := 0
+        num_frees := 0
+        largest_get := 0
+        largest_use := 0
+        current_use := 0
+    $)
+$)
+
+LET blib.finish_heap() BE $(
+    LET status = opsys(OPSYS_MUNMAP, heap_start << 3, HEAP_SIZE << 3)
+    heap_start := NULLPTR
+$)
+
+// Add block to free list (sorted by address for coalescing)
+LET blib.add_to_free_list(block) BE $(
+
+    // Mark the block as free
+    FREE OF block := 1
+    TEST free_list = NULLPTR THEN $(
+        free_list := block
+        SUCC OF block := NULLPTR
+        PREV OF block := NULLPTR
+    $)
+    ELSE $(
+
+        // Insert in address order for easier coalescing
+        LET current = free_list;
+        LET prev = 0;
+
+        WHILE current ~= NULLPTR & current < block DO $(
+            prev := current
+            current := SUCC OF current
+        $)
+
+        TEST prev = NULLPTR THEN $(
+            // Insert at beginning
+           SUCC OF block := free_list;
+           PREV OF block := NULLPTR;
+           IF free_list ~= NULLPTR DO PREV OF free_list := block
+           free_list := block
+        $)
+        ELSE $(
+            // Insert after prev
+            SUCC OF block := SUCC OF prev
+            PREV OF block := prev
+            IF SUCC OF prev ~= NULLPTR DO PREV OF (SUCC OF prev) := block
+            SUCC OF prev := block
+        $)
+    $)
+$)
+
+// Remove block from free list
+LET blib.remove_from_free_list(block) BE $(
+    TEST PREV OF block ~= NULLPTR THEN $(
+        SUCC OF (PREV OF block) := SUCC OF block
+    $)
+    ELSE $(
+        free_list := SUCC OF block
+    $)
+    IF SUCC OF block ~= NULLPTR DO PREV OF (SUCC OF block) := PREV OF block
+
+    SUCC OF block := NULLPTR
+    PREV OF block := NULLPTR
+$)
+
+
+// Coalesce adjacent free blocks
+LET blib.coalesce(block) = VALOF $(
+
+    // Try to merge with SUCC block
+    LET block_end = block + SIZE OF block
+    IF block_end < heap_end DO $(
+        LET SUCC_block = block_end
+        IF FREE OF SUCC_block DO $(
+            // Merge with SUCC block
+            blib.remove_from_free_list(SUCC_block)
+            SIZE OF block +:= SIZE OF SUCC_block
+        $)
+    $)
+
+    // Try to merge with previous block
+    IF PREV OF block ~= NULLPTR & PREV OF block + SIZE OF (PREV OF block) = block  DO $(
+        LET prev_block = PREV OF block
+        blib.remove_from_free_list(block)
+        blib.remove_from_free_list(prev_block)
+        SIZE OF prev_block +:= SIZE OF block
+        blib.add_to_free_list(prev_block)
+        RESULTIS prev_block
+    $)
+
+    RESULTIS block
+$)
+
+// Split a block if it's too large
+LET blib.split_block(block, size) BE $(
+    IF SIZE OF block >= size + 1 DO $(
+        LET new_block = block + size
+        SIZE OF new_block := SIZE OF block - size
+        FREE OF new_block := 1
+        SIZE OF block := size
+        blib.add_to_free_list(new_block)
+    $)
+$)
+
+LET getvec(upb) = VALOF $(
+
+    // Allocate memory. Remember that getvec specifies the upper bound of the
+    // allocated vector so that v!0 and v!upb are both valid addresses.
+
+    // The size of block we are looking for needs to be large enough to
+    // hold upb+1 words of user data plus the allocated block header, and
+    // the allocated block sentinels
+    LET required_size = upb + 1 + SENTINAL_SIZE*2 + ALLOCATED_HEADER_SIZE
+    LET current = ?
+
+    blib.init_heap()
+
+    // Find a suitable free block
+    current := free_list;
+    WHILE current ~= NULLPTR DO $(
+        IF SIZE OF current >= required_size DO $(
+
+            // Found a suitable block
+            blib.remove_from_free_list(current)
+            blib.split_block(current, required_size)
+            FREE OF current := 0
+
+            // Place a sentinal in the words before and after the user block
+            current!1 := SENTINAL
+            current!(required_size-1) := SENTINAL
+
+            // Return pointer to data (after header and sentinal)
+            num_gets +:= 1
+            current_use +:= upb + 1
+            IF current_use > largest_use DO largest_use := current_use
+            IF upb + 1 > largest_get DO largest_get := upb + 1
+            RESULTIS current + 2
+        $)
+
+        current := SUCC OF current
+    $)
+
+    RESULTIS 0 // No suitable block found
+$)
+
+// Free memory
+LET freevec(address) BE $(
+
+    IF address ~= 0 DO $(
+
+        // Get block header and the block size in words
+        LET block, block_size = address - 2, SIZE OF block
+
+        // Check the sentinals are valid
+        IF block!1 ~= SENTINAL | block!(block_size-1) ~= SENTINAL DO $(
+            blib.dumpheap("attempt to free damaged block #X%16X", address);
+            opsys(OPSYS_EXIT, 42)
+        $)
+
+        // Validate pointer is within heap bounds
+        IF block <heap_start | block >= heap_end $(
+            blib.dumpheap("attempt to free block not allocated by getvec #X%16X", address)
+            opsys(OPSYS_EXIT, 42)
+        $)
+
+        // A block should not be already free
+        IF FREE OF block = 1 DO $(
+            blib.dumpheap("attempt to free block already marked as free #X%16X", address)
+            opsys(OPSYS_EXIT, 42)
+        $)
+
+        blib.add_to_free_list(block)
+        blib.coalesce(block)
+
+        num_frees +:= 1
+        current_use -:= block_size - (SENTINAL_SIZE*2 + ALLOCATED_HEADER_SIZE)
+    $)
+$)
+
+// Return the size of the largest block (in words) we can allocate
+LET maxvec() = VALOF $(
+    LET largest_block = 0
+    LET next_block = ?
+    blib.init_heap()
+    next_block := free_list
+    UNTIL next_block = NULLPTR DO $(
+        LET usable_size = SIZE OF next_block - (SENTINAL_SIZE*2 + ALLOCATED_HEADER_SIZE)
+        IF usable_size > largest_block DO largest_block := usable_size
+        next_block := SUCC OF next_block
+    $)
+
+    RESULTIS largest_block
+$)
+
+
+// Host-dependent implementations
+
+LET time() = VALOF $(
+
+    // The tm struct is two 64-bit values
+    LET tm = VEC 1
+
+    // Get CLOCK_MONOTONIC as this never goes backward on wall clock changes
+    // so is reliable for timing intervals. The result will not wrap this
+    // century.
+    result2 := opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
+    RESULTIS result2 = 0 -> tm!0 * 1000000000 + tm!1, 0
+$)
+
+LET stacksize() = VALOF $(
+
+    // Return the maximum size of the stack in machine words
+    LET rlim = VEC 1 // Soft limit and hard limit
+    result2 := opsys(OPSYS_GETRLIMIT, RLIMIT_STACK, rlim << 3)
+    RESULTIS result2 = 0 -> rlim!0 >> 3, 0
+$)
+
+LET stop(n) BE opsys(OPSYS_EXIT, n)
+
+
+MANIFEST $(
+    ACCESS_READ  = 1
+    ACCESS_WRITE = 2
+
+    // DCB Layout
+    //  0: ........ ........ ........ ........ ........ ........ ........ .......X  stream has reached EOF
+    //  0: ........ ........ ........ ........ ........ ........ ........ ......X.  open for reading
+    //  0: ........ ........ ........ ........ ........ ........ ........ .....X..  open for writing
+    //  0: ........ ........ ........ ........ ........ ........ ........ ....X...  stream is permanantly open
+    //  0: ........ ........ ........ ........ ........ ........ ........ ...X....  stream currently holding arguments
+    //  0: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX ........ ........ ........ ........  system call file descriptor
+    //  1: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX  bcpl address of buffer
+    //  2: ........ ........ ........ ........ XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX  index of next byte to use in buffer
+    //  2: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX ........ ........ ........ ........  index past the end of valid data
+    //  3: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX  bcpl address of routine to close the stream
+    //  4: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX  bcpl address of routine to refill/flush stream
+    //  5: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX  bcpl address of next DCB in chain
+
+
+
+    ACCESS = SLCT 2:1:0 // Bottom two bits of the DCB are the access modes
+    PERM = SLCT 1:3:0   // Next bit is set if this is one of the permanent streams
+    EOF  = SLCT 1:0:0   // We have already read EOF
+    ARGS  = SLCT 1:4:0   // We have already read EOF
+    FD   = SLCT 32:32:0 // The file descriptor
+    BUFF = SLCT 1       // Pointer to i/o buffer
+    POS  = SLCT 32:0:2  // Index of next character in buffer
+    PAST = SLCT 32:32:2 // Index of first invalid character after end of data
+    CLOSE = SLCT 3      // Call this routine to close the stream
+    TRANSFER = SLCT 4   // Cal this function to read / write the next record
+    CHAIN = SLCT 5      // For traversing all allocard DCBs
+    DCB_SIZE = 6
+    BUFF_SIZE = 128*8   // 1K block
+
+    O_RDONLY = 0
+    O_WRONLY = 1
+    O_RDWR = 2
+    O_TRUNC = #o1000
+    O_CREAT = #o100
+$)
+
+
+STATIC $(
+    stdin_dcb
+    stdout_dcb
+    stderr_dcb
+    dcb_chain
+$)
+
+LET blib.allocate_dcb(fd, access, perm, close, transfer) = VALOF $(
+
+    LET dcb = ?
+
+    LET buffer = getvec(BUFF_SIZE/BYTESPERWORD-1)
+    IF buffer = 0 RESULTIS 0
+
+    dcb := getvec (DCB_SIZE-1)
+    IF dcb = 0 DO $(
+        freevec(buffer)
+        RESULTIS 0
+    $)
+
+    ACCESS::dcb := access
+    PERM::dcb := perm
+    FD::dcb   := fd
+    BUFF::dcb := buffer
+    POS::dcb  := 0
+    PAST::dcb := access = ACCESS_WRITE -> BUFF_SIZE, 0
+    EOF::dcb  := FALSE
+
+    TRANSFER::dcb := transfer
+    CLOSE::dcb := close
+    CHAIN::dcb := dcb_chain
+    dcb_chain := dcb
+
+    RESULTIS dcb
+$)
+
+LET blib.block_flush(dcb) BE $(
+    IF POS::dcb > 0 DO $(
+        LET status = opsys(OPSYS_WRITE, FD::dcb, BUFF::dcb << 3, POS::dcb)
+        POS::dcb := 0
+        IF status <= 0 DO result2 := -status
+    $)
+$)
+
+LET blib.block_write(dcb) BE blib.block_flush(dcb)
+
+LET xx(f, a, b, c, d) BE $(
+    LET o = output()
+    selectoutput(stderr_dcb)
+    writef(f, a, b, c, d)
+    blib.block_flush(cos)
+    selectoutput(o)
+$)
+
+LET blib.block_close(dcb) BE $(
+    IF ACCESS::dcb & ACCESS_WRITE DO blib.block_flush(dcb)
+    UNLESS PERM::dcb DO $(
+
+        // Find the address of the bcplword that points to this DCB, if any
+        // and unlink our DCB from the chain
+        LET ptr = dcb_chain
+        LET old = NULLPTR
+        WHILE ptr ~= NULLPTR DO $(
+            IF ptr = dcb DO $(
+                TEST old = NULLPTR THEN dcb_chain := CHAIN::dcb ELSE CHAIN::old := CHAIN::dcb
+                freevec(BUFF::dcb)
+                BUFF::dcb := 0
+                freevec(dcb)
+                RETURN
+            $)
+            old := ptr
+            ptr := CHAIN::ptr
+        $)
+        // Here, the DCB wasn't on the list
+        abort(ABORT_UNKNOWNDCB)
+    $)
+$)
+
+LET blib.block_read(dcb) BE $(
+    LET status = opsys(OPSYS_READ, FD::dcb, BUFF::dcb << 3, BUFF_SIZE)
+    POS::dcb := 0
+    TEST status <= 0 THEN $(
+
+       IF status < 0 DO $(
+            // Linux kernel has returned -errno.
+            result2 := -status
+        $)
+
+        EOF::dcb := TRUE
+    $)
+    ELSE $(
+        // Something was read. status is the number of bytes
+        PAST::dcb := status
+    $)
+$)
+
+LET blib.tty_write(dcb) BE blib.block_write(dcb)
+LET blib.tty_read(dcb)   = blib.block_read(dcb)
+LET blib.tty_write(dcb)  = blib.block_write(dcb)
+LET blib.tty_close(dcb)  = blib.block_close(dcb)
+
+
+LET blib.findfile(path, access) = VALOF $(
+
+    LET open_flags = ?
+    LET status = ?
+
+    // Space for a copy of the longest possible BCPL string
+    LET c_string = VEC 255 / BYTESPERWORD
+
+    // The standard streams are permanently open and created before start()
+    // is entered.
+    IF path%1 = '**' RESULTIS access = ACCESS_READ -> stdin_dcb, stdout_dcb
+    IF path%1 = '!' RESULTIS access = ACCESS_READ -> 0, stderr_dcb
+
+    // The system call expects to be passed a C string, not a BCPL one.
+    // Create a temporary copy.
+    FOR i = 1 TO path%0 DO c_string%(i-1) := path%i
+    c_string%(path%0) := 0
+
+    // Convert the access into the OPEN system call flags.
+    SWITCHON access INTO $(
+
+        CASE ACCESS_READ:    open_flags := O_RDONLY;                    ENDCASE
+        CASE ACCESS_WRITE:   open_flags := O_CREAT|O_TRUNC|O_WRONLY;    ENDCASE
+        CASE ACCESS_READ|ACCESS_WRITE: open_flags := O_RDWR;            ENDCASE
+        DEFAULT: result2 := 2; RESULTIS 0
+    $)
+
+    // We specify read/write access for user, group and world and allow
+    // umask to restrict this
+    status := opsys(OPSYS_OPEN, c_string << 3, open_flags, #o666)
+    IF status >= 0 DO $(
+        // what about read/write?
+        LET transfer = access = ACCESS_READ -> blib.block_read, blib.block_write
+        result2 := 0
+        RESULTIS blib.allocate_dcb(status, access, FALSE, blib.block_close, transfer)
+    $)
+
+    result2 := -status
+    RESULTIS 0
+$)
+
+LET blib.rditem_add(c_string) BE $(
+
+    LET dcb = stdin_dcb
+
+    // The c-string may not be 64-bit aligned so we start indexing into the
+    // c-vector at the offset into the alight address
+    LET index = c_string & 7
+    LET vector = c_string >> 3
+    WHILE PAST::dcb < BUFF_SIZE & vector%index ~= 0 DO $(
+        // We have space freein the input buffer and we have'nt reached
+        // the end of the c-style string. Insert another character
+        (BUFF::dcb)%(PAST::dcb) := vector%index
+        index +:= 1
+        PAST::dcb +:= 1
+    $)
+$)
+
+LET blib.rditem_end() BE $(
+    LET dcb = stdin_dcb
+    (BUFF::dcb)%(PAST::dcb)   := '*n'  // Force rditem to return the current token
+    (BUFF::dcb)%(PAST::dcb+1) := #xff  // so that this is read on entry
+    PAST::dcb +:= 2
+    ARGS::dcb := TRUE                  // Mark the stream as holding arguments
+$)
+
+LET findinput(path) = blib.findfile(path, ACCESS_READ)
+LET findoutput(path) = blib.findfile(path, ACCESS_WRITE)
+
+LET selectinput(dcb) BE cis := dcb
+LET selectoutput(dcb) BE cos := dcb
+
+LET rdch() = VALOF $(
+    LET result = ?
+    LET dcb = input()
+    IF dcb = 0 DO abort(ABORT_NOCIS)
+    IF EOF::dcb RESULTIS ENDSTREAMCH
+
+    // If the buffer is empty, attempt to fill it. Note that transfer
+    // always leaves something in the buffer, even if is a single endstreamch
+    IF POS::dcb = PAST::dcb DO (TRANSFER::dcb)(dcb)
+    IF EOF::dcb RESULTIS ENDSTREAMCH
+
+    result := (BUFF::dcb)%(POS::dcb)
+    POS::dcb +:= 1
+
+    // A value of 0xff when we are reading the arguments means we've reached
+    // the end and should (a) switch out of ARGS mode and (b) return
+    // ENDSTREAMCH
+    IF result = #xff & ARGS::dcb DO $(
+        result := ENDSTREAMCH
+        ARGS::dcb := FALSE
+    $)
+    RESULTIS result
+$)
+
+LET unrdch() BE $(
+    LET dcb = input()
+    IF dcb = 0 DO abort(ABORT_NOCIS)
+
+    // We guarantee that there is always one character in the buffer as long
+    // as at least one character has been read. However, if unrdch is called
+    // many times, we will reach the start of the buffer and there will be no
+    // more characters to unread.
+    IF POS::dcb > 0 DO POS::dcb -:= 1
+$)
+
+LET wrch(char) BE $(
+    LET dcb = output()
+    IF dcb = 0 DO abort(ABORT_NOCOS)
+
+    // If the buffer is full, we'd better write it all out. Additionally,
+    // if this is the end of the line and the stream is an interactive
+    // output, flush the line too,
+    IF POS::dcb = PAST::dcb | (char = '*n' & (dcb = stdout_dcb | dcb = stderr_dcb)) DO (TRANSFER::dcb)(dcb)
+
+    // The transfer function promises that POS now points to a valid space
+    (BUFF::dcb)%(POS::dcb) := char
+    POS::dcb +:= 1
+$)
+
+LET endread() BE $(
+    LET dcb = input()
+    IF dcb = 0 DO abort(ABORT_NOCIS)
+
+    blib.block_close(input())
+    selectinput(0)
+$)
+
+LET endwrite() BE $(
+    LET dcb = output()
+    IF dcb = 0 DO abort(ABORT_NOCOS)
+
+    blib.block_close(output())
+    selectoutput(0)
+$)
+
+LET blib.ioinit(stdin, stdout, stderr) BE $(
+
+    dcb_chain := NULLPTR
+
+    // Under linux, the shell will have opened three standard streams for
+    // our ptocess and so we set these up for the BCPL program's use.
+    stdin_dcb  := blib.allocate_dcb(stdin,  ACCESS_READ,  TRUE, blib.tty_close, blib.tty_read)
+    stdout_dcb := blib.allocate_dcb(stdout, ACCESS_WRITE, TRUE, blib.tty_close, blib.tty_write)
+    stderr_dcb := blib.allocate_dcb(stderr, ACCESS_WRITE, TRUE, blib.tty_close, blib.tty_write)
+
+    // ON entry, standard input and outpur are select
+    selectinput(stdin_dcb)
+    selectoutput(stdout_dcb)
+$)
+
+LET blib.ioterm() BE $(
+    LET oldcos = cos
+    LET dcb = dcb_chain
+    cos := stderr_dcb
+
+    //blib.dumpheap("at end of program*n")
+
+    WHILE dcb ~= NULLPTR DO $(
+        LET chain = CHAIN::dcb
+
+        // The standard streams are expected to be open and we flush them
+        TEST PERM::dcb THEN $(
+            // Clear the PERM flags in the standard streams so they can be closed
+            PERM::dcb := FALSE
+        $)
+        ELSE $(
+            //writef("DCB #X%16X open on exit: FD %n POS %n LAST %n EOF %n *n", dcb, FD::dcb, POS::dcb, PAST::dcb, EOF::dcb)
+        $)
+        blib.block_close(dcb)
+        dcb := chain
+    $)
+ $)
+
+
+
+LET rewind() BE $(
+    LET status = ?
+    LET dcb = input()
+    IF dcb = 0 DO abort(ABORT_NOCIS)
+    status := opsys(OPSYS_LSEEK, FD::dcb, 0, 0)
+    IF status < 0 DO $(
+        result2 := -status
+    $)
+    POS::dcb := 0
+    PAST::dcb := 0
+    EOF::dcb := FALSE
+$)
+
+
+LET mapstore() BE $(
+
+    LET dcb = ?
+    LET global_vector = @globsize
+
+    // Start with the global vector
+    writef("*n-- GLOBAL VECTOR (%4I ENTRIES) ------------------------------------------------*n", globsize)
+    FOR g = 0 TO globsize-1 DO $(
+
+        IF (g REM 4) = 0 DO writef("*n%4I: ", g)
+        writehex(global_vector!g, 16)
+        wrch(' ')
+    $)
+    newline()
+
+    // Now the open files
+    writef("*n-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------*n*n", BUFF_SIZE)
+
+    dcb := dcb_chain
+    WHILE dcb ~= NULLPTR DO $(
+        LET selected = dcb = cis | dcb = cos -> '**', ' '
+        LET r = (ACCESS::dcb & ACCESS_READ) ~= 0  -> 'R', ' '
+        LET w = (ACCESS::dcb & ACCESS_WRITE) ~= 0 -> 'W', ' '
+        writef("%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n *n", selected, dcb, FD::dcb, r, w, POS::dcb, PAST::dcb, EOF::dcb)
+        dcb := CHAIN::dcb
+    $)
+
+    // And the heap
+    blib.dumpheap()
+    writes("*n--------------------------------------------------------------------------------*n*n")
+$)
+
+LET xgetenv(value, name) BE $(
+
+    // Search the environment for the variable with the given name and, if
+    // found, copy it into s BCPL string in the vector <value>, If the
+    // variable is not found, place an empty BCPL string in value instead.
+$)
+
+//LET xfindstream(path, access, searchvar) = VALOF $(
+//{
+//    LET access_strings = TABLE ?, "r", "w", "rw"
+//    LET access_string = access_strings!access
+//    LET c_path = VEC 256 / BYTESPERWORD
+//
+//
+//    // Convert the bcpl path to a c string
+//    FOR i = 1 TO path%0 DO c_path%(i-1) := path%i
+//    c_path%(path%0) := 0
+//
+//    // If there is no search path or the path is absolute, do the open immediately
+//    if (searchvar == 0 || c_path[0] == '/') return openpath(c_path, selected_mode);
+//
+//    // Get the name of the environment variable
+//
+//    const char* const variable_name = c_string(searchvar);
+//
+//    // Get its value. We must not modify the value returned so we need to
+//    // copy it for strtok to modify. We'll restrict ourselves to the first
+//    // 4K of text.
+//    const char* const variable_text = getenv(variable_name);
+//    if (variable_text == NULL) return openpath(c_path, selected_mode);
+//    if (strlen(variable_text) >= 4096) return 0;
+//    char search_string[4096];
+//    strcpy(search_string, variable_text);
+//
+//    for (const char* directory = strtok(search_string, ":;"); directory != NULL; directory = strtok(NULL, ":;"))
+//    {
+//        char full_path[256+256];
+//        strcpy(full_path, directory);
+//        strcat(full_path, "/");
+//        strcat(full_path, c_path);
+//        FILE* file = fopen(full_path, selected_mode);
+//        if (file != NULL) return (bcplword_t)file;
+//    }
+//
+//    // Return the value of errno in result2
+//    __bcpl_global_vector[G_RESULT2] = errno;
+//    return 0;
+//$)
+
+LET blib.undefined() BE abort(ABORT_UNDEFINEDGLOBAL)
+
+LET bcpl.main(argc, argv, environ) BE $(
+
+    LET gv = &globsize
+    LET result = ?
+    blib.ioinit(0, 1, 2)
+
+    // Make the command line arguments appear as the initial data on standard
+    // input (which is how the rdarg/rditem mechanism expects them)
+    IF argc > 1 DO $(
+        FOR i = 1 TO argc - 1 DO $(
+            IF i > 1 DO blib.rditem_add(" ") // Treat args fred and jane as 'fred jane' not 'fredjane'
+            blib.rditem_add(argv!i)
+        $)
+        blib.rditem_end();
+    $)
+
+    // Start with all of the unset elements of the global vector referencing
+    // a debugging function
+    FOR i = 0 TO NUMGLOBALS-1 DO $(
+        IF gv!1 = 0 DO gv!i = blib.undefined
+    $)
+
+    filesys := environ
+
+    // Get START
+    TEST start = blib.undefined THEN $(
+        selectoutput(stderr_dcb)
+        writef("fatal: start is not defined*n")
+        abort(ABORT_STARTUNDEFINED)
+    $)
+    ELSE $(
+        result := start(0)
+        blib.ioterm()
+        blib.finish_heap()
+        stop(result)
+    $)
+$)
