@@ -10,8 +10,9 @@ TEMP=`getopt --name bcpl --options OScdmo:vk --longoptions optimise,source,compi
 eval set -- "$TEMP"
 
 # Path to installed run-time
-export RTL=$BL_ROOT/rtl
+export RTL=$BL_ROOT/x86-rtl
 export PATH=$BL_ROOT/bin:$PATH
+export X86HDRS=$RTL
 
 clang_prefix=$RTL/bcplinit.s
 clang_suffix="$RTL/blib.ll $RTL/bcplmain.c"
@@ -141,7 +142,7 @@ do
         b)
             echo bcpl $input to $object_path
             #perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
-            perform "$BL_ROOT/bin/bcpl t64  $input to $ll_path"
+            perform "$BL_ROOT/bin/bcpl t64  $input to $ll_path HDRS X86HDRS"
             perform "llc --relocation-model=pic $ll_path -o $s_path"
             clang_inputs="$clang_inputs $s_path"
             ;;
