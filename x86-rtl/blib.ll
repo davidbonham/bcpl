@@ -3,18 +3,18 @@ source_filename = "BLIB"
 target triple = "x86_64-unknown-linux-gnu"
 
 @__bcpl_global_vector = external global [1024 x i64], section "BCPLGVEC"
-@lstr.global = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".rodata.BLIB", align 8
-@itemn.global = internal global [16 x i64] [i64 48, i64 49, i64 50, i64 51, i64 52, i64 53, i64 54, i64 55, i64 56, i64 57, i64 65, i64 66, i64 67, i64 68, i64 69, i64 70], section ".rodata.BLIB"
-@lstr.global.23 = private global [51 x i8] c"2Error: rdargs format specified too many arguments\0A", section ".rodata.BLIB", align 8
-@lstr.global.24 = private global [10 x i8] c"\09 (yes/no)", section ".rodata.BLIB", align 8
-@lstr.global.25 = private global [4 x i8] c"\03 > ", section ".rodata.BLIB", align 8
-@lstr.global.26 = private global [4 x i8] c"\03yes", section ".rodata.BLIB", align 8
-@lstr.global.27 = private global [2 x i8] c"\01y", section ".rodata.BLIB", align 8
-@lstr.global.32 = private global [3 x i8] c"\02: ", section ".rodata.BLIB", align 8
-@lstr.global.45 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".rodata.BLIB", align 8
-@lstr.global.46 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".rodata.BLIB", align 8
-@lstr.global.47 = private global [56 x i8] c"7ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.BLIB", align 8
-@lstr.global.49 = private global [63 x i8] c">ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".rodata.BLIB", align 8
+@lstr.global = private global [14 x i8] c"\0D<<mess:%-%n>>", section ".data.BLIB", align 8
+@itemn.global = internal global [16 x i64] [i64 48, i64 49, i64 50, i64 51, i64 52, i64 53, i64 54, i64 55, i64 56, i64 57, i64 65, i64 66, i64 67, i64 68, i64 69, i64 70], section ".data.BLIB"
+@lstr.global.23 = private global [51 x i8] c"2Error: rdargs format specified too many arguments\0A", section ".data.BLIB", align 8
+@lstr.global.24 = private global [10 x i8] c"\09 (yes/no)", section ".data.BLIB", align 8
+@lstr.global.25 = private global [4 x i8] c"\03 > ", section ".data.BLIB", align 8
+@lstr.global.26 = private global [4 x i8] c"\03yes", section ".data.BLIB", align 8
+@lstr.global.27 = private global [2 x i8] c"\01y", section ".data.BLIB", align 8
+@lstr.global.32 = private global [3 x i8] c"\02: ", section ".data.BLIB", align 8
+@lstr.global.45 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".data.BLIB", align 8
+@lstr.global.46 = private global [11 x i8] c"\0A%10.5f %n\0A", section ".data.BLIB", align 8
+@lstr.global.47 = private global [56 x i8] c"7ERROR sys_flt operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".data.BLIB", align 8
+@lstr.global.49 = private global [63 x i8] c">ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x\0A", section ".data.BLIB", align 8
 @itemn.global.63 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.64 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.65 = internal unnamed_addr global i64 0, section ".data.BLIB"
@@ -23,26 +23,26 @@ target triple = "x86_64-unknown-linux-gnu"
 @itemn.global.68 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.69 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.70 = internal unnamed_addr global i64 0, section ".data.BLIB"
-@lstr.global.72 = private global [84 x i8] c"S\0A-- HEAP SPACE ------------------------------------------------------------------\0A\0A", section ".rodata.BLIB", align 8
-@lstr.global.73 = private global [20 x i8] c"\13Heap not allocated\0A", section ".rodata.BLIB", align 8
-@lstr.global.74 = private global [74 x i8] c"IHeap of %N words allocated at range %16X..%16X (byte address %16X..%16X)\0A", section ".rodata.BLIB", align 8
-@lstr.global.75 = private global [27 x i8] c"\1A\0ABlocks on the free list:\0A", section ".rodata.BLIB", align 8
-@lstr.global.76 = private global [73 x i8] c"HNo.  Size (words)      At BCPL address   To BCPL address    Contents...\0A", section ".rodata.BLIB", align 8
-@lstr.global.77 = private global [24 x i8] c"\17%4X: %16X %16X..%16X   ", section ".rodata.BLIB", align 8
-@lstr.global.78 = private global [14 x i8] c"\0D\0AStatistics:\0A", section ".rodata.BLIB", align 8
-@lstr.global.79 = private global [76 x i8] c"KFree list contains %N words of space in %N blocks. The largest is %N words\0A", section ".rodata.BLIB", align 8
-@lstr.global.80 = private global [62 x i8] c"=getvecs=%n (largest %n) freevecs=%n current use %n (hwm %n)\0A\0A", section ".rodata.BLIB", align 8
+@lstr.global.72 = private global [84 x i8] c"S\0A-- HEAP SPACE ------------------------------------------------------------------\0A\0A", section ".data.BLIB", align 8
+@lstr.global.73 = private global [20 x i8] c"\13Heap not allocated\0A", section ".data.BLIB", align 8
+@lstr.global.74 = private global [74 x i8] c"IHeap of %N words allocated at range %16X..%16X (byte address %16X..%16X)\0A", section ".data.BLIB", align 8
+@lstr.global.75 = private global [27 x i8] c"\1A\0ABlocks on the free list:\0A", section ".data.BLIB", align 8
+@lstr.global.76 = private global [73 x i8] c"HNo.  Size (words)      At BCPL address   To BCPL address    Contents...\0A", section ".data.BLIB", align 8
+@lstr.global.77 = private global [24 x i8] c"\17%4X: %16X %16X..%16X   ", section ".data.BLIB", align 8
+@lstr.global.78 = private global [14 x i8] c"\0D\0AStatistics:\0A", section ".data.BLIB", align 8
+@lstr.global.79 = private global [76 x i8] c"KFree list contains %N words of space in %N blocks. The largest is %N words\0A", section ".data.BLIB", align 8
+@lstr.global.80 = private global [62 x i8] c"=getvecs=%n (largest %n) freevecs=%n current use %n (hwm %n)\0A\0A", section ".data.BLIB", align 8
 @itemn.global.96 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.97 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.98 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @itemn.global.99 = internal unnamed_addr global i64 0, section ".data.BLIB"
-@lstr.global.127 = private global [82 x i8] c"Q\0A-- GLOBAL VECTOR (%4I ENTRIES) ------------------------------------------------\0A", section ".rodata.BLIB", align 8
-@lstr.global.128 = private global [7 x i8] c"\06\0A%4I: ", section ".rodata.BLIB", align 8
-@lstr.global.129 = private global [83 x i8] c"R\0A-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------\0A\0A", section ".rodata.BLIB", align 8
-@lstr.global.130 = private global [57 x i8] c"8%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n \0A", section ".rodata.BLIB", align 8
-@lstr.global.131 = private global [84 x i8] c"S\0A--------------------------------------------------------------------------------\0A\0A", section ".rodata.BLIB", align 8
-@lstr.global.135 = private global [2 x i8] c"\01 ", section ".rodata.BLIB", align 8
-@lstr.global.136 = private global [29 x i8] c"\1Cfatal: start is not defined\0A", section ".rodata.BLIB", align 8
+@lstr.global.127 = private global [82 x i8] c"Q\0A-- GLOBAL VECTOR (%4I ENTRIES) ------------------------------------------------\0A", section ".data.BLIB", align 8
+@lstr.global.128 = private global [7 x i8] c"\06\0A%4I: ", section ".data.BLIB", align 8
+@lstr.global.129 = private global [83 x i8] c"R\0A-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------\0A\0A", section ".data.BLIB", align 8
+@lstr.global.130 = private global [57 x i8] c"8%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n \0A", section ".data.BLIB", align 8
+@lstr.global.131 = private global [84 x i8] c"S\0A--------------------------------------------------------------------------------\0A\0A", section ".data.BLIB", align 8
+@lstr.global.135 = private global [2 x i8] c"\01 ", section ".data.BLIB", align 8
+@lstr.global.136 = private global [29 x i8] c"\1Cfatal: start is not defined\0A", section ".data.BLIB", align 8
 
 @__bcpl_gv64 = alias ptr, ptr @mapstore
 @__bcpl_gv4 = alias ptr, ptr @rewind

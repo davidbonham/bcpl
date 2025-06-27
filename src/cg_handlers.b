@@ -569,7 +569,7 @@ $(
     llvm_set_alignment(global_variable, 8);
     llvm_set_initializer(global_variable, string_ptr)
     llvm_set_linkage(global_variable, LLVM_PRIVATE_LINKAGE)
-    llvm_set_section(global_variable, module_rodata_section)
+    llvm_set_section(global_variable, module_data_section)
 
     // Store the bcpl address of the string into our tempa and push it onto
     ss_push(bcpl_address)
@@ -1108,7 +1108,7 @@ $(
             // A table is an array of bcplwords
             static_type := llvm_array_type(word_type, datalab_itemn_count)
             static_data := llvm_const_array(word_type, datalab_itemns, datalab_itemn_count)
-            static_section := module_rodata_section
+            static_section := module_data_section
         $)
         ELSE $(
             // A static is a single bcolword
