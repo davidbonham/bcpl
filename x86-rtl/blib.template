@@ -41,14 +41,6 @@ GET "libhdr"
 %insert clear_words
 %insert copy_bytes
 %insert readn
-%insert findinput
-%insert pathfindinput
-%insert findoutput
-%insert findinoutput
-%insert findupdate
-%insert findappend
-%insert endread
-%insert endwrite
 %insert input
 %insert output
 %insert writeflt
@@ -297,8 +289,8 @@ LET blib.add_to_free_list(block) BE $(
     ELSE $(
 
         // Insert in address order for easier coalescing
-        LET current = free_list;
-        LET prev = 0;
+        LET current = free_list
+        LET prev = 0
 
         WHILE current ~= NULLPTR & current < block DO $(
             prev := current
@@ -307,8 +299,8 @@ LET blib.add_to_free_list(block) BE $(
 
         TEST prev = NULLPTR THEN $(
             // Insert at beginning
-           SUCC OF block := free_list;
-           PREV OF block := NULLPTR;
+           SUCC OF block := free_list
+           PREV OF block := NULLPTR
            IF free_list ~= NULLPTR DO PREV OF free_list := block
            free_list := block
         $)
@@ -389,7 +381,7 @@ LET getvec(upb) = VALOF $(
     blib.init_heap()
 
     // Find a suitable free block
-    current := free_list;
+    current := free_list
     WHILE current ~= NULLPTR DO $(
         IF SIZE OF current >= required_size DO $(
 
@@ -426,7 +418,7 @@ LET freevec(address) BE $(
 
         // Check the sentinals are valid
         IF block!1 ~= SENTINAL | block!(block_size-1) ~= SENTINAL DO $(
-            blib.dumpheap("attempt to free damaged block #X%16X", address);
+            blib.dumpheap("attempt to free damaged block #X%16X", address)
             opsys(OPSYS_EXIT, 42)
         $)
 
@@ -909,9 +901,9 @@ $)
 
 LET blib.undefined() BE abort(ABORT_UNDEFINEDGLOBAL)
 
-LET bcpl.main(argc, argv, environ) BE $(
+LET blib.bcplmain(argc, argv, environ) BE $(
 
-    LET gv = &globsize
+    LET gv = @globsize
     LET result = ?
     blib.ioinit(0, 1, 2)
 
@@ -922,13 +914,13 @@ LET bcpl.main(argc, argv, environ) BE $(
             IF i > 1 DO blib.rditem_add(" ") // Treat args fred and jane as 'fred jane' not 'fredjane'
             blib.rditem_add(argv!i)
         $)
-        blib.rditem_end();
+        blib.rditem_end()
     $)
 
     // Start with all of the unset elements of the global vector referencing
     // a debugging function
-    FOR i = 0 TO NUMGLOBALS-1 DO $(
-        IF gv!1 = 0 DO gv!i = blib.undefined
+    FOR i = 0 TO globsize-1 DO $(
+        IF gv!1 = 0 DO gv!i := blib.undefined
     $)
 
     filesys := environ

@@ -260,7 +260,6 @@ GLOBAL $(
     findappend: ?
     compch: ?
     writeflt: ?
-    findstream: ?
     deplete: ?
 
     // Other extras
