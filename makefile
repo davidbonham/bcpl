@@ -226,3 +226,7 @@ x86-libhdr:
 !    @ scripts/tailor-blib.py x86-rtl/blib.template ${BCPL64ROOT}/sysb/blib.b >x86-rtl/blib.b
 !    ${BCPLT} x86-rtl/blib.b to x86-rtl/blib.ll
 !    @ ls -ltr x86-rtl/libhdr.h x86-rtl/global_enums.h x86-rtl/bcplinit.s x86-rtl/blib.ll
+!    @ llc --relocation-model=pic -O3 x86-rtl/blib.ll -o x86-rtl/blib.s
+!    @ as x86-rtl/blib.s -o x86-rtl/blib.o
+!    @ as x86-rtl/bcplinit.s -o x86-rtl/bcplinit.o
+
