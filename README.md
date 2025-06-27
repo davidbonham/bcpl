@@ -51,8 +51,8 @@ code which also runs using the same BCPL run-time.
 Stages 2 have just been reached. It passes a number of regression tests
 and correctly compiles itself. It now needs some proper testing.
 
-- It uses LLVM 20.1.3
-- The OCODE operations supporting SLCT are not implemented - specify noselst on the command line to compile BCPL programs using field selectors
+- It uses LLVM 20.1.6
+- The OCODE operations supporting SLCT are now implemented
 - The BCPL standard requires arguments to routines to have adjacent addresses so that it is possible to take the address of the first argument and treat the argument as a vector. The code generator does not honour this.
 - Much of CMPLTEST currently passes, skipping the floating point tests
 - According to section 2.4.5 of the BCPL Cintsys and Cintpos User Guide, local variables are allocated consecutive locations in the stack frame of the current function. The "Proposed Definition" does not mention this and the code generator does not honour it at the moment.
