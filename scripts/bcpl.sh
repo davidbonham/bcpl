@@ -105,75 +105,136 @@ else
     map=""
 fi
 
-for input in $@
+# If we're not going to keep our outputs, place them in a temporary directory
+# that will be cleaned up on exit
+if [ $keep -eq 0 ]
+then
+    WORKDIR="$(mktemp -d)"
+    trap 'rm -rf -- "$WORKDIR"' EXIT
+else
+    WORKDIR=.
+fi
+
+declare -a input_queue
+input_queue=("$@")
+index=0
+linker_objects=""
+
+while [ $index -lt ${#input_queue[@]} ]
 do
+    input="${input_queue[$index]}"
     entry=$(basename -- "$input")
     suffix="${entry##*.}"
     name="${entry%.*}"
 
-    # Work out the sources, intermediates and destinations. 
-    # If the user has specified --object, the destination directory is that
-    # containing that file. If the user has not specified --keep, intermediates 
-    # will be placed in /tmp otherwise they will be placed in the destination
-    # directory
-    srcdir=$(dirname $input)
-    if [ "$object_path" = "" ]
-    then
-        # Destination is the same as the source
-        dstdir=$srcdir
-    else
-        dstdir=$(dirname $object_path)
-    fi
-
-    if [ $keep -eq 0 ]
-    then
-        # Intermediate files are temporaries
-        ll_path=$(mktemp /tmp/$name.XXXXXX.ll)
-        s_path=$(mktemp /tmp/$name.XXXXXX.s)
-    else
-        ll_path=$dstdir/$name.ll
-        s_path=$dstdir/$name.s
-    fi
-
-        # Destination
-
     case "$suffix" in
 
-        b)
-            echo bcpl $input to $object_path
-            #perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
-            perform "$BL_ROOT/bin/bcpl t64  $input to $ll_path HDRS X86HDRS"
-            perform "llc --relocation-model=pic $ll_path -o $s_path"
-            clang_inputs="$clang_inputs $s_path"
-            ;;
-        c)
-            echo clang $entry to $name.o
-            clang_inputs="$clang_inputs $entry"
-            ;;
-        ll)
-            echo llc $entry to $name.s
-            perform "llc $name.ll -o $name.s"
-            clang_inputs="$clang_inputs $name.s"
-            ;;
-        o)
-            echo link $entry
-            clang_inputs="$clang_inputs $entry"
-            ;;
-        s)
-            echo clang $entry to $name.o
-            clang_inputs="$clang_inputs $entry"
-            ;;
-        *)
-            echo type of $entry not recognised
-            ;;
+    b)
+        ll_path=${WORKDIR}/${name}.ll
+        #perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
+        perform "$BL_ROOT/bin/bcpl t64  $input to ${ll_path} HDRS X86HDRS"
+        input_queue+=(${ll_path})
+        ;;
+
+    ll)
+        s_path=${WORKDIR}/${name}.s
+        perform "llc --relocation-model=pic ${optimise} ${input} -o ${s_path}"
+        input_queue+=(${s_path})
+        ;;
+
+    s)
+        o_path=${WORKDIR}/${name}.o
+        perform "as -o ${o_path} ${input}"
+        input_queue+=(${o_path})
+        ;;
+
+    o)
+        linker_objects="${linker_objects} ${input}"
+        ;;
+
     esac
+    ((index++))
 done
 
-perform "clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack $optimise -g3 $source $compile $clang_prefix $clang_inputs $clang_suffix $object $map"
-if [ $keep -eq 0 ]
-then
-    perform "rm --force --verbose $ll_path $s_path $name.map"
-fi
+perform "ld -z noexecstack ${linker_objects} ${object} ${map}"
 
+
+#for input in $@
+#do
+#    suffix="${entry##*.}"
+#    if [ "$suffix" eq "b" ]
+#    then
+#        entry=$(basename -- "$input")
+#        name="${entry%.*}"
+#            echo bcpl $input to $object_path
+#            #perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
+#            perform "$BL_ROOT/bin/bcpl t64  $input to $ll_path HDRS X86HDRS"
+#            perform "llc --relocation-model=pic $ll_path -o $s_path"
+#
+#
+#    # Work out the sources, intermediates and destinations.
+#    # If the user has specified --object, the destination directory is that
+#    # containing that file. If the user has not specified --keep, intermediates
+#    # will be placed in /tmp otherwise they will be placed in the destination
+#    # directory
+#    srcdir=$(dirname $input)
+#    if [ "$object_path" = "" ]
+#    then
+#        # Destination is the same as the source
+#        dstdir=$srcdir
+#    else
+#        dstdir=$(dirname $object_path)
+#    fi
+#
+#    if [ $keep -eq 0 ]
+#    then
+#        # Intermediate files are temporaries
+#        ll_path=$(mktemp /tmp/$name.XXXXXX.ll)
+#        s_path=$(mktemp /tmp/$name.XXXXXX.s)
+#    else
+#        ll_path=$dstdir/$name.ll
+#        s_path=$dstdir/$name.s
+#    fi
+#
+#        # Destination
+#
+#    case "$suffix" in
+#
+#        b)
+#            echo bcpl $input to $object_path
+#            #perform "cintsys64 -c $BL_ROOT/bin/mybcpl t64 noselst $input to $ll_path"
+#            perform "$BL_ROOT/bin/bcpl t64  $input to $ll_path HDRS X86HDRS"
+#            perform "llc --relocation-model=pic $ll_path -o $s_path"
+#            clang_inputs="$clang_inputs $s_path"
+#            ;;
+#        c)
+#            echo clang $entry to $name.o
+#            clang_inputs="$clang_inputs $entry"
+#            ;;
+#        ll)
+#            echo llc $entry to $name.s
+#            perform "llc $name.ll -o $name.s"
+#            clang_inputs="$clang_inputs $name.s"
+#            ;;
+#        o)
+#            echo link $entry
+#            clang_inputs="$clang_inputs $entry"
+#            ;;
+#        s)
+#            echo clang $entry to $name.o
+#            clang_inputs="$clang_inputs $entry"
+#            ;;
+#        *)
+#            echo type of $entry not recognised
+#            ;;
+#    esac
+#done
+#
+#perform "clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack $optimise -g3 $source $compile $clang_prefix $clang_inputs $clang_suffix $object $map"
+#if [ $keep -eq 0 ]
+#then
+#    perform "rm --force --verbose $ll_path $s_path $name.map"
+#fi
+#
 
 
