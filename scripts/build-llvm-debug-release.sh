@@ -34,7 +34,7 @@ else
 
     # Specify the release
     export DEVROOT=$(pwd)
-    export LLVM_VERSION=20.1.6
+    export LLVM_VERSION=20.1.7
     export LLVMREL=llvm-project-${LLVM_VERSION}
 
     mode="${umode,,}"
