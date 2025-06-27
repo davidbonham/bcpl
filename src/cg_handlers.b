@@ -859,7 +859,7 @@ $(
     // result
     LET rhs = ss_pop("rhs")
     LET lhs = ss_pop("lhs")
-    LET result = cg_build_binary_fop(builder, lhs, rhs, label)
+    LET result = cg_build_binary_fop(builder, build_fop, lhs, rhs, label)
     ss_push(result)
 $)
 
