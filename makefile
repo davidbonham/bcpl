@@ -11,6 +11,9 @@ export HDRPATHREL = src:src/inc:src/ninc:buildrel
 # Whatever this is set to externally, this is whe we need here
 BCPL64HDRS=/mnt/data/fs/bcpl-development/official_bcpl_release/BCPL/cintcode/g
 
+# Headers needed to build target programs
+HDRPATHX86 = x86-rtl
+
 # ----------------------------------------------------------------------
 # Our version of the CINTSYS system providing access to our LLVM binding
 # via the Sys() mechanism
@@ -124,6 +127,8 @@ bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcp
 # Build our BCPL compiler - release version
 # ----------------------------------------------------------------------
 
+BCPLC=${CINTSYS} -c bin/mybcpl t64 noselst hdrs HDRPATHREL
+
 buildrel:
 !   @echo "** create buildrel"
 !   @mkdir buildrel
@@ -160,19 +165,19 @@ buildrel/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b | buildrel
 
 buildrel/blib.ll : buildrel/blib.b ${RELCMPLHDRS}
 !   @echo \*\* BCPL BLIB.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
+!   @${BCPLC} $< to $@
 
 buildrel/bcplcgllvm.ll : ${CGSRC} ${RELCMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | buildrel
 !   @echo \*\* BCPL BCPLCGLLVM.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
+!   @${BCPLC} $< to $@
 
 buildrel/bcplsyn.ll : buildrel/bcplsyn.b buildrel/bcplfecg.h
 !   @echo \*\* BCPL BCPLSYN.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
+!   @${BCPLC}  $< to $@
 
 buildrel/bcpltrn.ll : buildrel/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHREL
+!   @${BCPLC} $< to $@
 
 bcplr : llvm-rtl/bcplinit.s buildrel/bcplsyn.ll buildrel/bcpltrn.ll buildrel/bcplcgllvm.ll buildrel/blib.ll llvm-rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
 !    @echo \*\* LINK BCPLR
@@ -202,6 +207,8 @@ clean:
 reallyclean:
 !    rm builddbg/* buildrel/*
 
+BCPLT=${CINTSYS} -c bin/mybcpl t64 noselst hdrs HDRPATHX86
+
 llvm-libhdr:
 !    @ bin/cintsys64 -c bcpl t64 xref ${BCPL64HDRS}/libhdr.h >/tmp/cintsys64_libhdr.xref
 !    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref                                     <src/inc/libhdr.template >src/inc/libhdr.h
@@ -215,4 +222,7 @@ x86-libhdr:
 !    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref                                    <x86-rtl/libhdr.template >x86-rtl/libhdr.h
 !    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --vector x86-rtl/bcplinit.template <x86-rtl/libhdr.template >x86-rtl/bcplinit.s
 !    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --enum                             <x86-rtl/libhdr.template >x86-rtl/global_enums.h
-!    @ ls -ltr x86-rtl/libhdr.h x86-rtl/global_enums.h x86-rtl/bcplinit.s
+!    @ echo \*\* TAILOR BLIB.B
+!    @ scripts/tailor-blib.py x86-rtl/blib.template ${BCPL64ROOT}/sysb/blib.b >x86-rtl/blib.b
+!    ${BCPLT} x86-rtl/blib.b to x86-rtl/blib.ll
+!    @ ls -ltr x86-rtl/libhdr.h x86-rtl/global_enums.h x86-rtl/bcplinit.s x86-rtl/blib.ll
