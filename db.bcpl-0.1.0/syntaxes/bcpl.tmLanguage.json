@@ -32,7 +32,7 @@
       },
 
       { "name": "keyword.operator.bcpl",
-        "match": "(@|!|:=|=|~=|<=|>=|<|>|<<|>>|/|->|~|\\+|-|\\*|&|\\||%|\\b(EQ|FIX|FLOAT|GE|GR|LE|LS|LOGOR|LOGAND|LSHIFT|LV|NE|NOT|OR|RSHIFT|RV|REM|EQV|NEQV)\\b)"
+        "match": "(@|!|::|:=|=|~=|<=|>=|<|>|<<|>>|/|->|~|\\+|-|\\*|&|\\||%|\\b(EQ|FIX|FLOAT|GE|GR|LE|LS|LOGOR|LOGAND|LSHIFT|LV|NE|NOT|OF|OR|RSHIFT|RV|REM|SLCT|EQV|NEQV)\\b)"
       },
 
       { "name": "constant.language.bcpl",
