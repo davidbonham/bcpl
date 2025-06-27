@@ -20,7 +20,7 @@ HDRPATHX86 = x86-rtl
 # ----------------------------------------------------------------------
 
 LLVMREL=/usr/lib/llvm-20
-LLVMVER=20.1.6
+LLVMVER=20.1.7
 
 # We need to use our debug build because we need the C API header files
 LLVMDBGHDRS=$(shell ${DEVROOT}/llvm-${LLVMVER}-debug-install/bin/llvm-config --includedir)
@@ -50,7 +50,7 @@ build%/llvm_cbcpl_binding_utilities.o:  src/llvm_bcpl_binding_utilities.c src/in
 # Create our bespoke cintsys dispatcher for external functions
 build%/extfn.o: src/extfn.c src/inc/llvm_bcpl_binding.h src/c-api/extfn.enums.h src/c-api/extfn.function_table.imp src/c-api/extfn.string_table.imp
 !	@echo "** compiling our version of extfn"
-!	@${CC}  ${DBGCFLAGS}-O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
+!	@${CC}  ${DBGCFLAGS} -O0  -DEXTavail  -DforLinux64 -I ${BCPLROOT}/sysc -I ${BL_ROOT}/src/inc -I ${BL_ROOT}/src/c-api -o $@ -c $<
 
 
 # Build the cintsys64 system. -lz is needed to satisfy LLVM's libLLVMSupport
@@ -105,19 +105,19 @@ builddbg/bcpltrn.b : src/bcpltrn.template ${BCPL64ROOT}/com/bcpltrn.b | builddbg
 
 builddbg/blib.ll : builddbg/blib.b ${DBGCMPLHDRS}
 !   @echo \*\* BCPL BLIB.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   @${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 builddbg/bcplcgllvm.ll : ${CGSRC} ${DBGCMPLHDRS} src/inc/llvmgvec.h src/ninc/llvmapi.h | builddbg
 !   @echo \*\* BCPL BCPLCGLLVM.LL
-!   @${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   @${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 builddbg/bcplsyn.ll : builddbg/bcplsyn.b builddbg/bcplfecg.h
 !   @echo \*\* BCPL BCPLSYN.LL
-!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   ${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 builddbg/bcpltrn.ll : builddbg/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
-!   ${CINTSYS} -c bin/mybcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   ${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgllvm.ll builddbg/blib.ll llvm-rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
 !    @echo \*\* LINK BCPLD
@@ -127,7 +127,7 @@ bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcp
 # Build our BCPL compiler - release version
 # ----------------------------------------------------------------------
 
-BCPLC=${CINTSYS} -c bin/mybcpl t64 noselst hdrs HDRPATHREL
+BCPLC=${CINTSYS} -c bin/cbcpl t64 noselst hdrs HDRPATHREL
 
 buildrel:
 !   @echo "** create buildrel"
@@ -207,7 +207,7 @@ clean:
 reallyclean:
 !    rm builddbg/* buildrel/*
 
-BCPLT=${CINTSYS} -c bin/mybcpl t64 noselst hdrs HDRPATHX86
+BCPLT=${CINTSYS} -c bin/cbcpl t64 noselst hdrs HDRPATHX86
 
 llvm-libhdr:
 !    @ bin/cintsys64 -c bcpl t64 xref ${BCPL64HDRS}/libhdr.h >/tmp/cintsys64_libhdr.xref
