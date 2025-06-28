@@ -95,9 +95,42 @@ done:
         retq                       # We set up %rax on entry
 
 
-
+#
+#     RES := MULDIV(A,B,C)
+#
+# This function calculates (A*B)/C, holding the intermediate product (A*B)
+# as a double length integer. If the result does not fit in a normal integer
+# the action of MULDIV is undefined. The remainder from the division is left
+# in global variable RESULT2.
+#
 __muldiv:
-        retq
+
+# Save divisor in a different register. It's a caller-saved register, we
+# don't need to preserve it. %rdx will be overwritten by the multiply.
+       movq    %rdx, %r11          # divisor
+
+       # Check for division by zero
+       testq   %r11, %r11
+       jz      zero_divide
+
+# Perform multiplication a * b leaving the 128-bit result in %rdx:%rax
+       movq    %rdi, %rax          # %rax = a
+       imulq   %rsi                # %rdx:%rax = a * b
+
+# Divide by c leaving the 64-bit quotient in %rax and the remainder in %rdx
+       idivq   %r11                # %rax = quotient, %rdx = remainder
+       jmp     return
+
+# Division by zero returns 0 rem 0
+zero_divide:
+       xorq    %rax, %rax
+       xorq    %rdx, %rdx
+
+return:
+       movq    $__bcpl_global_vector, %rdi
+       movq    %rdx, 10*8(%rdi)    # Store remainder in global 10, result
+       retq
+
 
     .equ MAXGLOBALS,1024
 
