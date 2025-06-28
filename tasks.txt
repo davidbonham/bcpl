@@ -29,13 +29,13 @@ Assuming that scripts/setup.sh has been sourced and that we are in $BL_ROOT:
 -- COMPILE BCPL TO EXECUTABLE --------------------------------------------------
 
     Either of, for example:
-    1. sh scripts/bcpl.sh <name>.b
-    2. sh scripts/bcpl.sh --optimise --object <name> <name>.b 
+    1. ./scripts/bcplcl <name>.b
+    2. ./scripts/bcplcl --optimise --object <name> <name>.b 
 
 -- REBUILD BLIB ----------------------------------------------------------------
 
-    scripts/tailor_blib rtl/blib.template $BCPL64ROOT/sysb/blib.b >rtl/blib.b
-    @ bin/mybcpl noselst t64 rtl/blib.b to rtl/blib.ll
+    scripts/tailor rtl/blib.template $BCPL64ROOT/sysb/blib.b >rtl/blib.b
+    @ bin/cbcpl noselst t64 rtl/blib.b to rtl/blib.ll
 
 -- REGRESSION TESTS ------------------------------------------------------------
 

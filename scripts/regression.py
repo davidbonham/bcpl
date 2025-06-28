@@ -162,7 +162,7 @@ def perform_one_test(source: str, inputs: str, results: str) -> bool:
         os.remove(bcpl_executable)
 
     # Build the executable
-    command = ["scripts/bcpl.sh", '--optimise', '--object', bcpl_executable, bcpl_source]
+    command = ["scripts/bcplcl", '--optimise', '--object', bcpl_executable, bcpl_source]
     logging.debug(f'running {" ".join(command)}')
     result = subprocess.run(command,capture_output=True,text=True)
 
