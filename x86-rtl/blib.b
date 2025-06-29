@@ -934,6 +934,278 @@ AND writeflt(x, w, p) BE
 
 AND writez(n, d) BE writedz(n, d, TRUE,  n<0)
 
+AND dat_to_strings(datv, v) = VALOF
+
+// Returns v containing 3 strings representing the
+// time and date given in datv, where
+// datv!0 = days since 1 Jan 1970
+// datv!1 = msecs since midnight
+// datv!2 = -1
+// or old format (no longer used)
+// datv!0 = days since 1 Jan 1978
+// datv!1 = mins since midnight
+// datv!2 = ticks since start of current minute
+
+// On return,
+// v    contains a the date in the form DD-MMM-YYYY,
+// v+5  contains the time in the format HH:MM:SS, and
+// v+10 contains the day of the week.
+// Vector v should have an upperbound of 14
+// If the date is unset (days = 0) then the strings
+// are all set to "<unset>"
+
+{ LET days, msecs = datv!0, datv!1
+  LET datestr, timestr, dowstr = v, v+5, v+10
+  LET year = 1970 // BCPL, Unix and Windows epoc
+  LET month = 1
+  LET dayofweek = ?
+  LET dowtemp = ?
+  LET hours, mins, secs = ?, ?, ?
+  LET monthtab     = TABLE   0, 31, 59, 90,120,151,
+                           181,212,243,273,304,334,365
+  LET leapmonthtab = TABLE   0, 31, 60, 91,121,152,
+                           182,213,244,274,305,335,366
+  LET mchars = "JanFebMarAprMayJunJulAugSepOctNovDec"
+  LET mcharbase = ?
+  LET mtable = ?
+
+  //IF datv!2>=0 DO // No longer used
+  //{ // Convert old dat format to new
+  //  days := days + 2922 // Days between 1 Jan 1970 and 1978
+  //  // Convert (mins,ticks) to msecs assuming 1000 ticks per second
+  //  msecs  := datv!1*60_000 + datv!2
+  //  datv!2 := -1 // mark as new dat format
+  //}
+
+  dayofweek := (days+4) MOD 7 // 1 Jan 1970 was a Thursday (code=4)
+  secs  := msecs/1000         // Seconds since midnight
+  msecs := msecs MOD 1000     // msecs since start of current second
+
+//sawritef("dat_to_strings: days=%n secs=%n msecs=%n*n", days, secs, msecs)
+  // Deal with case of unset date
+  IF days <= 0 DO
+  { LET unset = "<unset>"
+    FOR i = 0 TO unset%0 DO
+    { LET c = unset%i
+      datestr%i := c
+      timestr%i := c
+      dowstr%i  := c
+    }
+    RESULTIS v
+  }
+
+  days := days + 1
+  FOR j=0 TO 9 DO datestr%j := "DD-MMM-YYYY"%j
+  FOR j=0 TO 8 DO timestr%j := "HH:MM:SS"%j
+
+  // Construct date
+
+  { // Loop to get year
+    LET yearlen = isleap(year) -> 366, 365
+    IF days <= yearlen BREAK
+    days, year := days - yearlen, year + 1
+  } REPEAT
+
+  datestr%8  := year/1000 MOD 10 + '0'
+  datestr%9  := year/100  MOD 10 + '0'
+  datestr%10 := year/10   MOD 10 + '0'
+  datestr%11 := year      MOD 10 + '0'
+
+  // Find the month
+  mtable := isleap(year) -> leapmonthtab, monthtab
+
+  // 1 <= days <= 366
+  month := 1 + days / 32 // Actual month or one less
+  IF days > mtable ! month DO month := month+1
+
+  mcharbase := month*3 - 2
+  FOR j = 0 TO 2 DO datestr%(4+j) := mchars % (mcharbase + j)
+  days := days - mtable ! (month - 1)
+  datestr%1 := days/10 + '0'
+  datestr%2 := days MOD 10 + '0'
+
+  // Construct time
+
+  mins  := secs  /  60
+  hours := mins  /  60
+  mins  := mins MOD 60
+  secs  := secs MOD 60
+
+  timestr%1 := hours/10 + '0'
+  timestr%2 := hours MOD 10 + '0'
+  timestr%4 := mins/10 + '0'
+  timestr%5 := mins MOD 10 + '0'
+  timestr%7 := secs/10 MOD 10 + '0'
+  timestr%8 := secs MOD 10 + '0'
+
+  // Get day of week
+
+  dowtemp := VALOF SWITCHON dayofweek INTO
+      { CASE 0: RESULTIS "Sunday"
+        CASE 1: RESULTIS "Monday"
+        CASE 2: RESULTIS "Tuesday"
+        CASE 3: RESULTIS "Wednesday"
+        CASE 4: RESULTIS "Thursday"
+        CASE 5: RESULTIS "Friday"
+        CASE 6: RESULTIS "Saturday"
+      }
+
+  FOR j = 0 TO dowtemp%0 DO dowstr%j := dowtemp%j
+
+  RESULTIS v
+}
+
+AND isleap(year) = year MOD 400 = 0 -> TRUE,
+                   year MOD 100 = 0 -> FALSE,
+                   year MOD   4 = 0 -> TRUE,
+                                       FALSE
+
+AND readflt() = VALOF
+{ // Read and return a floating point number from the
+  // currently selected input stream.
+  // Syntax: spaces [+|-] [digits] [. digits] [e [+|-] digits]
+  // where spaces is zero or more white space chacters
+  //       [+|-] is an optional sign
+  //       digits is one or more decimal digits.
+  // There must be at least one digit before or after the decimal point.
+  // Underscores may be embedded in digit sequences.
+  // If successful, the result is the 32-bit or 64-bit representation
+  // of the floating point number, and result2 is zero.
+  // On failure the result is zero and result2 to -1.
+
+  // The strategy is as follows.
+  // Read and ignore white space: newline, newpage, tab and spaces.
+  // Read and remember the optional sign.
+  // Accumulate up to 9 or 17 digits in val.
+  // Count but otherwise ignore any additional digits left of the
+  // optional decimal point. Remember the number of non ignored
+  // digits following the optional decimal point.
+  // Negate val if the sign was negative,
+  // If the next character is E or e read and remember the optional
+  // exponent sign and accumulate the exponent digits in exponent.
+  // Negate exponent if negative.
+  // Return the 32- or 64-bit floating point number based on
+  // the val, the number of significant ignored digit and the
+  // exponent using sys(Sys_flt, fl_mk, val, exponent).
+
+  LET ch = rdch()
+  LET err = FALSE   // Set to TRUE if the number is bad.
+  LET neg = FALSE   // Sign of significand or exponent
+  LET dmax = ON64 -> 17, 9
+  LET digs = FALSE  // Set to TRUE by the first decimal digit
+                    // This must be TRUE for a valid number
+  LET dcount = -1   // =-1 or the number of digits after the
+                    // leading zeroes.
+  LET fcount = -1   // =-1 or the number of digits after the
+                    // decimal point, if any.
+  LET val, exponent = 0, 0
+
+//sawritef("readflt: entered*n"); checkpos(ch)
+
+  // Ignore leading white space
+  WHILE ch='*s' | ch='*t' | ch='*n' | ch='*p' DO
+  { //sawritef("readflt: reading white space chat %n*n", ch)
+    ch := rdch()
+  }
+
+  IF ch='-' | ch='+' DO
+  { IF ch='-' DO neg := TRUE // val must be negated
+//sawritef("readflt: dealing with '%c'*n", ch)
+    ch := rdch()
+  }
+
+  // Read the significand
+  WHILE '0'<=ch<='9' | ch='_' | ch='.' DO
+  { //sawritef("readflt: reading significand '%c'*n", ch)
+    IF ch='_' DO
+    { ch := rdch()
+      LOOP
+    }
+
+    IF ch='.' DO
+    { //sawritef("readflt: dealing with '%c'*n", ch)
+      IF fcount>=0 DO err := TRUE // Only one '.' allowed
+      fcount := 0 // Start counting fractional digits
+      ch := rdch()
+      LOOP
+    }
+
+    // ch must be a digit
+    digs := TRUE // The significand has at least one digit.
+    IF ch>'0' & dcount<0 DO dcount := 0
+    IF dcount>=0 DO dcount := dcount + 1
+    IF dcount <= dmax DO
+       val := 10*val + ch - '0' // Accumulate the significand
+    ch := rdch()
+    IF fcount >= 0 DO fcount := fcount+1 // Count the fractional
+                                         // digits
+  }
+
+  IF neg DO val := -val
+
+//sawritef("readflt: significand = %n dcount=%n fcount=%n digs=%n*n",
+//          val, dcount, fcount, digs)
+
+  // dcount = number of digits after the leading zeroes
+  // fcount indicates the number of digits after the decimal point.
+  // digs is TRUE if there were any digits.
+
+  // Read the an exponent is given.
+  IF ch='e' | ch='E' DO
+  { neg := FALSE
+//sawritef("readflt: reading exponent*n")
+    ch := rdch()
+
+    IF ch='-' | ch='+' DO
+    { //sawritef("readflt: reading exponent sign '%c'*n", ch)
+      IF ch='-' DO neg := TRUE
+      ch := rdch()
+    }
+    // Read the exponent
+    WHILE '0'<=ch<='9' | ch='_' DO
+    { sawritef("readflt: reading exponent ch='%c'*n", ch)
+      UNLESS ch='_' DO exponent := 10*exponent + ch - '0'
+      ch := rdch()
+    }
+    // Negate exponent if necessary.
+    IF neg DO exponent := -exponent
+  }
+//sawritef("readflt: exponent=%n*n", exponent)
+
+  // Unread the terminating character.
+//sawritef("readflt: about to call unrdch before returning*n")
+
+  unrdch()
+
+  // Correct the exponent.
+  IF dcount<0 DO dcount := 1 // All digits were zero
+  IF fcount<0 DO fcount := 0 // There was no decimal point
+  IF dcount < dmax DO dmax := dcount
+
+  // The number of diigits to the right of the least significant
+  // digit of the significand is: fcount-dmax
+  // so we must add dcount-dmax-fcount to the exponent
+//sawritef("readflt: val=%n exponent=%n dcount=%n fcount=%n dmax=%n*n",
+//          val, exponent, dcount, fcount, dmax)
+  exponent := exponent + dcount - dmax - fcount
+
+succ:
+  IF err DO
+  { result2 := -1
+//sawritef("readflt: Bad number*n")
+//abort(999)
+    RESULTIS 0
+  }
+
+  // Convert val x 10^exponent to a floating point number of the
+  // current BCPL word length.
+  val := sys(Sys_flt, fl_mk, val, exponent)
+//sawritef("readflt: return result %13.6f  val=%8x*n", val, val)
+  result2 :=  0  // Successful return
+  //abort(1679)
+  RESULTIS val
+}
+
 
 MANIFEST $(
     ABORT_UNKNOWNDCB = 100         // Attempt to close a DCB that was already closed?
@@ -967,7 +1239,103 @@ LET writef(format, a, b, c, d, e, f, g, h, i, j) BE $(
 $)
 
 // To provide simple cintpos support, we implement sys in BCPL as part
-// of BLIB
+// of BLIB. This code is used by code included from the official BLIB
+
+// This call decomposes the floating point number a returning the signed
+// integer mantissa and leaving the decimal exponent in result2. For example,
+// fl_unmk64(1234.5678) will return 12345678 leaving -4 in result2.
+LET fl_unmk64(f) = VALOF $(
+
+    LET mantissa = ?
+    LET exponent = 0
+    LET d = f
+    LET neg = FALSE
+
+    IF d #= 0.0 DO $(
+        result2 := 0
+        RESULTIS 0
+    $)
+
+    // Make sure we work with a positive value. We will restore the correct
+    // sign on exit
+    neg := d #< 0.0
+    IF neg DO d := #- d
+
+    // We are now going to "normalise" our floating point value so that
+    // lies in the range 1 <= d < 10, one digit before the decimal point.
+    // The first step is to reduce values above this range. To minimise
+    // the rounding error we use a large power of ten initially and then
+    // a few steps 10-by-10.
+    // while d>=10 divide by a power of 10 and adjust the exponent.
+    WHILE d #>= 100000.0 & exponent < 100 DO$(
+        d #/:= 100000.0
+        exponent +:= 5
+    $)
+
+    WHILE d #>= 10.0 & exponent < 100 DO$(
+        d #/:= 10.0
+        exponent +:= 1
+    $)
+
+    IF  exponent >= 100 DO $(
+        result2 := 100
+        RESULTIS 1
+    $)
+
+    // Having reduced and large number to be less than 10, we now consider
+    // the case of values less than or equal to 1. Here, we scale up the
+    // value in a similar way to above
+
+    WHILE d #<= 0.00001 & exponent > -100 DO $(
+        d #*:= 100000.0
+        exponent -:= 5
+    $)
+
+    WHILE d #< 1.0 & exponent > -100 DO $(
+        d #*:= 10.0
+        exponent -:= 1
+    $)
+
+    IF exponent <= -100  DO $(
+        result2 := 0 // Treat 1E-100 as 0.0
+        RESULTIS 0
+    $)
+
+    // Now we know it is in the range 1 <= d < 10 we can obtain all of
+    // the 17 decimal digits in the mantissa
+    // d is now <10.0 and >= 1.0
+    mantissa := FIX (d * 1e16)     // Mantissa has 17 digits
+    exponent -:= 16
+
+    // If this is the 32-bit world, then there are only 9 significant
+    // digits in the mantissa so we need to adjust it accordingly
+    IF BYTESPERWORD = 4 DO $(
+        WHILE mantissa >= 1e10 DO $(
+            mantissa /:= 10  // Divide by 10 without rounding
+            exponent +:= 1
+        $)
+        IF mantissa >= 1e9 DO $(
+            mantissa := (mantissa+5)/10  // Divide by 10 with rounding
+            exponent +:= 1
+        $)
+    $)
+
+    // Divide mantissa by 10 with rounding and correct the exponent.
+    mantissa := (mantissa+5)/10
+    exponent +:= 1
+
+    // Ensure the least significant decimal digit of mantissa
+    // is not 0. Checking mantissa non zero for safety.
+    WHILE (mantissa REM 10) = 0 & mantissa ~= 0 DO $(
+        mantissa /:= 10
+        exponent +:= 1
+    $)
+
+    IF  mantissa = 0 DO exponent := 0 // For safety.
+
+    result2 := exponent
+    RESULTIS neg -> -mantissa, mantissa
+$)
 
 LET sys_flt(operation, a, b, c, d) = VALOF $(
     LET result = ?
@@ -982,15 +1350,7 @@ LET sys_flt(operation, a, b, c, d) = VALOF $(
             WHILE b < 0 DO $( result #/:= 10.0; b +:= 1 $)
         ENDCASE
 
-        CASE fl_unmk: $(
-            LET m, e, s = a, 0, m #>= 0.0 -> 1, -1
-            IF s = -1 DO m :=  #- m
-            WHILE m #>= 10.0 DO $( m #/:= 10.0; e +:= 1 ; writef("%10.5f %n*n", m, e) $)
-            WHILE m # <= 1.0 DO $( m #*:= 10.0; e -:= 1 ; writef("%10.5f %n*n", m, e) $)
-            result2 := e
-            result := s = 1 -> m, #-m
-        $)
-        ENDCASE
+        CASE fl_unmk: result := fl_unmk64 (a);                          ENDCASE
 
         CASE fl_float: result := FLOAT a;                               ENDCASE
         CASE fl_fix:   result := FIX a;                                 ENDCASE
@@ -1030,6 +1390,9 @@ LET sys(package, operation, a, b, c, d) = VALOF $(
 $)
 
 AND writes(s) BE FOR i = 1 TO s%0 DO wrch(s%i)
+
+LET writefp(a, f, n) BE writeflt(a, f, n)
+LET readfp(a) = readflt()
 
 // A stub to support rditem below
 LET deplete(stream) BE stop(1)
@@ -1360,6 +1723,42 @@ LET time() = VALOF $(
     result2 := opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
     RESULTIS result2 = 0 -> tm!0 * 1000000000 + tm!1, 0
 $)
+
+LET datstamp(v) = VALOF $(
+    // The tm struct is two 64-bit values
+    LET tm = VEC 1
+
+    // Get CLOCK_MONOTONIC as this never goes backward on wall clock changes
+    // so is reliable for timing intervals. The result will not wrap this
+    // century.
+    result2 := opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
+
+    // Days since the epoch from seconds since the epoch
+    v!0 := tm!0 / 60 / 60 / 24
+
+    // Milliseconds since midnight from seconds since midnight and nanoseconds
+    v!1 := (tm!0 REM (60 * 60 * 24)) * 1_000 + tm!1/1_000_000
+
+    // Element v!2 is not used
+    RESULTIS result2 = 0
+$)
+
+LET timeofday() = VALOF $(
+    STATIC $( datstr $)
+    LET dv = VEC 1
+    datstr := TABLE 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    datstamp(dv)
+    dat_to_strings(dv, datstr)
+
+    // datstr now contains three bcpl strings:
+    // datstr+0:  Today's date: 28-Jun-2025
+    // datstr+5:  The GMT time: 10:45:21
+    // datstr+10: The weekday:  Saturday
+
+    RESULTIS datstr
+$)
+
+LET date() = timeofday() + 5
 
 LET stacksize() = VALOF $(
 
@@ -1739,54 +2138,6 @@ LET mapstore() BE $(
     writes("*n--------------------------------------------------------------------------------*n*n")
 $)
 
-LET xgetenv(value, name) BE $(
-
-    // Search the environment for the variable with the given name and, if
-    // found, copy it into s BCPL string in the vector <value>, If the
-    // variable is not found, place an empty BCPL string in value instead.
-$)
-
-//LET xfindstream(path, access, searchvar) = VALOF $(
-//{
-//    LET access_strings = TABLE ?, "r", "w", "rw"
-//    LET access_string = access_strings!access
-//    LET c_path = VEC 256 / BYTESPERWORD
-//
-//
-//    // Convert the bcpl path to a c string
-//    FOR i = 1 TO path%0 DO c_path%(i-1) := path%i
-//    c_path%(path%0) := 0
-//
-//    // If there is no search path or the path is absolute, do the open immediately
-//    if (searchvar == 0 || c_path[0] == '/') return openpath(c_path, selected_mode);
-//
-//    // Get the name of the environment variable
-//
-//    const char* const variable_name = c_string(searchvar);
-//
-//    // Get its value. We must not modify the value returned so we need to
-//    // copy it for strtok to modify. We'll restrict ourselves to the first
-//    // 4K of text.
-//    const char* const variable_text = getenv(variable_name);
-//    if (variable_text == NULL) return openpath(c_path, selected_mode);
-//    if (strlen(variable_text) >= 4096) return 0;
-//    char search_string[4096];
-//    strcpy(search_string, variable_text);
-//
-//    for (const char* directory = strtok(search_string, ":;"); directory != NULL; directory = strtok(NULL, ":;"))
-//    {
-//        char full_path[256+256];
-//        strcpy(full_path, directory);
-//        strcat(full_path, "/");
-//        strcat(full_path, c_path);
-//        FILE* file = fopen(full_path, selected_mode);
-//        if (file != NULL) return (bcplword_t)file;
-//    }
-//
-//    // Return the value of errno in result2
-//    __bcpl_global_vector[G_RESULT2] = errno;
-//    return 0;
-//$)
 
 LET blib.undefined() BE abort(ABORT_UNDEFINEDGLOBAL)
 

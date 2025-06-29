@@ -45,6 +45,9 @@ GET "libhdr"
 %insert output
 %insert writeflt
 %insert writez
+%insert dat_to_strings
+%insert isleap
+%insert readflt
 
 MANIFEST $(
     ABORT_UNKNOWNDCB = 100         // Attempt to close a DCB that was already closed?
@@ -78,7 +81,103 @@ LET writef(format, a, b, c, d, e, f, g, h, i, j) BE $(
 $)
 
 // To provide simple cintpos support, we implement sys in BCPL as part
-// of BLIB
+// of BLIB. This code is used by code included from the official BLIB
+
+// This call decomposes the floating point number a returning the signed
+// integer mantissa and leaving the decimal exponent in result2. For example,
+// fl_unmk64(1234.5678) will return 12345678 leaving -4 in result2.
+LET fl_unmk64(f) = VALOF $(
+
+    LET mantissa = ?
+    LET exponent = 0
+    LET d = f
+    LET neg = FALSE
+
+    IF d #= 0.0 DO $(
+        result2 := 0
+        RESULTIS 0
+    $)
+
+    // Make sure we work with a positive value. We will restore the correct
+    // sign on exit
+    neg := d #< 0.0
+    IF neg DO d := #- d
+
+    // We are now going to "normalise" our floating point value so that
+    // lies in the range 1 <= d < 10, one digit before the decimal point.
+    // The first step is to reduce values above this range. To minimise
+    // the rounding error we use a large power of ten initially and then
+    // a few steps 10-by-10.
+    // while d>=10 divide by a power of 10 and adjust the exponent.
+    WHILE d #>= 100000.0 & exponent < 100 DO$(
+        d #/:= 100000.0
+        exponent +:= 5
+    $)
+
+    WHILE d #>= 10.0 & exponent < 100 DO$(
+        d #/:= 10.0
+        exponent +:= 1
+    $)
+
+    IF  exponent >= 100 DO $(
+        result2 := 100
+        RESULTIS 1
+    $)
+
+    // Having reduced and large number to be less than 10, we now consider
+    // the case of values less than or equal to 1. Here, we scale up the
+    // value in a similar way to above
+
+    WHILE d #<= 0.00001 & exponent > -100 DO $(
+        d #*:= 100000.0
+        exponent -:= 5
+    $)
+
+    WHILE d #< 1.0 & exponent > -100 DO $(
+        d #*:= 10.0
+        exponent -:= 1
+    $)
+
+    IF exponent <= -100  DO $(
+        result2 := 0 // Treat 1E-100 as 0.0
+        RESULTIS 0
+    $)
+
+    // Now we know it is in the range 1 <= d < 10 we can obtain all of
+    // the 17 decimal digits in the mantissa
+    // d is now <10.0 and >= 1.0
+    mantissa := FIX (d * 1e16)     // Mantissa has 17 digits
+    exponent -:= 16
+
+    // If this is the 32-bit world, then there are only 9 significant
+    // digits in the mantissa so we need to adjust it accordingly
+    IF BYTESPERWORD = 4 DO $(
+        WHILE mantissa >= 1e10 DO $(
+            mantissa /:= 10  // Divide by 10 without rounding
+            exponent +:= 1
+        $)
+        IF mantissa >= 1e9 DO $(
+            mantissa := (mantissa+5)/10  // Divide by 10 with rounding
+            exponent +:= 1
+        $)
+    $)
+
+    // Divide mantissa by 10 with rounding and correct the exponent.
+    mantissa := (mantissa+5)/10
+    exponent +:= 1
+
+    // Ensure the least significant decimal digit of mantissa
+    // is not 0. Checking mantissa non zero for safety.
+    WHILE (mantissa REM 10) = 0 & mantissa ~= 0 DO $(
+        mantissa /:= 10
+        exponent +:= 1
+    $)
+
+    IF  mantissa = 0 DO exponent := 0 // For safety.
+
+    result2 := exponent
+    RESULTIS neg -> -mantissa, mantissa
+$)
 
 LET sys_flt(operation, a, b, c, d) = VALOF $(
     LET result = ?
@@ -93,15 +192,7 @@ LET sys_flt(operation, a, b, c, d) = VALOF $(
             WHILE b < 0 DO $( result #/:= 10.0; b +:= 1 $)
         ENDCASE
 
-        CASE fl_unmk: $(
-            LET m, e, s = a, 0, m #>= 0.0 -> 1, -1
-            IF s = -1 DO m :=  #- m
-            WHILE m #>= 10.0 DO $( m #/:= 10.0; e +:= 1 ; writef("%10.5f %n*n", m, e) $)
-            WHILE m # <= 1.0 DO $( m #*:= 10.0; e -:= 1 ; writef("%10.5f %n*n", m, e) $)
-            result2 := e
-            result := s = 1 -> m, #-m
-        $)
-        ENDCASE
+        CASE fl_unmk: result := fl_unmk64 (a);                          ENDCASE
 
         CASE fl_float: result := FLOAT a;                               ENDCASE
         CASE fl_fix:   result := FIX a;                                 ENDCASE
@@ -141,6 +232,9 @@ LET sys(package, operation, a, b, c, d) = VALOF $(
 $)
 
 AND writes(s) BE FOR i = 1 TO s%0 DO wrch(s%i)
+
+LET writefp(a, f, n) BE writeflt(a, f, n)
+LET readfp(a) = readflt()
 
 // A stub to support rditem below
 LET deplete(stream) BE stop(1)
@@ -471,6 +565,42 @@ LET time() = VALOF $(
     result2 := opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
     RESULTIS result2 = 0 -> tm!0 * 1000000000 + tm!1, 0
 $)
+
+LET datstamp(v) = VALOF $(
+    // The tm struct is two 64-bit values
+    LET tm = VEC 1
+
+    // Get CLOCK_MONOTONIC as this never goes backward on wall clock changes
+    // so is reliable for timing intervals. The result will not wrap this
+    // century.
+    result2 := opsys(OPSYS_CLOCK_GETTIME, CLOCK_MONOTONIC, tm << 3)
+
+    // Days since the epoch from seconds since the epoch
+    v!0 := tm!0 / 60 / 60 / 24
+
+    // Milliseconds since midnight from seconds since midnight and nanoseconds
+    v!1 := (tm!0 REM (60 * 60 * 24)) * 1_000 + tm!1/1_000_000
+
+    // Element v!2 is not used
+    RESULTIS result2 = 0
+$)
+
+LET timeofday() = VALOF $(
+    STATIC $( datstr $)
+    LET dv = VEC 1
+    datstr := TABLE 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    datstamp(dv)
+    dat_to_strings(dv, datstr)
+
+    // datstr now contains three bcpl strings:
+    // datstr+0:  Today's date: 28-Jun-2025
+    // datstr+5:  The GMT time: 10:45:21
+    // datstr+10: The weekday:  Saturday
+
+    RESULTIS datstr
+$)
+
+LET date() = timeofday() + 5
 
 LET stacksize() = VALOF $(
 
@@ -850,54 +980,6 @@ LET mapstore() BE $(
     writes("*n--------------------------------------------------------------------------------*n*n")
 $)
 
-LET xgetenv(value, name) BE $(
-
-    // Search the environment for the variable with the given name and, if
-    // found, copy it into s BCPL string in the vector <value>, If the
-    // variable is not found, place an empty BCPL string in value instead.
-$)
-
-//LET xfindstream(path, access, searchvar) = VALOF $(
-//{
-//    LET access_strings = TABLE ?, "r", "w", "rw"
-//    LET access_string = access_strings!access
-//    LET c_path = VEC 256 / BYTESPERWORD
-//
-//
-//    // Convert the bcpl path to a c string
-//    FOR i = 1 TO path%0 DO c_path%(i-1) := path%i
-//    c_path%(path%0) := 0
-//
-//    // If there is no search path or the path is absolute, do the open immediately
-//    if (searchvar == 0 || c_path[0] == '/') return openpath(c_path, selected_mode);
-//
-//    // Get the name of the environment variable
-//
-//    const char* const variable_name = c_string(searchvar);
-//
-//    // Get its value. We must not modify the value returned so we need to
-//    // copy it for strtok to modify. We'll restrict ourselves to the first
-//    // 4K of text.
-//    const char* const variable_text = getenv(variable_name);
-//    if (variable_text == NULL) return openpath(c_path, selected_mode);
-//    if (strlen(variable_text) >= 4096) return 0;
-//    char search_string[4096];
-//    strcpy(search_string, variable_text);
-//
-//    for (const char* directory = strtok(search_string, ":;"); directory != NULL; directory = strtok(NULL, ":;"))
-//    {
-//        char full_path[256+256];
-//        strcpy(full_path, directory);
-//        strcat(full_path, "/");
-//        strcat(full_path, c_path);
-//        FILE* file = fopen(full_path, selected_mode);
-//        if (file != NULL) return (bcplword_t)file;
-//    }
-//
-//    // Return the value of errno in result2
-//    __bcpl_global_vector[G_RESULT2] = errno;
-//    return 0;
-//$)
 
 LET blib.undefined() BE abort(ABORT_UNDEFINEDGLOBAL)
 
