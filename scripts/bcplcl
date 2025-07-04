@@ -137,9 +137,9 @@ do
         ;;
 
     ll)
-        s_path=${WORKDIR}/${name}.s
-        perform "llc --relocation-model=pic ${optimise} ${input} -o ${s_path}"
-        input_queue+=(${s_path})
+        o_path=${WORKDIR}/${name}.o
+        perform "llc --relocation-model=pic --frame-pointer=all --filetype=obj ${optimise} ${input} -o ${o_path}"
+        input_queue+=(${o_path})
         ;;
 
     s)
