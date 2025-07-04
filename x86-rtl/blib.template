@@ -55,6 +55,8 @@ MANIFEST $(
     ABORT_NOCOS                    // Attempt to operate on COS when none is selected
     ABORT_UNDEFINEDGLOBAL          // Attempt to call an undefined globak
     ABORT_STARTUNDEFINED           // No definition for start()
+    ABORT_TOOMANYLEVELS = 105      // Run out of space to allocate more level() state
+    ABORT_NOSUCHLEVEL = 106        // First argument to longjump not a level() state
 $)
 
 // -----------------------------------------------------------------------------
@@ -240,6 +242,7 @@ LET readfp(a) = readflt()
 LET deplete(stream) BE stop(1)
 
 LET abort(code) BE $(
+    opsys(OPSYS_WRITE, 2, ("*n****Aborted*****n" << 3) + 1, 13)
     opsys(OPSYS_EXIT, code)
 $)
 

@@ -239,7 +239,7 @@ GLOBAL $(
     rdargs2: ?
     rdargs:  ?
     rditem:  ?
-    abort:   ?
+    abort:   28
     randno:  ?
     setseed: ?
     capitalch: ?

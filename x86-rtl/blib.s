@@ -5097,14 +5097,30 @@ deplete:                                # @deplete
 abort:                                  # @abort
 	.cfi_startproc
 # %bb.0:                                # %entry
-	pushq	%rax
+	pushq	%r14
 	.cfi_def_cfa_offset 16
-	movq	%rdi, %rsi
-	movq	__bcpl_global_vector@GOTPCREL(%rip), %rax
+	pushq	%rbx
+	.cfi_def_cfa_offset 24
+	pushq	%rax
+	.cfi_def_cfa_offset 32
+	.cfi_offset %rbx, -24
+	.cfi_offset %r14, -16
+	movq	%rdi, %rbx
+	movq	__bcpl_global_vector@GOTPCREL(%rip), %r14
+	leaq	.Llstr.global.71+1(%rip), %rdx
+	movl	$1, %edi
+	movl	$2, %esi
+	movl	$13, %ecx
+	callq	*256(%r14)
 	movl	$60, %edi
-	callq	*256(%rax)
+	movq	%rbx, %rsi
+	callq	*256(%r14)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
-	popq	%rcx
+	addq	$8, %rsp
+	.cfi_def_cfa_offset 24
+	popq	%rbx
+	.cfi_def_cfa_offset 16
+	popq	%r14
 	.cfi_def_cfa_offset 8
 	retq
 .Lfunc_end42:
@@ -5249,29 +5265,29 @@ blib.dumpheap:                          # @blib.dumpheap
 	.cfi_offset %r14, -32
 	.cfi_offset %r15, -24
 	.cfi_offset %rbp, -16
-	movq	itemn.global.83(%rip), %rbx
-	leaq	.Llstr.global.90(%rip), %rdi
+	movq	itemn.global.84(%rip), %rbx
+	leaq	.Llstr.global.91(%rip), %rdi
 	sarq	$3, %rdi
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %r15
 	callq	*712(%r15)
-	movq	itemn.global.81(%rip), %rdx
+	movq	itemn.global.82(%rip), %rdx
 	testq	%rdx, %rdx
 	je	.LBB52_1
 # %bb.2:                                # %jf.then_L572
-	leaq	.Llstr.global.92(%rip), %rdi
+	leaq	.Llstr.global.93(%rip), %rdi
 	sarq	$3, %rdi
-	movq	itemn.global.82(%rip), %rcx
+	movq	itemn.global.83(%rip), %rcx
 	leaq	(,%rdx,8), %r8
 	leaq	(,%rcx,8), %r9
 	movl	$1048576, %esi                  # imm = 0x100000
 	callq	*752(%r15)
-	leaq	.Llstr.global.93(%rip), %rdi
-	sarq	$3, %rdi
-	callq	*712(%r15)
 	leaq	.Llstr.global.94(%rip), %rdi
 	sarq	$3, %rdi
 	callq	*712(%r15)
-	leaq	.Llstr.global.95(%rip), %rax
+	leaq	.Llstr.global.95(%rip), %rdi
+	sarq	$3, %rdi
+	callq	*712(%r15)
+	leaq	.Llstr.global.96(%rip), %rax
 	sarq	$3, %rax
 	movq	%rax, 16(%rsp)                  # 8-byte Spill
 	xorl	%r14d, %r14d
@@ -5304,7 +5320,7 @@ blib.dumpheap:                          # @blib.dumpheap
 	movq	%rbp, %rdx
 	movq	%rbx, %rcx
 	callq	*752(%r15)
-	movq	itemn.global.82(%rip), %rax
+	movq	itemn.global.83(%rip), %rax
 	cmpq	%rax, %rbx
 	jl	.LBB52_4
 # %bb.5:                                # %lab_L580
@@ -5337,7 +5353,7 @@ blib.dumpheap:                          # @blib.dumpheap
 	callq	*696(%r15)
 	movl	$32, %edi
 	callq	*328(%r15)
-	movq	itemn.global.82(%rip), %rax
+	movq	itemn.global.83(%rip), %rax
 	leaq	1(%rbx), %rcx
 	cmpq	%rax, %rcx
 	jge	.LBB52_7
@@ -5348,7 +5364,7 @@ blib.dumpheap:                          # @blib.dumpheap
 	callq	*696(%r15)
 	movl	$32, %edi
 	callq	*328(%r15)
-	movq	itemn.global.82(%rip), %rax
+	movq	itemn.global.83(%rip), %rax
 	leaq	2(%rbx), %rcx
 	cmpq	%rax, %rcx
 	jge	.LBB52_9
@@ -5359,7 +5375,7 @@ blib.dumpheap:                          # @blib.dumpheap
 	callq	*696(%r15)
 	movl	$32, %edi
 	callq	*328(%r15)
-	movq	itemn.global.82(%rip), %rax
+	movq	itemn.global.83(%rip), %rax
 	leaq	3(%rbx), %rcx
 	cmpq	%rax, %rcx
 	jge	.LBB52_11
@@ -5370,7 +5386,7 @@ blib.dumpheap:                          # @blib.dumpheap
 	callq	*696(%r15)
 	movl	$32, %edi
 	callq	*328(%r15)
-	movq	itemn.global.82(%rip), %rax
+	movq	itemn.global.83(%rip), %rax
 	addq	$4, %rbx
 	cmpq	%rax, %rbx
 	jge	.LBB52_13
@@ -5383,27 +5399,27 @@ blib.dumpheap:                          # @blib.dumpheap
 	callq	*328(%r15)
 	jmp	.LBB52_13
 .LBB52_14:                              # %lab_L574
-	leaq	.Llstr.global.96(%rip), %rdi
+	leaq	.Llstr.global.97(%rip), %rdi
 	sarq	$3, %rdi
 	movq	%rsi, %rbx
 	callq	*712(%r15)
-	leaq	.Llstr.global.97(%rip), %rdi
+	leaq	.Llstr.global.98(%rip), %rdi
 	sarq	$3, %rdi
 	movq	%r14, %rsi
 	movq	%rbx, %rdx
 	movq	%r12, %rcx
 	callq	*752(%r15)
-	leaq	.Llstr.global.98(%rip), %rdi
+	leaq	.Llstr.global.99(%rip), %rdi
 	sarq	$3, %rdi
-	movq	itemn.global.84(%rip), %rsi
-	movq	itemn.global.86(%rip), %rdx
-	movq	itemn.global.85(%rip), %rcx
-	movq	itemn.global.88(%rip), %r8
-	movq	itemn.global.87(%rip), %r9
+	movq	itemn.global.85(%rip), %rsi
+	movq	itemn.global.87(%rip), %rdx
+	movq	itemn.global.86(%rip), %rcx
+	movq	itemn.global.89(%rip), %r8
+	movq	itemn.global.88(%rip), %r9
 	callq	*752(%r15)
 	jmp	.LBB52_15
 .LBB52_1:                               # %jf.else
-	leaq	.Llstr.global.91(%rip), %rdi
+	leaq	.Llstr.global.92(%rip), %rdi
 	sarq	$3, %rdi
 	callq	*752(%r15)
 .LBB52_15:                              # %common.ret
@@ -5431,7 +5447,7 @@ blib.dumpheap:                          # @blib.dumpheap
 blib.init_heap:                         # @blib.init_heap
 	.cfi_startproc
 # %bb.0:                                # %entry
-	cmpq	$0, itemn.global.81(%rip)
+	cmpq	$0, itemn.global.82(%rip)
 	je	.LBB53_1
 # %bb.4:                                # %common.ret
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
@@ -5451,7 +5467,7 @@ blib.init_heap:                         # @blib.init_heap
 	xorl	%esi, %esi
 	xorl	%r9d, %r9d
 	callq	*256(%rbx)
-	movq	%rax, itemn.global.81(%rip)
+	movq	%rax, itemn.global.82(%rip)
 	testq	%rax, %rax
 	jns	.LBB53_3
 # %bb.2:                                # %jf.else27
@@ -5459,31 +5475,31 @@ blib.init_heap:                         # @blib.init_heap
 	movl	$60, %edi
 	movq	%rax, %rsi
 	callq	*256(%rbx)
-	movq	itemn.global.81(%rip), %rax
+	movq	itemn.global.82(%rip), %rax
 .LBB53_3:                               # %jf.then_L584
 	movq	%rax, %rcx
 	shrq	$3, %rcx
-	movq	%rcx, itemn.global.81(%rip)
+	movq	%rcx, itemn.global.82(%rip)
 	leaq	1048576(%rcx), %rdx
-	movq	%rdx, itemn.global.82(%rip)
-	movq	%rcx, itemn.global.83(%rip)
+	movq	%rdx, itemn.global.83(%rip)
+	movq	%rcx, itemn.global.84(%rip)
 	andq	$-8, %rax
 	movabsq	$-9223372036854775808, %rcx     # imm = 0x8000000000000000
 	movq	(%rax), %rdx
 	andq	%rcx, %rdx
 	orq	$1048576, %rdx                  # imm = 0x100000
 	movq	%rdx, (%rax)
-	movq	itemn.global.83(%rip), %rax
+	movq	itemn.global.84(%rip), %rax
 	orq	%rcx, (,%rax,8)
-	movq	itemn.global.83(%rip), %rax
+	movq	itemn.global.84(%rip), %rax
 	movq	$0, 8(,%rax,8)
-	movq	itemn.global.83(%rip), %rax
+	movq	itemn.global.84(%rip), %rax
 	movq	$0, 16(,%rax,8)
-	movq	$0, itemn.global.84(%rip)
 	movq	$0, itemn.global.85(%rip)
 	movq	$0, itemn.global.86(%rip)
 	movq	$0, itemn.global.87(%rip)
 	movq	$0, itemn.global.88(%rip)
+	movq	$0, itemn.global.89(%rip)
 	addq	$16, %rsp
 	.cfi_def_cfa_offset 16
 	popq	%rbx
@@ -5503,13 +5519,13 @@ blib.finish_heap:                       # @blib.finish_heap
 # %bb.0:                                # %entry
 	pushq	%rax
 	.cfi_def_cfa_offset 16
-	movq	itemn.global.81(%rip), %rsi
+	movq	itemn.global.82(%rip), %rsi
 	shlq	$3, %rsi
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %rax
 	movl	$11, %edi
 	movl	$8388608, %edx                  # imm = 0x800000
 	callq	*256(%rax)
-	movq	$0, itemn.global.81(%rip)
+	movq	$0, itemn.global.82(%rip)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
 	popq	%rcx
 	.cfi_def_cfa_offset 8
@@ -5525,7 +5541,7 @@ blib.add_to_free_list:                  # @blib.add_to_free_list
 # %bb.0:                                # %entry
 	leaq	(,%rdi,8), %rax
 	orb	$-128, 7(,%rdi,8)
-	movq	itemn.global.83(%rip), %rcx
+	movq	itemn.global.84(%rip), %rcx
 	testq	%rcx, %rcx
 	je	.LBB55_1
 # %bb.2:                                # %jf.else69
@@ -5563,17 +5579,17 @@ blib.add_to_free_list:                  # @blib.add_to_free_list
 .LBB55_7:                               # %jf.else128
 	movq	%rcx, 8(%rax)
 	movq	$0, 16(%rax)
-	movq	itemn.global.83(%rip), %rax
+	movq	itemn.global.84(%rip), %rax
 	testq	%rax, %rax
 	je	.LBB55_9
 # %bb.8:                                # %jf.else164
 	movq	%rdi, 16(,%rax,8)
 .LBB55_9:                               # %jf.then_L593
-	movq	%rdi, itemn.global.83(%rip)
+	movq	%rdi, itemn.global.84(%rip)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
 	retq
 .LBB55_1:                               # %jf.else
-	movq	%rdi, itemn.global.83(%rip)
+	movq	%rdi, itemn.global.84(%rip)
 	movq	$0, 8(%rax)
 	movq	$0, 16(%rax)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
@@ -5591,7 +5607,7 @@ blib.remove_from_free_list:             # @blib.remove_from_free_list
 	movq	16(,%rdi,8), %rdx
 	testq	%rdx, %rdx
 	leaq	8(,%rdx,8), %rdx
-	leaq	itemn.global.83(%rip), %rsi
+	leaq	itemn.global.84(%rip), %rsi
 	cmovneq	%rdx, %rsi
 	movq	%rcx, (%rsi)
 	movq	8(,%rdi,8), %rcx
@@ -5619,7 +5635,7 @@ blib.coalesce:                          # @blib.coalesce
 	movq	(,%rdi,8), %rsi
 	andq	%rcx, %rsi
 	addq	%rdi, %rsi
-	cmpq	itemn.global.82(%rip), %rsi
+	cmpq	itemn.global.83(%rip), %rsi
 	jge	.LBB57_5
 # %bb.1:                                # %jf.else
 	cmpq	$0, (,%rsi,8)
@@ -5632,7 +5648,7 @@ blib.coalesce:                          # @blib.coalesce
 	leaq	8(%rsi), %r8
 	testq	%r10, %r10
 	leaq	8(,%r10,8), %r10
-	leaq	itemn.global.83(%rip), %r11
+	leaq	itemn.global.84(%rip), %r11
 	cmovneq	%r10, %r11
 	movq	%r9, (%r11)
 	movq	8(%rsi), %r9
@@ -5684,7 +5700,7 @@ blib.coalesce:                          # @blib.coalesce
 	testq	%r8, %r8
 	movq	(%rsi), %r9
 	leaq	8(,%r8,8), %r8
-	leaq	itemn.global.83(%rip), %r10
+	leaq	itemn.global.84(%rip), %r10
 	cmovneq	%r8, %r10
 	movq	%r9, (%r10)
 	movq	(%rsi), %r8
@@ -5774,7 +5790,7 @@ getvec:                                 # @getvec
 	.cfi_offset %rbp, -16
 	movq	%rdi, %rbx
 	callq	blib.init_heap@PLT
-	movq	itemn.global.83(%rip), %rax
+	movq	itemn.global.84(%rip), %rax
 	testq	%rax, %rax
 	je	.LBB59_5
 # %bb.1:                                # %lab_L606.preheader
@@ -5805,7 +5821,7 @@ getvec:                                 # @getvec
 	leaq	8(%r13), %rbp
 	testq	%rdi, %rdi
 	leaq	8(,%rdi,8), %rdi
-	leaq	itemn.global.83(%rip), %r8
+	leaq	itemn.global.84(%rip), %r8
 	cmovneq	%rdi, %r8
 	movq	%rsi, (%r8)
 	movq	8(%r13), %rsi
@@ -5844,19 +5860,19 @@ getvec:                                 # @getvec
 	movq	%rcx, (%rbp)
 	addq	%rax, %r15
 	movq	%rcx, (,%r15,8)
-	incq	itemn.global.84(%rip)
-	movq	itemn.global.88(%rip), %rcx
+	incq	itemn.global.85(%rip)
+	movq	itemn.global.89(%rip), %rcx
 	addq	%r14, %rcx
-	movq	%rcx, itemn.global.88(%rip)
-	cmpq	itemn.global.87(%rip), %rcx
+	movq	%rcx, itemn.global.89(%rip)
+	cmpq	itemn.global.88(%rip), %rcx
 	jle	.LBB59_12
 # %bb.11:                               # %jf.else151
-	movq	%rcx, itemn.global.87(%rip)
+	movq	%rcx, itemn.global.88(%rip)
 .LBB59_12:                              # %jf.then_L610
-	cmpq	itemn.global.86(%rip), %r14
+	cmpq	itemn.global.87(%rip), %r14
 	jle	.LBB59_14
 # %bb.13:                               # %jf.else171
-	movq	%r14, itemn.global.86(%rip)
+	movq	%r14, itemn.global.87(%rip)
 .LBB59_14:                              # %jf.then_L611
 	addq	$2, %rax
 .LBB59_15:                              # %common.ret
@@ -5921,10 +5937,10 @@ freevec:                                # @freevec
 .LBB60_4:                               # %jf.then_L614
 	movabsq	$9223372036854775807, %r12      # imm = 0x7FFFFFFFFFFFFFFF
 	leaq	-16(,%r14,8), %r14
-	cmpq	itemn.global.81(%rip), %rbx
+	cmpq	itemn.global.82(%rip), %rbx
 	jl	.LBB60_6
 # %bb.5:                                # %jf.then_L614
-	cmpq	itemn.global.82(%rip), %rbx
+	cmpq	itemn.global.83(%rip), %rbx
 	jge	.LBB60_6
 # %bb.7:                                # %jf.then_L616
 	andq	%r12, %r15
@@ -5935,11 +5951,11 @@ freevec:                                # @freevec
 	callq	blib.add_to_free_list@PLT
 	movq	%rbx, %rdi
 	callq	blib.coalesce@PLT
-	incq	itemn.global.85(%rip)
-	movq	itemn.global.88(%rip), %rax
+	incq	itemn.global.86(%rip)
+	movq	itemn.global.89(%rip), %rax
 	negq	%r15
 	leaq	3(%rax,%r15), %rax
-	movq	%rax, itemn.global.88(%rip)
+	movq	%rax, itemn.global.89(%rip)
 	addq	$8, %rsp
 	.cfi_def_cfa_offset 40
 	popq	%rbx
@@ -5991,7 +6007,7 @@ maxvec:                                 # @maxvec
 	pushq	%rax
 	.cfi_def_cfa_offset 16
 	callq	blib.init_heap@PLT
-	movq	itemn.global.83(%rip), %rcx
+	movq	itemn.global.84(%rip), %rcx
 	xorl	%eax, %eax
 	testq	%rcx, %rcx
 	je	.LBB61_3
@@ -6138,9 +6154,9 @@ timeofday:                              # @timeofday
 	.cfi_offset %r14, -16
 	leaq	8(%rsp), %rbx
 	sarq	$3, %rbx
-	leaq	itemn.global.115(%rip), %rax
+	leaq	itemn.global.116(%rip), %rax
 	sarq	$3, %rax
-	movq	%rax, itemn.global.114(%rip)
+	movq	%rax, itemn.global.115(%rip)
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %r14
 	leaq	24(%rsp), %rdx
 	movl	$228, %edi
@@ -6167,10 +6183,10 @@ timeofday:                              # @timeofday
 	addq	%rax, %rdx
 	addq	%rcx, %rdx
 	movq	%rdx, 16(%rsp)
-	movq	itemn.global.114(%rip), %rsi
+	movq	itemn.global.115(%rip), %rsi
 	movq	%rbx, %rdi
 	callq	dat_to_strings@PLT
-	movq	itemn.global.114(%rip), %rax
+	movq	itemn.global.115(%rip), %rax
 	addq	$40, %rsp
 	.cfi_def_cfa_offset 24
 	popq	%rbx
@@ -6316,9 +6332,9 @@ blib.allocate_dcb:                      # @blib.allocate_dcb
 	movq	%r14, 32(,%rax,8)
 	movq	(%rsp), %rcx                    # 8-byte Reload
 	movq	%rcx, 24(,%rax,8)
-	movq	itemn.global.122(%rip), %rcx
+	movq	itemn.global.123(%rip), %rcx
 	movq	%rcx, 40(,%rax,8)
-	movq	%rax, itemn.global.122(%rip)
+	movq	%rax, itemn.global.123(%rip)
 	jmp	.LBB68_2
 .LBB68_4:                               # %jf.else31
 	movq	%r13, %rdi
@@ -6469,7 +6485,7 @@ xx:                                     # @xx
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %rbx
 	callq	*472(%rbx)
 	movq	%rax, (%rsp)                    # 8-byte Spill
-	movq	itemn.global.121(%rip), %rdi
+	movq	itemn.global.122(%rip), %rdi
 	callq	*456(%rbx)
 	movq	%rbp, %rdi
 	movq	%r13, %rsi
@@ -6562,7 +6578,7 @@ blib.block_close:                       # @blib.block_close
 	testb	$8, (%r14)
 	jne	.LBB72_9
 .LBB72_5:                               # %jt.else
-	movq	itemn.global.122(%rip), %rax
+	movq	itemn.global.123(%rip), %rax
 	testq	%rax, %rax
 	je	.LBB72_6
 # %bb.10:                               # %lab_L651.preheader
@@ -6570,7 +6586,7 @@ blib.block_close:                       # @blib.block_close
 	jne	.LBB72_11
 # %bb.13:                               # %jf.else74
 	movq	40(%r14), %rax
-	movq	%rax, itemn.global.122(%rip)
+	movq	%rax, itemn.global.123(%rip)
 	jmp	.LBB72_14
 .LBB72_6:
 	movl	$224, %r15d
@@ -6777,10 +6793,10 @@ blib.tty_read:                          # @blib.tty_read
 	.size	blib.tty_read, .Lfunc_end75-blib.tty_read
 	.cfi_endproc
                                         # -- End function
-	.globl	blib.tty_write.131              # -- Begin function blib.tty_write.131
+	.globl	blib.tty_write.132              # -- Begin function blib.tty_write.132
 	.p2align	4
-	.type	blib.tty_write.131,@function
-blib.tty_write.131:                     # @blib.tty_write.131
+	.type	blib.tty_write.132,@function
+blib.tty_write.132:                     # @blib.tty_write.132
 	.cfi_startproc
 # %bb.0:                                # %entry
 	pushq	%r14
@@ -6819,7 +6835,7 @@ blib.tty_write.131:                     # @blib.tty_write.131
 	.cfi_def_cfa_offset 8
 	retq
 .Lfunc_end76:
-	.size	blib.tty_write.131, .Lfunc_end76-blib.tty_write.131
+	.size	blib.tty_write.132, .Lfunc_end76-blib.tty_write.132
 	.cfi_endproc
                                         # -- End function
 	.globl	blib.tty_close                  # -- Begin function blib.tty_close
@@ -6866,13 +6882,13 @@ blib.findfile:                          # @blib.findfile
 	cmpq	$1, %rsi
 	jne	.LBB78_17
 # %bb.3:                                # %jf.else20
-	movq	itemn.global.119(%rip), %rax
+	movq	itemn.global.120(%rip), %rax
 	jmp	.LBB78_34
 .LBB78_4:                               # %jf.else44
 	cmpq	$1, %rsi
 	je	.LBB78_33
 # %bb.5:                                # %jf.else44
-	movq	itemn.global.121(%rip), %rax
+	movq	itemn.global.122(%rip), %rax
 	jmp	.LBB78_34
 .LBB78_6:                               # %jf.then_L667
 	leaq	(,%rdi,8), %rax
@@ -6926,7 +6942,7 @@ blib.findfile:                          # @blib.findfile
 	movl	$577, %edx                      # imm = 0x241
 	jmp	.LBB78_22
 .LBB78_17:                              # %jf.then_L666
-	movq	itemn.global.120(%rip), %rax
+	movq	itemn.global.121(%rip), %rax
 	jmp	.LBB78_34
 .LBB78_19:
 	xorl	%eax, %eax
@@ -6999,9 +7015,9 @@ blib.findfile:                          # @blib.findfile
 	movq	%r15, 32(,%rax,8)
 	movq	blib.block_close@GOTPCREL(%rip), %rcx
 	movq	%rcx, 24(,%rax,8)
-	movq	itemn.global.122(%rip), %rcx
+	movq	itemn.global.123(%rip), %rcx
 	movq	%rcx, 40(,%rax,8)
-	movq	%rax, itemn.global.122(%rip)
+	movq	%rax, itemn.global.123(%rip)
 	jmp	.LBB78_34
 .LBB78_32:                              # %jf.else31.i
 	movq	%r14, %rdi
@@ -7031,7 +7047,7 @@ blib.findfile:                          # @blib.findfile
 	.type	blib.rditem_add,@function
 blib.rditem_add:                        # @blib.rditem_add
 # %bb.0:                                # %entry
-	movq	itemn.global.119(%rip), %rax
+	movq	itemn.global.120(%rip), %rax
 	movq	16(,%rax,8), %rcx
 	movq	%rcx, %rdx
 	shrq	$42, %rdx
@@ -7082,7 +7098,7 @@ blib.rditem_add:                        # @blib.rditem_add
 	.type	blib.rditem_end,@function
 blib.rditem_end:                        # @blib.rditem_end
 # %bb.0:                                # %entry
-	movq	itemn.global.119(%rip), %rax
+	movq	itemn.global.120(%rip), %rax
 	movq	8(,%rax,8), %rcx
 	movl	20(,%rax,8), %edx
 	movb	$10, (%rdx,%rcx,8)
@@ -7328,10 +7344,10 @@ wrch:                                   # @wrch
 	cmpq	$10, %rbx
 	jne	.LBB87_7
 # %bb.4:                                # %jf.else56
-	cmpq	%r14, itemn.global.120(%rip)
+	cmpq	%r14, itemn.global.121(%rip)
 	je	.LBB87_6
 # %bb.5:                                # %jf.else56
-	cmpq	%r14, itemn.global.121(%rip)
+	cmpq	%r14, itemn.global.122(%rip)
 	je	.LBB87_6
 .LBB87_7:                               # %jf.then_L703
 	movq	8(%r12), %rcx
@@ -7437,7 +7453,7 @@ blib.ioinit:                            # @blib.ioinit
 	movq	%rdx, %rbx
 	movq	%rsi, %r14
 	movq	%rdi, %r15
-	movq	$0, itemn.global.122(%rip)
+	movq	$0, itemn.global.123(%rip)
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %r13
 	movl	$127, %edi
 	callq	*200(%r13)
@@ -7463,9 +7479,9 @@ blib.ioinit:                            # @blib.ioinit
 	movq	%rcx, 32(,%rax,8)
 	movq	blib.tty_close@GOTPCREL(%rip), %rcx
 	movq	%rcx, 24(,%rax,8)
-	movq	itemn.global.122(%rip), %rcx
+	movq	itemn.global.123(%rip), %rcx
 	movq	%rcx, 40(,%rax,8)
-	movq	%rax, itemn.global.122(%rip)
+	movq	%rax, itemn.global.123(%rip)
 	jmp	.LBB90_6
 .LBB90_4:                               # %jf.else31.i
 	movq	%r12, %rdi
@@ -7473,7 +7489,7 @@ blib.ioinit:                            # @blib.ioinit
 .LBB90_5:                               # %blib.allocate_dcb.exit
 	xorl	%eax, %eax
 .LBB90_6:                               # %blib.allocate_dcb.exit
-	movq	%rax, itemn.global.119(%rip)
+	movq	%rax, itemn.global.120(%rip)
 	movl	$127, %edi
 	callq	*200(%r13)
 	testq	%rax, %rax
@@ -7495,13 +7511,13 @@ blib.ioinit:                            # @blib.ioinit
 	movq	%rdx, 16(,%rax,8)
 	andb	$-4, %cl
 	movb	%cl, (,%rax,8)
-	movq	blib.tty_write.131@GOTPCREL(%rip), %rcx
+	movq	blib.tty_write.132@GOTPCREL(%rip), %rcx
 	movq	%rcx, 32(,%rax,8)
 	movq	blib.tty_close@GOTPCREL(%rip), %rcx
 	movq	%rcx, 24(,%rax,8)
-	movq	itemn.global.122(%rip), %rcx
+	movq	itemn.global.123(%rip), %rcx
 	movq	%rcx, 40(,%rax,8)
-	movq	%rax, itemn.global.122(%rip)
+	movq	%rax, itemn.global.123(%rip)
 	jmp	.LBB90_12
 .LBB90_10:                              # %jf.else31.i103
 	movq	%r15, %rdi
@@ -7509,7 +7525,7 @@ blib.ioinit:                            # @blib.ioinit
 .LBB90_11:                              # %blib.allocate_dcb.exit107
 	xorl	%eax, %eax
 .LBB90_12:                              # %blib.allocate_dcb.exit107
-	movq	%rax, itemn.global.120(%rip)
+	movq	%rax, itemn.global.121(%rip)
 	movl	$127, %edi
 	callq	*200(%r13)
 	testq	%rax, %rax
@@ -7531,13 +7547,13 @@ blib.ioinit:                            # @blib.ioinit
 	movq	%rdx, 16(,%rax,8)
 	andb	$-4, %cl
 	movb	%cl, (,%rax,8)
-	movq	blib.tty_write.131@GOTPCREL(%rip), %rcx
+	movq	blib.tty_write.132@GOTPCREL(%rip), %rcx
 	movq	%rcx, 32(,%rax,8)
 	movq	blib.tty_close@GOTPCREL(%rip), %rcx
 	movq	%rcx, 24(,%rax,8)
-	movq	itemn.global.122(%rip), %rcx
+	movq	itemn.global.123(%rip), %rcx
 	movq	%rcx, 40(,%rax,8)
-	movq	%rax, itemn.global.122(%rip)
+	movq	%rax, itemn.global.123(%rip)
 	jmp	.LBB90_18
 .LBB90_16:                              # %jf.else31.i139
 	movq	%r14, %rdi
@@ -7545,10 +7561,10 @@ blib.ioinit:                            # @blib.ioinit
 .LBB90_17:                              # %blib.allocate_dcb.exit143
 	xorl	%eax, %eax
 .LBB90_18:                              # %blib.allocate_dcb.exit143
-	movq	%rax, itemn.global.121(%rip)
-	movq	itemn.global.119(%rip), %rdi
-	callq	*448(%r13)
+	movq	%rax, itemn.global.122(%rip)
 	movq	itemn.global.120(%rip), %rdi
+	callq	*448(%r13)
+	movq	itemn.global.121(%rip), %rdi
 	callq	*456(%r13)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
 	popq	%rbx
@@ -7575,8 +7591,8 @@ blib.ioterm:                            # @blib.ioterm
 	pushq	%rbx
 	.cfi_def_cfa_offset 16
 	.cfi_offset %rbx, -16
-	movq	itemn.global.122(%rip), %rdi
-	movq	itemn.global.121(%rip), %rax
+	movq	itemn.global.123(%rip), %rdi
+	movq	itemn.global.122(%rip), %rax
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %rcx
 	movq	%rax, 104(%rcx)
 	testq	%rdi, %rdi
@@ -7690,7 +7706,7 @@ mapstore:                               # @mapstore
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %r15
 	movq	%r15, %r12
 	sarq	$3, %r12
-	leaq	.Llstr.global.150(%rip), %rdi
+	leaq	.Llstr.global.151(%rip), %rdi
 	sarq	$3, %rdi
 	movq	(%r15), %rsi
 	callq	*752(%r15)
@@ -7698,7 +7714,7 @@ mapstore:                               # @mapstore
 	decq	%r13
 	js	.LBB93_5
 # %bb.1:                                # %lab_L720.preheader
-	leaq	.Llstr.global.151(%rip), %rbx
+	leaq	.Llstr.global.152(%rip), %rbx
 	sarq	$3, %rbx
 	leaq	(,%r12,8), %rbp
 	xorl	%r14d, %r14d
@@ -7727,15 +7743,15 @@ mapstore:                               # @mapstore
 	jmp	.LBB93_4
 .LBB93_5:                               # %jt.then_L721
 	callq	*672(%r15)
-	leaq	.Llstr.global.152(%rip), %rdi
+	leaq	.Llstr.global.153(%rip), %rdi
 	sarq	$3, %rdi
 	movl	$1024, %esi                     # imm = 0x400
 	callq	*752(%r15)
-	movq	itemn.global.122(%rip), %rbx
+	movq	itemn.global.123(%rip), %rbx
 	testq	%rbx, %rbx
 	je	.LBB93_8
 # %bb.6:                                # %lab_L725.preheader
-	leaq	.Llstr.global.153(%rip), %r14
+	leaq	.Llstr.global.154(%rip), %r14
 	sarq	$3, %r14
 	movl	$42, %r13d
 	movl	$32, %ebp
@@ -7778,12 +7794,12 @@ mapstore:                               # @mapstore
 	jne	.LBB93_7
 .LBB93_8:                               # %jf.then_L727
 	callq	blib.dumpheap@PLT
-	leaq	.Llstr.global.154(%rip), %rdi
+	leaq	.Llstr.global.155(%rip), %rdi
 	sarq	$3, %rdi
 	movl	$1024, %esi                     # imm = 0x400
 	callq	*752(%r15)
 	movq	(%r15), %r14
-	leaq	.Llstr.global.155(%rip), %rbx
+	leaq	.Llstr.global.156(%rip), %rbx
 	sarq	$3, %rbx
 	shlq	$3, %r14
 	.p2align	4
@@ -7806,7 +7822,7 @@ mapstore:                               # @mapstore
 	leaq	56(%r14), %r14
 	jne	.LBB93_9
 # %bb.10:                               # %lab_L736
-	leaq	.Llstr.global.156(%rip), %rdi
+	leaq	.Llstr.global.157(%rip), %rdi
 	sarq	$3, %rdi
 	callq	*712(%r15)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
@@ -7889,7 +7905,7 @@ blib.bcplmain:                          # @blib.bcplmain
 	movabsq	$4398046511103, %rcx            # imm = 0x3FFFFFFFFFF
 	movabsq	$4393751543808, %rdx            # imm = 0x3FF00000000
 	movabsq	$4294967296, %rsi               # imm = 0x100000000
-	leaq	.Llstr.global.159(%rip), %rdi
+	leaq	.Llstr.global.160(%rip), %rdi
 	sarq	$3, %rdi
 	movq	%rdi, %r8
 	andq	$-8, %r8
@@ -7908,7 +7924,7 @@ blib.bcplmain:                          # @blib.bcplmain
                                         #     Child Loop BB95_6 Depth 2
                                         #     Child Loop BB95_12 Depth 2
 	cmpq	$2, %r12
-	movq	itemn.global.119(%rip), %r10
+	movq	itemn.global.120(%rip), %r10
 	jb	.LBB95_9
 # %bb.3:                                # %jf.else42
                                         #   in Loop: Header=BB95_2 Depth=1
@@ -7949,7 +7965,7 @@ blib.bcplmain:                          # @blib.bcplmain
 	jne	.LBB95_6
 .LBB95_8:                               # %jf.then_L745.loopexit
                                         #   in Loop: Header=BB95_2 Depth=1
-	movq	itemn.global.119(%rip), %r10
+	movq	itemn.global.120(%rip), %r10
 	.p2align	4
 .LBB95_9:                               # %jf.then_L745
                                         #   in Loop: Header=BB95_2 Depth=1
@@ -7995,7 +8011,7 @@ blib.bcplmain:                          # @blib.bcplmain
 	jne	.LBB95_12
 	jmp	.LBB95_14
 .LBB95_15:                              # %jt.then_L742
-	movq	itemn.global.119(%rip), %rcx
+	movq	itemn.global.120(%rip), %rcx
 	movq	8(,%rcx,8), %rdx
 	movl	20(,%rcx,8), %esi
 	movb	$10, (%rsi,%rdx,8)
@@ -8046,9 +8062,9 @@ blib.bcplmain:                          # @blib.bcplmain
 	cmpq	blib.undefined@GOTPCREL(%rip), %rax
 	jne	.LBB95_23
 # %bb.22:                               # %jf.else169
-	movq	itemn.global.121(%rip), %rdi
+	movq	itemn.global.122(%rip), %rdi
 	callq	*456(%r14)
-	leaq	.Llstr.global.160(%rip), %rdi
+	leaq	.Llstr.global.161(%rip), %rdi
 	sarq	$3, %rdi
 	callq	*752(%r14)
 	addq	$224, %r14
@@ -8058,18 +8074,18 @@ blib.bcplmain:                          # @blib.bcplmain
 	xorl	%edi, %edi
 	callq	*%rax
 	movq	%rax, %rbx
-	movq	itemn.global.122(%rip), %rdi
-	movq	itemn.global.121(%rip), %rax
+	movq	itemn.global.123(%rip), %rdi
+	movq	itemn.global.122(%rip), %rax
 	movq	%rax, 104(%r14)
 	testq	%rdi, %rdi
 	jne	.LBB95_24
 .LBB95_27:                              # %blib.ioterm.exit
-	movq	itemn.global.81(%rip), %rsi
+	movq	itemn.global.82(%rip), %rsi
 	shlq	$3, %rsi
 	movl	$11, %edi
 	movl	$8388608, %edx                  # imm = 0x800000
 	callq	*256(%r14)
-	movq	$0, itemn.global.81(%rip)
+	movq	$0, itemn.global.82(%rip)
 	addq	$16, %r14
 .LBB95_28:                              # %common.ret
 	movq	%rbx, %rdi
@@ -8282,11 +8298,11 @@ itemn.global.45:
 	.ascii	">ERROR sys package=%n operation=%n a=%16x b=%16x c=%16x d=%16x\n"
 	.size	.Llstr.global.65, 63
 
-	.type	itemn.global.81,@object         # @itemn.global.81
+	.type	.Llstr.global.71,@object        # @lstr.global.71
 	.p2align	3, 0x0
-itemn.global.81:
-	.quad	0                               # 0x0
-	.size	itemn.global.81, 8
+.Llstr.global.71:
+	.ascii	"\r\n**Aborted**\n"
+	.size	.Llstr.global.71, 14
 
 	.type	itemn.global.82,@object         # @itemn.global.82
 	.p2align	3, 0x0
@@ -8330,77 +8346,77 @@ itemn.global.88:
 	.quad	0                               # 0x0
 	.size	itemn.global.88, 8
 
-	.type	.Llstr.global.90,@object        # @lstr.global.90
+	.type	itemn.global.89,@object         # @itemn.global.89
 	.p2align	3, 0x0
-.Llstr.global.90:
-	.ascii	"S\n-- HEAP SPACE ------------------------------------------------------------------\n\n"
-	.size	.Llstr.global.90, 84
+itemn.global.89:
+	.quad	0                               # 0x0
+	.size	itemn.global.89, 8
 
 	.type	.Llstr.global.91,@object        # @lstr.global.91
 	.p2align	3, 0x0
 .Llstr.global.91:
-	.ascii	"\023Heap not allocated\n"
-	.size	.Llstr.global.91, 20
+	.ascii	"S\n-- HEAP SPACE ------------------------------------------------------------------\n\n"
+	.size	.Llstr.global.91, 84
 
 	.type	.Llstr.global.92,@object        # @lstr.global.92
 	.p2align	3, 0x0
 .Llstr.global.92:
-	.ascii	"IHeap of %N words allocated at range %16X..%16X (byte address %16X..%16X)\n"
-	.size	.Llstr.global.92, 74
+	.ascii	"\023Heap not allocated\n"
+	.size	.Llstr.global.92, 20
 
 	.type	.Llstr.global.93,@object        # @lstr.global.93
 	.p2align	3, 0x0
 .Llstr.global.93:
-	.ascii	"\032\nBlocks on the free list:\n"
-	.size	.Llstr.global.93, 27
+	.ascii	"IHeap of %N words allocated at range %16X..%16X (byte address %16X..%16X)\n"
+	.size	.Llstr.global.93, 74
 
 	.type	.Llstr.global.94,@object        # @lstr.global.94
 	.p2align	3, 0x0
 .Llstr.global.94:
-	.ascii	"HNo.  Size (words)      At BCPL address   To BCPL address    Contents...\n"
-	.size	.Llstr.global.94, 73
+	.ascii	"\032\nBlocks on the free list:\n"
+	.size	.Llstr.global.94, 27
 
 	.type	.Llstr.global.95,@object        # @lstr.global.95
 	.p2align	3, 0x0
 .Llstr.global.95:
-	.ascii	"\027%4X: %16X %16X..%16X   "
-	.size	.Llstr.global.95, 24
+	.ascii	"HNo.  Size (words)      At BCPL address   To BCPL address    Contents...\n"
+	.size	.Llstr.global.95, 73
 
 	.type	.Llstr.global.96,@object        # @lstr.global.96
 	.p2align	3, 0x0
 .Llstr.global.96:
-	.ascii	"\r\nStatistics:\n"
-	.size	.Llstr.global.96, 14
+	.ascii	"\027%4X: %16X %16X..%16X   "
+	.size	.Llstr.global.96, 24
 
 	.type	.Llstr.global.97,@object        # @lstr.global.97
 	.p2align	3, 0x0
 .Llstr.global.97:
-	.ascii	"KFree list contains %N words of space in %N blocks. The largest is %N words\n"
-	.size	.Llstr.global.97, 76
+	.ascii	"\r\nStatistics:\n"
+	.size	.Llstr.global.97, 14
 
 	.type	.Llstr.global.98,@object        # @lstr.global.98
 	.p2align	3, 0x0
 .Llstr.global.98:
-	.ascii	"=getvecs=%n (largest %n) freevecs=%n current use %n (hwm %n)\n\n"
-	.size	.Llstr.global.98, 62
+	.ascii	"KFree list contains %N words of space in %N blocks. The largest is %N words\n"
+	.size	.Llstr.global.98, 76
 
-	.type	itemn.global.114,@object        # @itemn.global.114
+	.type	.Llstr.global.99,@object        # @lstr.global.99
 	.p2align	3, 0x0
-itemn.global.114:
-	.quad	0                               # 0x0
-	.size	itemn.global.114, 8
+.Llstr.global.99:
+	.ascii	"=getvecs=%n (largest %n) freevecs=%n current use %n (hwm %n)\n\n"
+	.size	.Llstr.global.99, 62
 
 	.type	itemn.global.115,@object        # @itemn.global.115
-	.p2align	4, 0x0
-itemn.global.115:
-	.zero	128
-	.size	itemn.global.115, 128
-
-	.type	itemn.global.119,@object        # @itemn.global.119
 	.p2align	3, 0x0
-itemn.global.119:
+itemn.global.115:
 	.quad	0                               # 0x0
-	.size	itemn.global.119, 8
+	.size	itemn.global.115, 8
+
+	.type	itemn.global.116,@object        # @itemn.global.116
+	.p2align	4, 0x0
+itemn.global.116:
+	.zero	128
+	.size	itemn.global.116, 128
 
 	.type	itemn.global.120,@object        # @itemn.global.120
 	.p2align	3, 0x0
@@ -8420,59 +8436,65 @@ itemn.global.122:
 	.quad	0                               # 0x0
 	.size	itemn.global.122, 8
 
-	.type	.Llstr.global.150,@object       # @lstr.global.150
+	.type	itemn.global.123,@object        # @itemn.global.123
 	.p2align	3, 0x0
-.Llstr.global.150:
-	.ascii	"Q\n-- GLOBAL VECTOR (%4I ENTRIES) ------------------------------------------------\n"
-	.size	.Llstr.global.150, 82
+itemn.global.123:
+	.quad	0                               # 0x0
+	.size	itemn.global.123, 8
 
 	.type	.Llstr.global.151,@object       # @lstr.global.151
 	.p2align	3, 0x0
 .Llstr.global.151:
-	.ascii	"\006\n%4I: "
-	.size	.Llstr.global.151, 7
+	.ascii	"Q\n-- GLOBAL VECTOR (%4I ENTRIES) ------------------------------------------------\n"
+	.size	.Llstr.global.151, 82
 
 	.type	.Llstr.global.152,@object       # @lstr.global.152
 	.p2align	3, 0x0
 .Llstr.global.152:
-	.ascii	"R\n-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------\n\n"
-	.size	.Llstr.global.152, 83
+	.ascii	"\006\n%4I: "
+	.size	.Llstr.global.152, 7
 
 	.type	.Llstr.global.153,@object       # @lstr.global.153
 	.p2align	3, 0x0
 .Llstr.global.153:
-	.ascii	"8%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n \n"
-	.size	.Llstr.global.153, 57
+	.ascii	"R\n-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------\n\n"
+	.size	.Llstr.global.153, 83
 
 	.type	.Llstr.global.154,@object       # @lstr.global.154
 	.p2align	3, 0x0
 .Llstr.global.154:
-	.ascii	"S\n-- LEVEL() STATES --------------------------------------------------------------\n\n"
-	.size	.Llstr.global.154, 84
+	.ascii	"8%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n \n"
+	.size	.Llstr.global.154, 57
 
 	.type	.Llstr.global.155,@object       # @lstr.global.155
 	.p2align	3, 0x0
 .Llstr.global.155:
-	.ascii	"?RSP=%16X RBP=%16X RBX=%16X R12=%16X R13=%16X R14=%16X R15=%16X\n"
-	.size	.Llstr.global.155, 64
+	.ascii	"S\n-- LEVEL() STATES --------------------------------------------------------------\n\n"
+	.size	.Llstr.global.155, 84
 
 	.type	.Llstr.global.156,@object       # @lstr.global.156
 	.p2align	3, 0x0
 .Llstr.global.156:
-	.ascii	"S\n--------------------------------------------------------------------------------\n\n"
-	.size	.Llstr.global.156, 84
+	.ascii	"?RSP=%16X RBP=%16X RBX=%16X R12=%16X R13=%16X R14=%16X R15=%16X\n"
+	.size	.Llstr.global.156, 64
 
-	.type	.Llstr.global.159,@object       # @lstr.global.159
+	.type	.Llstr.global.157,@object       # @lstr.global.157
 	.p2align	3, 0x0
-.Llstr.global.159:
-	.ascii	"\001 "
-	.size	.Llstr.global.159, 2
+.Llstr.global.157:
+	.ascii	"S\n--------------------------------------------------------------------------------\n\n"
+	.size	.Llstr.global.157, 84
 
 	.type	.Llstr.global.160,@object       # @lstr.global.160
 	.p2align	3, 0x0
 .Llstr.global.160:
+	.ascii	"\001 "
+	.size	.Llstr.global.160, 2
+
+	.type	.Llstr.global.161,@object       # @lstr.global.161
+	.p2align	3, 0x0
+.Llstr.global.161:
 	.ascii	"\034fatal: start is not defined\n"
-	.size	.Llstr.global.160, 29
+	.size	.Llstr.global.161, 29
 
 	.globl	__bcpl_gv64
 	.type	__bcpl_gv64,@function
