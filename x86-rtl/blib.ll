@@ -50,7 +50,7 @@ target triple = "x86_64-unknown-linux-gnu"
 @itemn.global.123 = internal unnamed_addr global i64 0, section ".data.BLIB"
 @lstr.global.151 = private global [82 x i8] c"Q\0A-- GLOBAL VECTOR (%4I ENTRIES) ------------------------------------------------\0A", section ".data.BLIB", align 8
 @lstr.global.152 = private global [7 x i8] c"\06\0A%4I: ", section ".data.BLIB", align 8
-@lstr.global.153 = private global [83 x i8] c"R\0A-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------\0A\0A", section ".data.BLIB", align 8
+@lstr.global.153 = private global [83 x i8] c"R\0A-- STREAMS (BUFFER SIZE %4I) --------------------------------------------------\0A\0A", section ".data.BLIB", align 8
 @lstr.global.154 = private global [57 x i8] c"8%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n \0A", section ".data.BLIB", align 8
 @lstr.global.155 = private global [84 x i8] c"S\0A-- LEVEL() STATES --------------------------------------------------------------\0A\0A", section ".data.BLIB", align 8
 @lstr.global.156 = private global [64 x i8] c"?RSP=%16X RBP=%16X RBX=%16X R12=%16X R13=%16X R14=%16X R15=%16X\0A", section ".data.BLIB", align 8
