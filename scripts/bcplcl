@@ -6,7 +6,7 @@ usage()
 }
 
 
-TEMP=`getopt --name bcpl --options OScdmo:vk --longoptions optimise,source,compile,dryrun,map,object:,verbose,keep -- "$@"`
+TEMP=`getopt --name bcpl --options g:l:dmo:Ovk --longoptions globals:,levels:,dryrun,map,object:,verbose,keep,optimise -- "$@"`
 eval set -- "$TEMP"
 
 # Path to installed run-time
@@ -27,6 +27,8 @@ object_path=""
 map=0
 keep=0
 map_name=a.out.map
+globals=""
+levels=""
 
 perform()
 {
@@ -48,22 +50,16 @@ perform()
 while true
 do
     case "$1" in
+        -g|--globals)
+            globals="--defsym MAXGLOBALS=$2"
+            shift 2
+            ;;
+        -l|--levels)
+            levels="--defsym MAXLEVELS=$2"
+            shift 2
+            ;;
         -O|--optimise)
             optimise=-O3
-            shift
-            ;;
-        -S|--source)
-            # source only means we aren't going to compile or link so remove bcplinit.s
-            source="-S"
-            clang_prefix=""
-            clang_suffix=""
-            shift
-            ;;
-        -c|--compile)
-            # compiling means we aren't going to link so remove bcplinit.s
-            compile="-c"
-            clang_prefix=""
-            clang_suffix=""
             shift
             ;;
         -d|--dryrun)
@@ -117,6 +113,7 @@ fi
 
 declare -a input_queue
 input_queue=("$@")
+input_queue+=("x86-rtl/bcplinit.s")
 index=0
 linker_objects=""
 
@@ -144,7 +141,7 @@ do
 
     s)
         o_path=${WORKDIR}/${name}.o
-        perform "as -o ${o_path} ${input}"
+        perform "as ${globals} ${levels} -o ${o_path} ${input}"
         input_queue+=(${o_path})
         ;;
 
@@ -156,4 +153,4 @@ do
     ((index++))
 done
 
-perform "ld -z noexecstack x86-rtl/bcplinit.o x86-rtl/blib.o ${linker_objects} ${object} ${map}"
+perform "ld -z noexecstack  x86-rtl/blib.o ${linker_objects} ${object} ${map}"

@@ -1,6 +1,25 @@
+################################################################################
+#                                                                              #
+#          Handwritten components of BLIB, including the global vector         #
+#                                                                              #
+# This object module can be tailored by defining the following symbols:        #
+#                                                                              #
+#     MAXGLOBALS     The number of globals in the global vector     1024       #
+#     MAXLEVELS      The number of level()s that can be active       128       #
+#                                                                              #
+##################################################################################
+
+        .ifndef MAXGLOBALS
+        .set   MAXGLOBALS, 1024
+        .endif
+
+        .ifndef MAXLEVELS
+        .set   MAXLEVELS, 128
+        .endif
+
 # -- Standard BCPL library functions that need to be coded in assembler --------
 
-    .section        .text.bcplmain,"ax",@progbits
+        .section        .text.bcplmain,"ax",@progbits
 #
 # On entry, the shell has set up the stack to look like this:
 #
@@ -220,7 +239,6 @@ __opsys:
 #
 # This corresponds to the values in cintcode/g/libhdr.h
 
-    .equ MAXGLOBALS,1024
     .section BCPLGVEC,"aw",@progbits
     .global __bcpl_global_vector
 
@@ -235,7 +253,7 @@ __opsys:
      .weak __bcpl_gv\@
      .endm
  
- # Then define each of our 512 globals
+ # Then define each of our globals
 
         .data
         .align     8
@@ -244,8 +262,8 @@ __opsys:
         .rept MAXGLOBALS
         GLOBAL_INIT
         .endr
-        .type __bcpl_global_vector, @object
-        .size __bcpl_global_vector, MAXGLOBALS*8
+        .type  __bcpl_global_vector, @object
+        .size  __bcpl_global_vector, MAXGLOBALS*8
 
 # Initialise our global vector with the entries for the standard library
 # by defining the Gn to match the entry point of each routine.
@@ -393,12 +411,12 @@ __opsys:
 # rsp rbp  rbx  r12  r13  r14  r15
 #
 # As we have a falling stack, any entry with an RSP that is lower that the
-# current RSP will be stale or never used
+# current RSP will be stale or never used.
 
-    .type __bcpl_levelstate, @object
-    .size __bcpl_levelstate, 128*8
+        .type  __bcpl_levelstate, @object
+        .size  __bcpl_levelstate, MAXLEVELS*8
 __bcpl_levelstate:
-    .rept 8
-    .quad 1, 0, 0, 0, 0, 0, 0      # each state has SP lower than any true SP
-    .endr
-    .quad 0                        # but not zero as that terminates the table
+        .rept  MAXLEVELS
+        .quad  1, 0, 0, 0, 0, 0, 0  # each state has SP lower than any true SP
+        .endr
+        .quad 0                     # but not zero as that terminates the table

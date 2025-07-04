@@ -1,8 +1,34 @@
+################################################################################
+#                                                                              #
+#          Handwritten components of BLIB, including the global vector         #
+#                                                                              #
+# This object module can be tailored by defining the following symbols:        #
+#                                                                              #
+#     MAXGLOBALS     The number of globals in the global vector     1024       #
+#     MAXLEVELS      The number of level()s that can be active       128       #
+#                                                                              #
+################################################################################
+
+        .ifndef MAXGLOBALS
+        .set   MAXGLOBALS, 1024
+        .endif
+
+        .ifndef MAXLEVELS
+        .set   MAXLEVELS, 128
+        .endif
+
 # -- Standard BCPL library functions that need to be coded in assembler --------
 
     .section        .text.bcplmain,"ax",@progbits
 
-    .equ MAXGLOBALS,1024
+
+#
+# abort is a handy way for the following code to call the BLIB abort()
+# function in global 28. %rdi is to hold the abort code.
+abort:
+    movq    $__bcpl_global_vector+8*28, %rax
+    jmp     *(%rax)
+
 
 # -- P := LEVEL() --------------------------------------------------------------
 #
@@ -22,9 +48,8 @@ __level:
 2:
     testq   %rsi,%rsi              # If zero, we've run out of table
     jnz     3f
-    movq    $100, %rdi
-    movq    $60,  %rax
-    syscall
+    movq    $105, %rdi             # ABORT_TOOMANYLEVELS
+    jmp     abort
 
 3:
     movq    %rsp, %rax             # Preserve caller's sp and set up as result
@@ -66,12 +91,11 @@ __longjump:
     popq    %r15
     movq    %rax, %rsp             # SP as it was on call to level()
     addq    $8, %rsp               # so drop level()'s return address
-    jmpq    *%rsi                  # branch to the label
+    jmp     *%rsi                  # branch to the label
 
 3:
-    movq    $100, %rdi
-    movq    $60,  %rax
-    syscall
+    movq    $106, %rdi             # ABORT_NOSUCHLEVEL
+    jmp     abort
 
 __opsys:
     endbr64
@@ -104,7 +128,7 @@ __opsys:
      .weak __bcpl_gv\@
      .endm
  
- # Then define each of our 512 globals
+ # Then define each of our globals
 
         .data
         .align     8
@@ -263,10 +287,10 @@ __opsys:
 # As we have a falling stack, any entry with an RSP that is lower that the
 # current RSP will be stale or never used.
 
-    .type __bcpl_levelstate, @object
-    .size __bcpl_levelstate, 128*8
+        .type  __bcpl_levelstate, @object
+        .size  __bcpl_levelstate, MAXLEVELS*8
 __bcpl_levelstate:
-    .rept 128
-    .quad 1, 0, 0, 0, 0, 0, 0      # each state has SP lower than any true SP
-    .endr
-    .quad 0                        # but not zero as that terminates the table
+        .rept  MAXLEVELS
+        .quad  1, 0, 0, 0, 0, 0, 0  # each state has SP lower than any true SP
+        .endr
+        .quad 0                     # but not zero as that terminates the table
