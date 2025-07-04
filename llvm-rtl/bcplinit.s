@@ -11,7 +11,32 @@
 #
 __level:
     endbr64
-    movq    %rbp, %rax             # return the caller's frame pointer
+    movq    $__bcpl_levelstate, %rdi
+1:
+    movq    (%rdi), %rsi           # Entry key
+    cmpq    %rsi, %rsp             # If sp >= si, stale or unused entry
+    jge     2f
+    addq    $7*8, %rdi
+    jmp     1b
+
+2:
+    testq   %rsi,%rsi              # If zero, we've run out of table
+    jnz     3f
+    movq    $100, %rdi
+    movq    $60,  %rax
+    syscall
+
+3:
+    movq    %rsp, %rax             # Preserve caller's sp and set up as result
+    leaq    56(%rdi), %rsp         # Make the table entry the top of stack
+    push    %r15                   # Save the non-volatiles into the entry
+    push    %r14
+    push    %r13
+    push    %r12
+    push    %rbx
+    push    %rbp
+    push    %rax                   # First quad in entry is the SP
+    movq    %rax, %rsp             # Restore the SP
     retq
 
 # -- LONGJUMP(P, L) ------------------------------------------------------------
@@ -21,9 +46,32 @@ __level:
 #
 __longjump:
     endbr64
-    movq    %rdi, %rbp             # restore the saved frame pointer
-    popq    %rdi                   # discard the caller's return address
+    movq    $__bcpl_levelstate, %rdx    # Start of saved state table
+1:
+    movq    (%rdx), %rcx           # The entry's SP
+    testq    %rcx, %rcx            # Zero means we've run out of entries
+    jz      3f
+    cmpq    %rcx, %rdi             # Is it the caller-specified SP?
+    je      2f                     # If so, we have found the entry
+    addq    $7*8, %rdx
+    jmp     1b
+2:
+    movq    %rdx, %rsp             # Treat the state as a stack and pop to
+    popq    %rax                   # restore the volatile registers. The
+    popq    %rbp                   # first item is the SP but we can't set
+    popq    %rbx                   # that yet as we're using it to pop the
+    popq    %r12                   # rest. Keep it in AX until the end.
+    popq    %r13
+    popq    %r14
+    popq    %r15
+    movq    %rax, %rsp             # SP as it was on call to level()
+    addq    $8, %rsp               # so drop level()'s return address
     jmpq    *%rsi                  # branch to the label
+
+3:
+    movq    $100, %rdi
+    movq    $60,  %rax
+    syscall
 
 __opsys:
     endbr64
@@ -206,4 +254,19 @@ __opsys:
 #   .quad 0                # 127    RANDSEED
 
 
+# Each space has room to save the non-volatile state of the program when LEVEL()
+# is called. We assume that RSP can be used as a key to look up the state and
+# that RSP is never zero.
+#
+# rsp rbp  rbx  r12  r13  r14  r15
+#
+# As we have a falling stack, any entry with an RSP that is lower that the
+# current RSP will be stale or never used.
 
+    .type __bcpl_levelstate, @object
+    .size __bcpl_levelstate, 128*8
+__bcpl_levelstate:
+    .rept 128
+    .quad 1, 0, 0, 0, 0, 0, 0      # each state has SP lower than any true SP
+    .endr
+    .quad 0                        # but not zero as that terminates the table
