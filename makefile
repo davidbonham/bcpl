@@ -12,7 +12,7 @@ export HDRPATHREL = src:src/inc:src/ninc:buildrel
 BCPL64HDRS=/mnt/data/fs/bcpl-development/official_bcpl_release/BCPL/cintcode/g
 
 # Headers needed to build target programs
-HDRPATHX86 = x86-rtl
+export HDRPATHX86 = x86-rtl
 
 # ----------------------------------------------------------------------
 # Our version of the CINTSYS system providing access to our LLVM binding
@@ -30,8 +30,10 @@ LLVMRELLIBS=$(shell ${DEVROOT}/llvm-${LLVMVER}-release-install/bin/llvm-config -
 DBGCFLAGS=$(shell ${DEVROOT}/llvm-${LLVMVER}-debug-install/bin/llvm-config --cflags)
 RELCFLAGS=$(shell ${DEVROOT}/llvm-${LLVMVER}-release-install/bin/llvm-config --cflags)
 
-# And we build everything witthout position independence
-CLANG=${LLVMREL}/bin/clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -g3
+# And we build everything witthout position independence. We need frame pointers
+# because the BCPL compiler uses level and longjump
+CLANG=${LLVMREL}/bin/clang -no-pie -target x86_64-unknown-linux-gnu -Wl,-z,noexecstack -g3 -fno-omit-frame-pointer
+LLC=${LLVMREL}/bin/llc --relocation-model=pic -O3 --frame-pointer=all --filetype=obj
 CC=${LLVMREL}/bin/clang -g3
 
 # Object files from the official BCPL release of cintsys64
@@ -119,7 +121,23 @@ builddbg/bcpltrn.ll : builddbg/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
 !   ${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
-bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.ll builddbg/bcpltrn.ll builddbg/bcplcgllvm.ll builddbg/blib.ll llvm-rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
+builddbg/bcplsyn.o : builddbg/bcplsyn.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+builddbg/bcpltrn.o : builddbg/bcpltrn.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+builddbg/bcplcgllvm.o : builddbg/bcplcgllvm.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+builddbg/blib.o : builddbg/blib.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.o builddbg/bcpltrn.o builddbg/bcplcgllvm.o builddbg/blib.o llvm-rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
 !    @echo \*\* LINK BCPLD
 !    @${CLANG}  ${DBGCFLAGS} -O0 $^ ${LLVMDBGLIBS} -pthread  -lm -lstdc++ -o $@
 
@@ -179,9 +197,25 @@ buildrel/bcpltrn.ll : buildrel/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
 !   @${BCPLC} $< to $@
 
-bcplr : llvm-rtl/bcplinit.s buildrel/bcplsyn.ll buildrel/bcpltrn.ll buildrel/bcplcgllvm.ll buildrel/blib.ll llvm-rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
+buildrel/bcplsyn.o : buildrel/bcplsyn.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+buildrel/bcpltrn.o : buildrel/bcpltrn.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+buildrel/bcplcgllvm.o : buildrel/bcplcgllvm.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+buildrel/blib.o : buildrel/blib.ll
+!   @echo \*\* LLC BCPLSYN.O
+!   @${LLC} -o $@ $<
+
+bcplr : llvm-rtl/bcplinit.s buildrel/bcplsyn.o buildrel/bcpltrn.o buildrel/bcplcgllvm.o buildrel/blib.o llvm-rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
 !    @echo \*\* LINK BCPLR
-!    ${CLANG} ${RELCFLAGS} -O2 $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
+!    @${CLANG} ${RELCFLAGS} -O2 $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
 
 
 # ------------------------ CINTSYS -------------------------------------
@@ -224,7 +258,7 @@ x86-libhdr:
 !    @ scripts/genlibhdr.py /tmp/cintsys64_libhdr.xref --enum                             <x86-rtl/libhdr.template >x86-rtl/global_enums.h
 !    @ echo \*\* TAILOR BLIB.B
 !    @ scripts/tailor-blib.py x86-rtl/blib.template ${BCPL64ROOT}/sysb/blib.b >x86-rtl/blib.b
-!    ${BCPLT} x86-rtl/blib.b to x86-rtl/blib.ll
+!    @ ${BCPLT} x86-rtl/blib.b to x86-rtl/blib.ll
 !    @ ls -ltr x86-rtl/libhdr.h x86-rtl/global_enums.h x86-rtl/bcplinit.s x86-rtl/blib.ll
 !    @ llc --relocation-model=pic -O3 x86-rtl/blib.ll -o x86-rtl/blib.s
 !    @ as x86-rtl/blib.s -o x86-rtl/blib.o
