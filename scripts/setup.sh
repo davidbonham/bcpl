@@ -27,7 +27,7 @@ export BCPL64ROOT=${DEVROOT}/official_bcpl_release/BCPL/cintcode
 export BCPL64PATH=${BCPL64ROOT}/cin64
 export BCPL64HDRS=${BCPL64ROOT}/g
 export BCPL64SCRIPTS=${BCPL64ROOT}/s
-
+export X86RTL=${BL_ROOT}/x86-rtl
 alias @="${BL_ROOT}/bin/cintsys64 -c"
 alias bcd="cd ${BL_ROOT}; cd "
 alias mybcpl="@ ${BL_ROOT}/bin/mybcpl "
