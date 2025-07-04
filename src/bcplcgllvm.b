@@ -125,7 +125,7 @@ $(
   
     LET l_param_types = VEC 10
     IF errcount > 0 RETURN
-    writef("LLVM code generator with %N words of workspace. cgg=%n*N", workspace_size,cgg)
+    IF debug DO writef("LLVM code generator with %N words of workspace. cgg=%n*N", workspace_size,cgg)
     llvm_tracing(debug)
 
     // The following code replaced rdn with a version that reads from
