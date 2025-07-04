@@ -115,11 +115,11 @@ builddbg/bcplcgllvm.ll : ${CGSRC} ${DBGCMPLHDRS} src/inc/llvmgvec.h src/ninc/llv
 
 builddbg/bcplsyn.ll : builddbg/bcplsyn.b builddbg/bcplfecg.h
 !   @echo \*\* BCPL BCPLSYN.LL
-!   ${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   @${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 builddbg/bcpltrn.ll : builddbg/bcpltrn.b
 !   @echo \*\* BCPL BCPLTRN.LL
-!   ${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
+!   @${CINTSYS} -c bin/cbcpl t64 noselst $< to $@ hdrs HDRPATHDBG
 
 builddbg/bcplsyn.o : builddbg/bcplsyn.ll
 !   @echo \*\* LLC BCPLSYN.O
@@ -138,8 +138,8 @@ builddbg/blib.o : builddbg/blib.ll
 !   @${LLC} -o $@ $<
 
 bcpld : llvm-rtl/bcplinit.s builddbg/bcplsyn.o builddbg/bcpltrn.o builddbg/bcplcgllvm.o builddbg/blib.o llvm-rtl/bcplmain.c builddbg/llvm_bcpl_binding.o builddbg/llvm_nbcpl_binding_utilities.o builddbg/stubzlib.o
-!    @echo \*\* LINK BCPLD
-!    @${CLANG}  ${DBGCFLAGS} -O0 $^ ${LLVMDBGLIBS} -pthread  -lm -lstdc++ -o $@
+!   @echo \*\* LINK BCPLD
+!   @${CLANG}  ${DBGCFLAGS} -O0 $^ ${LLVMDBGLIBS} -pthread  -lm -lstdc++ -o $@
 
 # ----------------------------------------------------------------------
 # Build our BCPL compiler - release version
@@ -214,8 +214,8 @@ buildrel/blib.o : buildrel/blib.ll
 !   @${LLC} -o $@ $<
 
 bcplr : llvm-rtl/bcplinit.s buildrel/bcplsyn.o buildrel/bcpltrn.o buildrel/bcplcgllvm.o buildrel/blib.o llvm-rtl/bcplmain.c buildrel/llvm_bcpl_binding.o buildrel/llvm_nbcpl_binding_utilities.o buildrel/stubzlib.o
-!    @echo \*\* LINK BCPLR
-!    @${CLANG} ${RELCFLAGS} -O2 $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
+!   @echo \*\* LINK BCPLR
+!   @${CLANG} ${RELCFLAGS} -O2 $^ ${LLVMRELLIBS} -pthread  -lm -lstdc++ -o $@
 
 
 # ------------------------ CINTSYS -------------------------------------
@@ -226,8 +226,8 @@ bcplr : llvm-rtl/bcplinit.s buildrel/bcplsyn.o buildrel/bcpltrn.o buildrel/bcplc
 #    and the llvmapi header included comes from src/cinc not src/ninc
 # 3. The native binding is held in extfn.c linked into CINTSYS64
 cbcpl : src/bcpl.b builddbg/bcplsyn.b builddbg/bcpltrn.b ${CGSRC} ${DBGCMPLHDRS} src/cinc/llvmapi.h
-!    @echo \*\*  CINTSYS BCPL
-!    bin/cintsys64 -c bcpl t64 src/bcpl.b to cbcpl hdrs HDRPATHC64
+!   @echo \*\*  CINTSYS BCPL
+!   @bin/cintsys64 -c bcpl t64 src/bcpl.b to cbcpl hdrs HDRPATHC64
 
 # ------------------------ NATIVE- -------------------------------------
 
@@ -260,7 +260,5 @@ x86-libhdr:
 !    @ scripts/tailor-blib.py x86-rtl/blib.template ${BCPL64ROOT}/sysb/blib.b >x86-rtl/blib.b
 !    @ ${BCPLT} x86-rtl/blib.b to x86-rtl/blib.ll
 !    @ ls -ltr x86-rtl/libhdr.h x86-rtl/global_enums.h x86-rtl/bcplinit.s x86-rtl/blib.ll
-!    @ llc --relocation-model=pic -O3 x86-rtl/blib.ll -o x86-rtl/blib.s
-!    @ as x86-rtl/blib.s -o x86-rtl/blib.o
-!    @ as x86-rtl/bcplinit.s -o x86-rtl/bcplinit.o
+!    @ ${LLC} x86-rtl/blib.ll -o x86-rtl/blib.o
 
