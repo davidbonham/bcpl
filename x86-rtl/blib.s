@@ -7667,48 +7667,53 @@ rewind:                                 # @rewind
 mapstore:                               # @mapstore
 	.cfi_startproc
 # %bb.0:                                # %entry
-	pushq	%r15
+	pushq	%rbp
 	.cfi_def_cfa_offset 16
-	pushq	%r14
+	pushq	%r15
 	.cfi_def_cfa_offset 24
-	pushq	%r13
+	pushq	%r14
 	.cfi_def_cfa_offset 32
-	pushq	%r12
+	pushq	%r13
 	.cfi_def_cfa_offset 40
-	pushq	%rbx
+	pushq	%r12
 	.cfi_def_cfa_offset 48
-	.cfi_offset %rbx, -48
-	.cfi_offset %r12, -40
-	.cfi_offset %r13, -32
-	.cfi_offset %r14, -24
-	.cfi_offset %r15, -16
+	pushq	%rbx
+	.cfi_def_cfa_offset 56
+	pushq	%rax
+	.cfi_def_cfa_offset 64
+	.cfi_offset %rbx, -56
+	.cfi_offset %r12, -48
+	.cfi_offset %r13, -40
+	.cfi_offset %r14, -32
+	.cfi_offset %r15, -24
+	.cfi_offset %rbp, -16
+	movq	__bcpl_global_vector@GOTPCREL(%rip), %r15
+	movq	%r15, %r12
+	sarq	$3, %r12
 	leaq	.Llstr.global.150(%rip), %rdi
 	sarq	$3, %rdi
-	movq	__bcpl_global_vector@GOTPCREL(%rip), %r15
 	movq	(%r15), %rsi
 	callq	*752(%r15)
-	movq	(%r15), %r12
-	decq	%r12
+	movq	(%r15), %r13
+	decq	%r13
 	js	.LBB93_5
 # %bb.1:                                # %lab_L720.preheader
 	leaq	.Llstr.global.151(%rip), %rbx
 	sarq	$3, %rbx
+	leaq	(,%r12,8), %rbp
 	xorl	%r14d, %r14d
-	movq	%r15, %r13
 	jmp	.LBB93_2
 	.p2align	4
 .LBB93_4:                               # %jf.then_L724
                                         #   in Loop: Header=BB93_2 Depth=1
-	movq	%r13, %rax
-	andq	$-8, %rax
-	movq	(%rax), %rdi
+	movq	(%rbp), %rdi
 	movl	$16, %esi
 	callq	*696(%r15)
 	movl	$32, %edi
 	callq	*328(%r15)
 	incq	%r14
-	addq	$8, %r13
-	cmpq	%r12, %r14
+	addq	$8, %rbp
+	cmpq	%r13, %r14
 	jg	.LBB93_5
 .LBB93_2:                               # %lab_L720
                                         # =>This Inner Loop Header: Depth=1
@@ -7721,7 +7726,6 @@ mapstore:                               # @mapstore
 	callq	*752(%r15)
 	jmp	.LBB93_4
 .LBB93_5:                               # %jt.then_L721
-	movq	__bcpl_global_vector@GOTPCREL(%rip), %r15
 	callq	*672(%r15)
 	leaq	.Llstr.global.152(%rip), %rdi
 	sarq	$3, %rdi
@@ -7733,24 +7737,24 @@ mapstore:                               # @mapstore
 # %bb.6:                                # %lab_L725.preheader
 	leaq	.Llstr.global.153(%rip), %r14
 	sarq	$3, %r14
-	movl	$42, %r12d
-	movl	$32, %r13d
+	movl	$42, %r13d
+	movl	$32, %ebp
 	.p2align	4
 .LBB93_7:                               # %lab_L725
                                         # =>This Inner Loop Header: Depth=1
 	cmpq	%rbx, 104(%r15)
 	movl	$32, %esi
-	cmoveq	%r12, %rsi
+	cmoveq	%r13, %rsi
 	cmpq	%rbx, 96(%r15)
-	cmoveq	%r12, %rsi
+	cmoveq	%r13, %rsi
 	movq	(,%rbx,8), %rax
 	movq	16(,%rbx,8), %r10
 	testb	$2, %al
 	movl	$82, %r8d
-	cmoveq	%r13, %r8
+	cmoveq	%rbp, %r8
 	testb	$4, %al
 	movl	$87, %r9d
-	cmoveq	%r13, %r9
+	cmoveq	%rbp, %r9
 	movq	%rax, %rcx
 	shrq	$32, %rcx
 	movl	%r10d, %r11d
@@ -7776,17 +7780,49 @@ mapstore:                               # @mapstore
 	callq	blib.dumpheap@PLT
 	leaq	.Llstr.global.154(%rip), %rdi
 	sarq	$3, %rdi
+	movl	$1024, %esi                     # imm = 0x400
+	callq	*752(%r15)
+	movq	(%r15), %r14
+	leaq	.Llstr.global.155(%rip), %rbx
+	sarq	$3, %rbx
+	shlq	$3, %r14
+	.p2align	4
+.LBB93_9:                               # %lab_L735
+                                        # =>This Inner Loop Header: Depth=1
+	movq	(%r14,%r12,8), %rsi
+	movq	8(%r14,%r12,8), %rdx
+	movq	16(%r14,%r12,8), %rcx
+	movq	24(%r14,%r12,8), %r8
+	movq	32(%r14,%r12,8), %r9
+	movq	%rbx, %rdi
+	pushq	48(%r14,%r12,8)
+	.cfi_adjust_cfa_offset 8
+	pushq	40(%r14,%r12,8)
+	.cfi_adjust_cfa_offset 8
+	callq	*752(%r15)
+	addq	$16, %rsp
+	.cfi_adjust_cfa_offset -16
+	cmpq	$0, 56(%r14,%r12,8)
+	leaq	56(%r14), %r14
+	jne	.LBB93_9
+# %bb.10:                               # %lab_L736
+	leaq	.Llstr.global.156(%rip), %rdi
+	sarq	$3, %rdi
 	callq	*712(%r15)
 	movabsq	$-4985279381848933680, %rax     # imm = 0xBAD0BAD0BAD0BAD0
+	addq	$8, %rsp
+	.cfi_def_cfa_offset 56
 	popq	%rbx
-	.cfi_def_cfa_offset 40
+	.cfi_def_cfa_offset 48
 	popq	%r12
-	.cfi_def_cfa_offset 32
+	.cfi_def_cfa_offset 40
 	popq	%r13
-	.cfi_def_cfa_offset 24
+	.cfi_def_cfa_offset 32
 	popq	%r14
-	.cfi_def_cfa_offset 16
+	.cfi_def_cfa_offset 24
 	popq	%r15
+	.cfi_def_cfa_offset 16
+	popq	%rbp
 	.cfi_def_cfa_offset 8
 	retq
 .Lfunc_end93:
@@ -7848,12 +7884,12 @@ blib.bcplmain:                          # @blib.bcplmain
 	callq	blib.ioinit@PLT
 	cmpq	$2, %r15
 	jl	.LBB95_16
-# %bb.1:                                # %lab_L738.preheader
+# %bb.1:                                # %lab_L741.preheader
 	movabsq	$-4294967296, %rax              # imm = 0xFFFFFFFF00000000
 	movabsq	$4398046511103, %rcx            # imm = 0x3FFFFFFFFFF
 	movabsq	$4393751543808, %rdx            # imm = 0x3FF00000000
 	movabsq	$4294967296, %rsi               # imm = 0x100000000
-	leaq	.Llstr.global.157(%rip), %rdi
+	leaq	.Llstr.global.159(%rip), %rdi
 	sarq	$3, %rdi
 	movq	%rdi, %r8
 	andq	$-8, %r8
@@ -7867,7 +7903,7 @@ blib.bcplmain:                          # @blib.bcplmain
 	incq	%r12
 	cmpq	%r15, %r12
 	jge	.LBB95_15
-.LBB95_2:                               # %lab_L738
+.LBB95_2:                               # %lab_L741
                                         # =>This Loop Header: Depth=1
                                         #     Child Loop BB95_6 Depth 2
                                         #     Child Loop BB95_12 Depth 2
@@ -7911,11 +7947,11 @@ blib.bcplmain:                          # @blib.bcplmain
 	incq	%rbp
 	testb	%bl, %bl
 	jne	.LBB95_6
-.LBB95_8:                               # %jf.then_L742.loopexit
+.LBB95_8:                               # %jf.then_L745.loopexit
                                         #   in Loop: Header=BB95_2 Depth=1
 	movq	itemn.global.119(%rip), %r10
 	.p2align	4
-.LBB95_9:                               # %jf.then_L742
+.LBB95_9:                               # %jf.then_L745
                                         #   in Loop: Header=BB95_2 Depth=1
 	movq	16(,%r10,8), %r11
 	cmpq	%rcx, %r11
@@ -7958,7 +7994,7 @@ blib.bcplmain:                          # @blib.bcplmain
 	testb	%bl, %bl
 	jne	.LBB95_12
 	jmp	.LBB95_14
-.LBB95_15:                              # %jt.then_L739
+.LBB95_15:                              # %jt.then_L742
 	movq	itemn.global.119(%rip), %rcx
 	movq	8(,%rcx,8), %rdx
 	movl	20(,%rcx,8), %esi
@@ -7974,25 +8010,25 @@ blib.bcplmain:                          # @blib.bcplmain
 	addq	%rdx, %rax
 	movq	%rax, 16(,%rcx,8)
 	orb	$16, (,%rcx,8)
-.LBB95_16:                              # %jf.then_L737
+.LBB95_16:                              # %jf.then_L740
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %rax
 	movq	(%rax), %rcx
 	decq	%rcx
 	js	.LBB95_21
-# %bb.17:                               # %lab_L743.preheader
+# %bb.17:                               # %lab_L746.preheader
 	movq	%rax, %rdx
 	andq	$-8, %rdx
 	xorl	%esi, %esi
 	movq	blib.undefined@GOTPCREL(%rip), %rdi
 	jmp	.LBB95_18
 	.p2align	4
-.LBB95_20:                              # %lab_L746
+.LBB95_20:                              # %lab_L749
                                         #   in Loop: Header=BB95_18 Depth=1
 	incq	%rsi
 	addq	$8, %rax
 	cmpq	%rcx, %rsi
 	jg	.LBB95_21
-.LBB95_18:                              # %lab_L743
+.LBB95_18:                              # %lab_L746
                                         # =>This Inner Loop Header: Depth=1
 	cmpq	$0, 8(%rdx)
 	jne	.LBB95_20
@@ -8002,7 +8038,7 @@ blib.bcplmain:                          # @blib.bcplmain
 	andq	$-8, %r8
 	movq	%rdi, (%r8)
 	jmp	.LBB95_20
-.LBB95_21:                              # %jt.then_L744
+.LBB95_21:                              # %jt.then_L747
 	movq	__bcpl_global_vector@GOTPCREL(%rip), %r14
 	movq	8(%rsp), %rax                   # 8-byte Reload
 	movq	%rax, 232(%r14)
@@ -8012,13 +8048,13 @@ blib.bcplmain:                          # @blib.bcplmain
 # %bb.22:                               # %jf.else169
 	movq	itemn.global.121(%rip), %rdi
 	callq	*456(%r14)
-	leaq	.Llstr.global.158(%rip), %rdi
+	leaq	.Llstr.global.160(%rip), %rdi
 	sarq	$3, %rdi
 	callq	*752(%r14)
 	addq	$224, %r14
 	movl	$104, %ebx
 	jmp	.LBB95_28
-.LBB95_23:                              # %jf.then_L748
+.LBB95_23:                              # %jf.then_L751
 	xorl	%edi, %edi
 	callq	*%rax
 	movq	%rax, %rbx
@@ -8411,20 +8447,32 @@ itemn.global.122:
 	.type	.Llstr.global.154,@object       # @lstr.global.154
 	.p2align	3, 0x0
 .Llstr.global.154:
-	.ascii	"S\n--------------------------------------------------------------------------------\n\n"
+	.ascii	"S\n-- LEVEL() STATES --------------------------------------------------------------\n\n"
 	.size	.Llstr.global.154, 84
 
-	.type	.Llstr.global.157,@object       # @lstr.global.157
+	.type	.Llstr.global.155,@object       # @lstr.global.155
 	.p2align	3, 0x0
-.Llstr.global.157:
-	.ascii	"\001 "
-	.size	.Llstr.global.157, 2
+.Llstr.global.155:
+	.ascii	"?RSP=%16X RBP=%16X RBX=%16X R12=%16X R13=%16X R14=%16X R15=%16X\n"
+	.size	.Llstr.global.155, 64
 
-	.type	.Llstr.global.158,@object       # @lstr.global.158
+	.type	.Llstr.global.156,@object       # @lstr.global.156
 	.p2align	3, 0x0
-.Llstr.global.158:
+.Llstr.global.156:
+	.ascii	"S\n--------------------------------------------------------------------------------\n\n"
+	.size	.Llstr.global.156, 84
+
+	.type	.Llstr.global.159,@object       # @lstr.global.159
+	.p2align	3, 0x0
+.Llstr.global.159:
+	.ascii	"\001 "
+	.size	.Llstr.global.159, 2
+
+	.type	.Llstr.global.160,@object       # @lstr.global.160
+	.p2align	3, 0x0
+.Llstr.global.160:
 	.ascii	"\034fatal: start is not defined\n"
-	.size	.Llstr.global.158, 29
+	.size	.Llstr.global.160, 29
 
 	.globl	__bcpl_gv64
 	.type	__bcpl_gv64,@function

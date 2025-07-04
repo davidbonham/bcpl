@@ -51,9 +51,11 @@ target triple = "x86_64-unknown-linux-gnu"
 @lstr.global.151 = private global [7 x i8] c"\06\0A%4I: ", section ".data.BLIB", align 8
 @lstr.global.152 = private global [83 x i8] c"R\0A-- STREAMS (BUFFER SIZE %4I)) -------------------------------------------------\0A\0A", section ".data.BLIB", align 8
 @lstr.global.153 = private global [57 x i8] c"8%cDCB %16X: FD %2i ACCESS %c%c POS %4i LAST %4i EOF %n \0A", section ".data.BLIB", align 8
-@lstr.global.154 = private global [84 x i8] c"S\0A--------------------------------------------------------------------------------\0A\0A", section ".data.BLIB", align 8
-@lstr.global.157 = private global [2 x i8] c"\01 ", section ".data.BLIB", align 8
-@lstr.global.158 = private global [29 x i8] c"\1Cfatal: start is not defined\0A", section ".data.BLIB", align 8
+@lstr.global.154 = private global [84 x i8] c"S\0A-- LEVEL() STATES --------------------------------------------------------------\0A\0A", section ".data.BLIB", align 8
+@lstr.global.155 = private global [64 x i8] c"?RSP=%16X RBP=%16X RBX=%16X R12=%16X R13=%16X R14=%16X R15=%16X\0A", section ".data.BLIB", align 8
+@lstr.global.156 = private global [84 x i8] c"S\0A--------------------------------------------------------------------------------\0A\0A", section ".data.BLIB", align 8
+@lstr.global.159 = private global [2 x i8] c"\01 ", section ".data.BLIB", align 8
+@lstr.global.160 = private global [29 x i8] c"\1Cfatal: start is not defined\0A", section ".data.BLIB", align 8
 
 @__bcpl_gv64 = alias ptr, ptr @mapstore
 @__bcpl_gv4 = alias ptr, ptr @rewind
@@ -6322,103 +6324,146 @@ jf.then_L718:                                     ; preds = %jf.else41, %jf.then
 
 define noundef i64 @mapstore() section ".text.BLIB" {
 entry:
+  %llg.bcpladdr = ashr i64 ptrtoint (ptr @__bcpl_global_vector to i64), 3
   %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global.150 to i64), 3
   %lg.value = load i64, ptr @__bcpl_global_vector, align 4
-  %lg.value4 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
-  %rtap_ep_p_fn = inttoptr i64 %lg.value4 to ptr
+  %lg.value5 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
+  %rtap_ep_p_fn = inttoptr i64 %lg.value5 to ptr
   %rtap = tail call i64 %rtap_ep_p_fn(i64 %lstr.bcpladdr, i64 %lg.value)
-  %lg.value8 = load i64, ptr @__bcpl_global_vector, align 4
-  %sub = add i64 %lg.value8, -1
+  %lg.value9 = load i64, ptr @__bcpl_global_vector, align 4
+  %sub = add i64 %lg.value9, -1
   %gr = icmp slt i64 %sub, 0
   br i1 %gr, label %jt.then_L721, label %lab_L720.preheader
 
 lab_L720.preheader:                               ; preds = %entry
-  %lstr.bcpladdr31 = ashr exact i64 ptrtoint (ptr @lstr.global.151 to i64), 3
+  %lstr.bcpladdr32 = ashr exact i64 ptrtoint (ptr @lstr.global.151 to i64), 3
   br label %lab_L720
 
 lab_L720:                                         ; preds = %lab_L720.preheader, %jf.then_L724
-  %STK7.0 = phi i64 [ %add70, %jf.then_L724 ], [ 0, %lab_L720.preheader ]
-  %0 = and i64 %STK7.0, 3
+  %STK8.0 = phi i64 [ %add71, %jf.then_L724 ], [ 0, %lab_L720.preheader ]
+  %0 = and i64 %STK8.0, 3
   %eq.not = icmp eq i64 %0, 0
   br i1 %eq.not, label %jf.else, label %jf.then_L724
 
 jf.else:                                          ; preds = %lab_L720
-  %lg.value35 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
-  %rtap_ep_p_fn38 = inttoptr i64 %lg.value35 to ptr
-  %rtap41 = tail call i64 %rtap_ep_p_fn38(i64 %lstr.bcpladdr31, i64 %STK7.0)
+  %lg.value36 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
+  %rtap_ep_p_fn39 = inttoptr i64 %lg.value36 to ptr
+  %rtap42 = tail call i64 %rtap_ep_p_fn39(i64 %lstr.bcpladdr32, i64 %STK8.0)
   br label %jf.then_L724
 
 jf.then_L724:                                     ; preds = %jf.else, %lab_L720
-  %add369 = shl i64 %STK7.0, 3
-  %llg.bcpladdr370 = add i64 %add369, ptrtoint (ptr @__bcpl_global_vector to i64)
-  %rv.llvmaddr = and i64 %llg.bcpladdr370, -8
+  %add = add i64 %STK8.0, %llg.bcpladdr
+  %rv.llvmaddr = shl i64 %add, 3
   %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
   %rv.rv = load i64, ptr %rv.lv, align 8
-  %lg.value51 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 696), align 4
-  %rtap_ep_p_fn54 = inttoptr i64 %lg.value51 to ptr
-  %rtap57 = tail call i64 %rtap_ep_p_fn54(i64 %rv.rv, i64 16)
-  %lg.value59 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
-  %rtap_ep_p_fn62 = inttoptr i64 %lg.value59 to ptr
-  %rtap64 = tail call i64 %rtap_ep_p_fn62(i64 32)
-  %add70 = add i64 %STK7.0, 1
-  %le.not = icmp sgt i64 %add70, %sub
+  %lg.value52 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 696), align 4
+  %rtap_ep_p_fn55 = inttoptr i64 %lg.value52 to ptr
+  %rtap58 = tail call i64 %rtap_ep_p_fn55(i64 %rv.rv, i64 16)
+  %lg.value60 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 328), align 4
+  %rtap_ep_p_fn63 = inttoptr i64 %lg.value60 to ptr
+  %rtap65 = tail call i64 %rtap_ep_p_fn63(i64 32)
+  %add71 = add i64 %STK8.0, 1
+  %le.not = icmp sgt i64 %add71, %sub
   br i1 %le.not, label %jt.then_L721, label %lab_L720
 
 jt.then_L721:                                     ; preds = %jf.then_L724, %entry
-  %lg.value83 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 672), align 4
-  %rtap_ep_p_fn86 = inttoptr i64 %lg.value83 to ptr
-  %rtap87 = tail call i64 %rtap_ep_p_fn86()
-  %lstr.bcpladdr88 = ashr exact i64 ptrtoint (ptr @lstr.global.152 to i64), 3
-  %lg.value91 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
-  %rtap_ep_p_fn94 = inttoptr i64 %lg.value91 to ptr
-  %rtap97 = tail call i64 %rtap_ep_p_fn94(i64 %lstr.bcpladdr88, i64 1024)
+  %lg.value84 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 672), align 4
+  %rtap_ep_p_fn87 = inttoptr i64 %lg.value84 to ptr
+  %rtap88 = tail call i64 %rtap_ep_p_fn87()
+  %lstr.bcpladdr89 = ashr exact i64 ptrtoint (ptr @lstr.global.152 to i64), 3
+  %lg.value92 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
+  %rtap_ep_p_fn95 = inttoptr i64 %lg.value92 to ptr
+  %rtap98 = tail call i64 %rtap_ep_p_fn95(i64 %lstr.bcpladdr89, i64 1024)
   %ll.static.value = load i64, ptr @itemn.global.122, align 8
   %ne.not = icmp eq i64 %ll.static.value, 0
   br i1 %ne.not, label %jf.then_L727, label %lab_L725.preheader
 
 lab_L725.preheader:                               ; preds = %jt.then_L721
-  %lstr.bcpladdr219 = ashr exact i64 ptrtoint (ptr @lstr.global.153 to i64), 3
+  %lstr.bcpladdr220 = ashr exact i64 ptrtoint (ptr @lstr.global.153 to i64), 3
   br label %lab_L725
 
 lab_L725:                                         ; preds = %lab_L725.preheader, %lab_L725
-  %STK.0 = phi i64 [ %rv.rv323, %lab_L725 ], [ %ll.static.value, %lab_L725.preheader ]
-  %lg.value110 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 96), align 4
-  %eq116 = icmp eq i64 %lg.value110, %STK.0
-  %lg.value122 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 104), align 4
-  %eq128.not = icmp eq i64 %lg.value122, %STK.0
-  %or.cond = select i1 %eq116, i1 true, i1 %eq128.not
+  %STK.0 = phi i64 [ %rv.rv324, %lab_L725 ], [ %ll.static.value, %lab_L725.preheader ]
+  %lg.value111 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 96), align 4
+  %eq117 = icmp eq i64 %lg.value111, %STK.0
+  %lg.value123 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 104), align 4
+  %eq129.not = icmp eq i64 %lg.value123, %STK.0
+  %or.cond = select i1 %eq117, i1 true, i1 %eq129.not
   %__res_a.0 = select i1 %or.cond, i64 42, i64 32
-  %rv.llvmaddr141 = shl i64 %STK.0, 3
-  %rv.lv142 = inttoptr i64 %rv.llvmaddr141 to ptr
-  %rv.rv143 = load i64, ptr %rv.lv142, align 8
-  %1 = and i64 %rv.rv143, 2
-  %if_cond166 = icmp eq i64 %1, 0
-  %__res_a.1 = select i1 %if_cond166, i64 32, i64 82
-  %2 = and i64 %rv.rv143, 4
-  %if_cond210 = icmp eq i64 %2, 0
-  %__res_a.2 = select i1 %if_cond210, i64 32, i64 87
-  %shift.result239 = lshr i64 %rv.rv143, 32
-  %rv.llvmaddr255 = add i64 %rv.llvmaddr141, 16
-  %rv.lv256 = inttoptr i64 %rv.llvmaddr255 to ptr
-  %rv.rv257 = load i64, ptr %rv.lv256, align 8
-  %logand262 = and i64 %rv.rv257, 4294967295
-  %shift.result283 = lshr i64 %rv.rv257, 32
-  %logand297 = and i64 %rv.rv143, 1
-  %lg.value299 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
-  %rtap_ep_p_fn302 = inttoptr i64 %lg.value299 to ptr
-  %rtap312 = tail call i64 %rtap_ep_p_fn302(i64 %lstr.bcpladdr219, i64 %__res_a.0, i64 %STK.0, i64 %shift.result239, i64 %__res_a.1, i64 %__res_a.2, i64 %logand262, i64 %shift.result283, i64 %logand297)
-  %rv.llvmaddr321 = add i64 %rv.llvmaddr141, 40
-  %rv.lv322 = inttoptr i64 %rv.llvmaddr321 to ptr
-  %rv.rv323 = load i64, ptr %rv.lv322, align 8
-  %ne331.not = icmp eq i64 %rv.rv323, 0
-  br i1 %ne331.not, label %jf.then_L727, label %lab_L725
+  %rv.llvmaddr142 = shl i64 %STK.0, 3
+  %rv.lv143 = inttoptr i64 %rv.llvmaddr142 to ptr
+  %rv.rv144 = load i64, ptr %rv.lv143, align 8
+  %1 = and i64 %rv.rv144, 2
+  %if_cond167 = icmp eq i64 %1, 0
+  %__res_a.1 = select i1 %if_cond167, i64 32, i64 82
+  %2 = and i64 %rv.rv144, 4
+  %if_cond211 = icmp eq i64 %2, 0
+  %__res_a.2 = select i1 %if_cond211, i64 32, i64 87
+  %shift.result240 = lshr i64 %rv.rv144, 32
+  %rv.llvmaddr256 = add i64 %rv.llvmaddr142, 16
+  %rv.lv257 = inttoptr i64 %rv.llvmaddr256 to ptr
+  %rv.rv258 = load i64, ptr %rv.lv257, align 8
+  %logand263 = and i64 %rv.rv258, 4294967295
+  %shift.result284 = lshr i64 %rv.rv258, 32
+  %logand298 = and i64 %rv.rv144, 1
+  %lg.value300 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
+  %rtap_ep_p_fn303 = inttoptr i64 %lg.value300 to ptr
+  %rtap313 = tail call i64 %rtap_ep_p_fn303(i64 %lstr.bcpladdr220, i64 %__res_a.0, i64 %STK.0, i64 %shift.result240, i64 %__res_a.1, i64 %__res_a.2, i64 %logand263, i64 %shift.result284, i64 %logand298)
+  %rv.llvmaddr322 = add i64 %rv.llvmaddr142, 40
+  %rv.lv323 = inttoptr i64 %rv.llvmaddr322 to ptr
+  %rv.rv324 = load i64, ptr %rv.lv323, align 8
+  %ne332.not = icmp eq i64 %rv.rv324, 0
+  br i1 %ne332.not, label %jf.then_L727, label %lab_L725
 
 jf.then_L727:                                     ; preds = %lab_L725, %jt.then_L721
-  %rtap340 = tail call i64 @blib.dumpheap()
-  %lstr.bcpladdr341 = ashr exact i64 ptrtoint (ptr @lstr.global.154 to i64), 3
-  %lg.value343 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 712), align 4
-  %rtap_ep_p_fn346 = inttoptr i64 %lg.value343 to ptr
-  %rtap348 = tail call i64 %rtap_ep_p_fn346(i64 %lstr.bcpladdr341)
+  %rtap341 = tail call i64 @blib.dumpheap()
+  %lstr.bcpladdr342 = ashr exact i64 ptrtoint (ptr @lstr.global.154 to i64), 3
+  %lg.value345 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
+  %rtap_ep_p_fn348 = inttoptr i64 %lg.value345 to ptr
+  %rtap351 = tail call i64 %rtap_ep_p_fn348(i64 %lstr.bcpladdr342, i64 1024)
+  %lg.value352 = load i64, ptr @__bcpl_global_vector, align 4
+  %add358 = add i64 %lg.value352, %llg.bcpladdr
+  %lstr.bcpladdr361 = ashr exact i64 ptrtoint (ptr @lstr.global.155 to i64), 3
+  br label %lab_L735
+
+lab_L735:                                         ; preds = %lab_L735, %jf.then_L727
+  %STK1.0 = phi i64 [ %add358, %jf.then_L727 ], [ %add465, %lab_L735 ]
+  %rv.llvmaddr371 = shl i64 %STK1.0, 3
+  %rv.lv372 = inttoptr i64 %rv.llvmaddr371 to ptr
+  %rv.rv373 = load i64, ptr %rv.lv372, align 8
+  %rv.llvmaddr383 = add i64 %rv.llvmaddr371, 8
+  %rv.lv384 = inttoptr i64 %rv.llvmaddr383 to ptr
+  %rv.rv385 = load i64, ptr %rv.lv384, align 8
+  %rv.llvmaddr395 = add i64 %rv.llvmaddr371, 16
+  %rv.lv396 = inttoptr i64 %rv.llvmaddr395 to ptr
+  %rv.rv397 = load i64, ptr %rv.lv396, align 8
+  %rv.llvmaddr407 = add i64 %rv.llvmaddr371, 24
+  %rv.lv408 = inttoptr i64 %rv.llvmaddr407 to ptr
+  %rv.rv409 = load i64, ptr %rv.lv408, align 8
+  %rv.llvmaddr419 = add i64 %rv.llvmaddr371, 32
+  %rv.lv420 = inttoptr i64 %rv.llvmaddr419 to ptr
+  %rv.rv421 = load i64, ptr %rv.lv420, align 8
+  %rv.llvmaddr431 = add i64 %rv.llvmaddr371, 40
+  %rv.lv432 = inttoptr i64 %rv.llvmaddr431 to ptr
+  %rv.rv433 = load i64, ptr %rv.lv432, align 8
+  %rv.llvmaddr443 = add i64 %rv.llvmaddr371, 48
+  %rv.lv444 = inttoptr i64 %rv.llvmaddr443 to ptr
+  %rv.rv445 = load i64, ptr %rv.lv444, align 8
+  %lg.value447 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
+  %rtap_ep_p_fn450 = inttoptr i64 %lg.value447 to ptr
+  %rtap459 = tail call i64 %rtap_ep_p_fn450(i64 %lstr.bcpladdr361, i64 %rv.rv373, i64 %rv.rv385, i64 %rv.rv397, i64 %rv.rv409, i64 %rv.rv421, i64 %rv.rv433, i64 %rv.rv445)
+  %add465 = add i64 %STK1.0, 7
+  %rv.llvmaddr476 = shl i64 %add465, 3
+  %rv.lv477 = inttoptr i64 %rv.llvmaddr476 to ptr
+  %rv.rv478 = load i64, ptr %rv.lv477, align 8
+  %eq483.not = icmp eq i64 %rv.rv478, 0
+  br i1 %eq483.not, label %lab_L736, label %lab_L735
+
+lab_L736:                                         ; preds = %lab_L735
+  %lstr.bcpladdr489 = ashr exact i64 ptrtoint (ptr @lstr.global.156 to i64), 3
+  %lg.value491 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 712), align 4
+  %rtap_ep_p_fn494 = inttoptr i64 %lg.value491 to ptr
+  %rtap496 = tail call i64 %rtap_ep_p_fn494(i64 %lstr.bcpladdr489)
   ret i64 -4985279381848933680
 }
 
@@ -6434,34 +6479,34 @@ define noundef i64 @blib.bcplmain(i64 %0, i64 %1, i64 %2) local_unnamed_addr sec
 entry:
   %rtap = tail call i64 @blib.ioinit(i64 0, i64 1, i64 2)
   %gr = icmp slt i64 %0, 2
-  br i1 %gr, label %jf.then_L737, label %lab_L738.preheader
+  br i1 %gr, label %jf.then_L740, label %lab_L741.preheader
 
-lab_L738.preheader:                               ; preds = %entry
-  %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global.157 to i64), 3
+lab_L741.preheader:                               ; preds = %entry
+  %lstr.bcpladdr = ashr exact i64 ptrtoint (ptr @lstr.global.159 to i64), 3
   %shift.result10.i = and i64 %lstr.bcpladdr, -8
   %logand.i = and i64 %lstr.bcpladdr, 7
   %getbyte.string.i = inttoptr i64 %shift.result10.i to ptr
   %getbyte.charptr.i = getelementptr i8, ptr %getbyte.string.i, i64 %logand.i
-  br label %lab_L738
+  br label %lab_L741
 
-lab_L738:                                         ; preds = %lab_L738.preheader, %blib.rditem_add.exit267
-  %STK14.0 = phi i64 [ %add69, %blib.rditem_add.exit267 ], [ 1, %lab_L738.preheader ]
+lab_L741:                                         ; preds = %lab_L741.preheader, %blib.rditem_add.exit267
+  %STK14.0 = phi i64 [ %add69, %blib.rditem_add.exit267 ], [ 1, %lab_L741.preheader ]
   %gr37 = icmp samesign ult i64 %STK14.0, 2
   %ll.static.value.i232.pre284 = load i64, ptr @itemn.global.119, align 8
-  br i1 %gr37, label %jf.then_L742, label %jf.else42
+  br i1 %gr37, label %jf.then_L745, label %jf.else42
 
-jf.else42:                                        ; preds = %lab_L738
+jf.else42:                                        ; preds = %lab_L741
   %add.i = shl i64 %ll.static.value.i232.pre284, 3
   %rv.llvmaddr.i = add i64 %add.i, 16
   %rv.lv.i = inttoptr i64 %rv.llvmaddr.i to ptr
   %rv.rv.i = load i64, ptr %rv.lv.i, align 8
   %ls.i = icmp ugt i64 %rv.rv.i, 4398046511103
-  br i1 %ls.i, label %jf.then_L742, label %jf.else.i
+  br i1 %ls.i, label %jf.then_L745, label %jf.else.i
 
 jf.else.i:                                        ; preds = %jf.else42
   %getbyte.char.i = load i8, ptr %getbyte.charptr.i, align 1
   %ne.not.i = icmp eq i8 %getbyte.char.i, 0
-  br i1 %ne.not.i, label %jf.then_L742, label %jt.then_L683.preheader.i
+  br i1 %ne.not.i, label %jf.then_L745, label %jt.then_L683.preheader.i
 
 jt.then_L683.preheader.i:                         ; preds = %jf.else.i
   %rv.llvmaddr66.i = add i64 %add.i, 8
@@ -6485,21 +6530,21 @@ jt.then_L683.i:                                   ; preds = %jf.else213.i, %jt.t
   %xor173.i = or disjoint i64 %shift.result135.i, %3
   store i64 %xor173.i, ptr %rv.lv.i, align 8
   %ls208.i = icmp ugt i64 %shift.result135.i, 4393751543808
-  br i1 %ls208.i, label %jf.then_L742.loopexit, label %jf.else213.i
+  br i1 %ls208.i, label %jf.then_L745.loopexit, label %jf.else213.i
 
 jf.else213.i:                                     ; preds = %jt.then_L683.i
   %add98.i = add i64 %STK4.0.i, 1
   %getbyte.charptr222.i = getelementptr i8, ptr %getbyte.string.i, i64 %add98.i
   %getbyte.char223.i = load i8, ptr %getbyte.charptr222.i, align 1
   %ne229.not.i = icmp eq i8 %getbyte.char223.i, 0
-  br i1 %ne229.not.i, label %jf.then_L742.loopexit, label %jt.then_L683.i
+  br i1 %ne229.not.i, label %jf.then_L745.loopexit, label %jt.then_L683.i
 
-jf.then_L742.loopexit:                            ; preds = %jt.then_L683.i, %jf.else213.i
+jf.then_L745.loopexit:                            ; preds = %jt.then_L683.i, %jf.else213.i
   %ll.static.value.i232.pre = load i64, ptr @itemn.global.119, align 8
-  br label %jf.then_L742
+  br label %jf.then_L745
 
-jf.then_L742:                                     ; preds = %jf.then_L742.loopexit, %jf.else.i, %jf.else42, %lab_L738
-  %ll.static.value.i232 = phi i64 [ %ll.static.value.i232.pre, %jf.then_L742.loopexit ], [ %ll.static.value.i232.pre284, %jf.else.i ], [ %ll.static.value.i232.pre284, %jf.else42 ], [ %ll.static.value.i232.pre284, %lab_L738 ]
+jf.then_L745:                                     ; preds = %jf.then_L745.loopexit, %jf.else.i, %jf.else42, %lab_L741
+  %ll.static.value.i232 = phi i64 [ %ll.static.value.i232.pre, %jf.then_L745.loopexit ], [ %ll.static.value.i232.pre284, %jf.else.i ], [ %ll.static.value.i232.pre284, %jf.else42 ], [ %ll.static.value.i232.pre284, %lab_L741 ]
   %add.i233 = shl i64 %ll.static.value.i232, 3
   %rv.llvmaddr.i234 = add i64 %add.i233, 16
   %rv.lv.i235 = inttoptr i64 %rv.llvmaddr.i234 to ptr
@@ -6507,7 +6552,7 @@ jf.then_L742:                                     ; preds = %jf.then_L742.loopex
   %ls.i237 = icmp ugt i64 %rv.rv.i236, 4398046511103
   br i1 %ls.i237, label %blib.rditem_add.exit267, label %jf.else.i238
 
-jf.else.i238:                                     ; preds = %jf.then_L742
+jf.else.i238:                                     ; preds = %jf.then_L745
   %add = add i64 %STK14.0, %1
   %rv.llvmaddr = shl i64 %add, 3
   %rv.lv = inttoptr i64 %rv.llvmaddr to ptr
@@ -6551,12 +6596,12 @@ jf.else213.i262:                                  ; preds = %jt.then_L683.i248
   %ne229.not.i266 = icmp eq i8 %getbyte.char223.i265, 0
   br i1 %ne229.not.i266, label %blib.rditem_add.exit267, label %jt.then_L683.i248
 
-blib.rditem_add.exit267:                          ; preds = %jt.then_L683.i248, %jf.else213.i262, %jf.then_L742, %jf.else.i238
+blib.rditem_add.exit267:                          ; preds = %jt.then_L683.i248, %jf.else213.i262, %jf.then_L745, %jf.else.i238
   %add69 = add nuw nsw i64 %STK14.0, 1
   %le.not.not = icmp slt i64 %add69, %0
-  br i1 %le.not.not, label %lab_L738, label %jt.then_L739
+  br i1 %le.not.not, label %lab_L741, label %jt.then_L742
 
-jt.then_L739:                                     ; preds = %blib.rditem_add.exit267
+jt.then_L742:                                     ; preds = %blib.rditem_add.exit267
   %ll.static.value.i268 = load i64, ptr @itemn.global.119, align 8
   %add.i269 = shl i64 %ll.static.value.i268, 3
   %rv.llvmaddr.i270 = add i64 %add.i269, 8
@@ -6588,44 +6633,44 @@ jt.then_L739:                                     ; preds = %blib.rditem_add.exi
   %rv.rv169.i = load i64, ptr %rv.lv168.i, align 8
   %xor189.i = or i64 %rv.rv169.i, 16
   store i64 %xor189.i, ptr %rv.lv168.i, align 8
-  br label %jf.then_L737
+  br label %jf.then_L740
 
-jf.then_L737:                                     ; preds = %jt.then_L739, %entry
+jf.then_L740:                                     ; preds = %jt.then_L742, %entry
   %lg.value = load i64, ptr @__bcpl_global_vector, align 4
   %sub92 = add i64 %lg.value, -1
   %gr100 = icmp slt i64 %sub92, 0
-  br i1 %gr100, label %jt.then_L744, label %lab_L743.preheader
+  br i1 %gr100, label %jt.then_L747, label %lab_L746.preheader
 
-lab_L743.preheader:                               ; preds = %jf.then_L737
+lab_L746.preheader:                               ; preds = %jf.then_L740
   %add111 = and i64 ptrtoint (ptr @__bcpl_global_vector to i64), -8
   %rv.llvmaddr114 = add i64 %add111, 8
   %rv.lv115 = inttoptr i64 %rv.llvmaddr114 to ptr
-  br label %lab_L743
+  br label %lab_L746
 
-lab_L743:                                         ; preds = %lab_L743.preheader, %lab_L746
-  %STK87.0 = phi i64 [ %add141, %lab_L746 ], [ 0, %lab_L743.preheader ]
+lab_L746:                                         ; preds = %lab_L746.preheader, %lab_L749
+  %STK87.0 = phi i64 [ %add141, %lab_L749 ], [ 0, %lab_L746.preheader ]
   %rv.rv116 = load i64, ptr %rv.lv115, align 8
   %eq.not = icmp eq i64 %rv.rv116, 0
-  br i1 %eq.not, label %jf.else125, label %lab_L746
+  br i1 %eq.not, label %jf.else125, label %lab_L749
 
-jf.else125:                                       ; preds = %lab_L743
+jf.else125:                                       ; preds = %lab_L746
   %add134230 = shl i64 %STK87.0, 3
   %llg.bcpladdr231 = add i64 %add134230, ptrtoint (ptr @__bcpl_global_vector to i64)
   %stind.llvmaddr = and i64 %llg.bcpladdr231, -8
   %stind.lv = inttoptr i64 %stind.llvmaddr to ptr
   store i64 ptrtoint (ptr @blib.undefined to i64), ptr %stind.lv, align 8
-  br label %lab_L746
+  br label %lab_L749
 
-lab_L746:                                         ; preds = %lab_L743, %jf.else125
+lab_L749:                                         ; preds = %lab_L746, %jf.else125
   %add141 = add i64 %STK87.0, 1
   %le150.not = icmp sgt i64 %add141, %sub92
-  br i1 %le150.not, label %jt.then_L744, label %lab_L743
+  br i1 %le150.not, label %jt.then_L747, label %lab_L746
 
-jt.then_L744:                                     ; preds = %lab_L746, %jf.then_L737
+jt.then_L747:                                     ; preds = %lab_L749, %jf.then_L740
   store i64 %2, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 232), align 4
   %lg.value160 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 8), align 4
   %eq164.not = icmp eq i64 %lg.value160, ptrtoint (ptr @blib.undefined to i64)
-  br i1 %eq164.not, label %jf.else169, label %jf.then_L748
+  br i1 %eq164.not, label %jf.else169, label %jf.then_L751
 
 common.ret:                                       ; preds = %blib.ioterm.exit, %jf.else169
   %lg.value212.sink.in = phi ptr [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 16), %blib.ioterm.exit ], [ getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 224), %jf.else169 ]
@@ -6635,18 +6680,18 @@ common.ret:                                       ; preds = %blib.ioterm.exit, %
   %rtap217 = tail call i64 %rtap_ep_p_fn215(i64 %fnap.sink)
   ret i64 -4985279381848933680
 
-jf.else169:                                       ; preds = %jt.then_L744
+jf.else169:                                       ; preds = %jt.then_L747
   %ll.static.value = load i64, ptr @itemn.global.121, align 8
   %lg.value171 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 456), align 4
   %rtap_ep_p_fn174 = inttoptr i64 %lg.value171 to ptr
   %rtap176 = tail call i64 %rtap_ep_p_fn174(i64 %ll.static.value)
-  %lstr.bcpladdr177 = ashr exact i64 ptrtoint (ptr @lstr.global.158 to i64), 3
+  %lstr.bcpladdr177 = ashr exact i64 ptrtoint (ptr @lstr.global.160 to i64), 3
   %lg.value179 = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 752), align 4
   %rtap_ep_p_fn182 = inttoptr i64 %lg.value179 to ptr
   %rtap184 = tail call i64 %rtap_ep_p_fn182(i64 %lstr.bcpladdr177)
   br label %common.ret
 
-jf.then_L748:                                     ; preds = %jt.then_L744
+jf.then_L751:                                     ; preds = %jt.then_L747
   %rtap_ep_p_fn196 = inttoptr i64 %lg.value160 to ptr
   %fnap = tail call i64 %rtap_ep_p_fn196(i64 0)
   %ll.static.value.i276 = load i64, ptr @itemn.global.122, align 8
@@ -6655,8 +6700,8 @@ jf.then_L748:                                     ; preds = %jt.then_L744
   %ne.not.i277 = icmp eq i64 %ll.static.value.i276, 0
   br i1 %ne.not.i277, label %blib.ioterm.exit, label %jt.then_L712.i
 
-jt.then_L712.i:                                   ; preds = %jf.then_L748, %jump.target_L715.i
-  %STK1.0.i = phi i64 [ %rv.rv.i281, %jump.target_L715.i ], [ %ll.static.value.i276, %jf.then_L748 ]
+jt.then_L712.i:                                   ; preds = %jf.then_L751, %jump.target_L715.i
+  %STK1.0.i = phi i64 [ %rv.rv.i281, %jump.target_L715.i ], [ %ll.static.value.i276, %jf.then_L751 ]
   %add.i278 = shl i64 %STK1.0.i, 3
   %rv.llvmaddr.i279 = add i64 %add.i278, 40
   %rv.lv.i280 = inttoptr i64 %rv.llvmaddr.i279 to ptr
@@ -6677,7 +6722,7 @@ jump.target_L715.i:                               ; preds = %jf.else.i282, %jt.t
   %ne82.not.i = icmp eq i64 %rv.rv.i281, 0
   br i1 %ne82.not.i, label %blib.ioterm.exit, label %jt.then_L712.i
 
-blib.ioterm.exit:                                 ; preds = %jump.target_L715.i, %jf.then_L748
+blib.ioterm.exit:                                 ; preds = %jump.target_L715.i, %jf.then_L751
   %ll.static.value.i283 = load i64, ptr @itemn.global.81, align 8
   %shift.result3.i = shl i64 %ll.static.value.i283, 3
   %lg.value.i = load i64, ptr getelementptr inbounds nuw (i8, ptr @__bcpl_global_vector, i64 256), align 4

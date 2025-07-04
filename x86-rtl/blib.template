@@ -951,6 +951,7 @@ $)
 LET mapstore() BE $(
 
     LET dcb = ?
+    LET level_state = ?
     LET global_vector = @globsize
 
     // Start with the global vector
@@ -977,6 +978,17 @@ LET mapstore() BE $(
 
     // And the heap
     blib.dumpheap()
+
+    // Finally, the level() states
+    writef("*n-- LEVEL() STATES --------------------------------------------------------------*n*n", BUFF_SIZE)
+
+    level_state := @(global_vector!globsize)
+    $(
+        writef("RSP=%16X RBP=%16X RBX=%16X R12=%16X R13=%16X R14=%16X R15=%16X*N",
+            level_state!0, level_state!1, level_state!2, level_state!3, level_state!4, level_state!5, level_state!6)
+        level_state +:= 7
+    $) REPEATUNTIL level_state!0 = 0
+
     writes("*n--------------------------------------------------------------------------------*n*n")
 $)
 
