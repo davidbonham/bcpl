@@ -7,5 +7,14 @@ LET default_hdrs() = "BCPL64HDRS"                                       //PATCH
 %skipto 340
 %copyto 600
 %skipto 602
+%copyto 1955
+         token=s_eof DO $(                                              //PATCH
+                 synerr("Incorrect termination");                       //PATCH
+                 // Not-reached reference to rec to prevent LLVM        //PATCH
+                 // optimising it away. It is the target of a           //PATCH
+                 // longjump() in synerr()                              //PATCH
+                 GOTO rec                                               //PATCH
+         $)                                                             //PATCH
+%skipto 1956
 %copyto %%EOF%%
 
